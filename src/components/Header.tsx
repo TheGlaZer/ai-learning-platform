@@ -89,9 +89,9 @@ const Header: React.FC = () => {
           </SearchContainer>
         </Box>
 
-        <CustomComponent />
+        {/* <CustomComponent />
         <CustomCheck />
-        <CustomWhat />
+        <CustomWhat /> */}
 
         {/* Right: Avatar */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -101,25 +101,5 @@ const Header: React.FC = () => {
     </StyledAppBar>
   );
 };
-
-const CustomComponent = () => <>
-<StyledCheck>
-<h1>hi</h1>
-</StyledCheck>
-</>
-const CustomCheck = () => <>
-<StyledCheck>
-
-<h1>hi</h1>
-</StyledCheck>
-</>
-
-const CustomWhat = () => <>
-<div>
-
-<h1>hi</h1>
-</div>
-</>
-
 
 export default Header;

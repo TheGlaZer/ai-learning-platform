@@ -14,15 +14,13 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <Box>
-      {/* <Header />
+      <Header />
       <Box sx={{ display: "flex", pt: 8 }}>
         <Navbar />
-
-      </Box> */}
-
-      <PageContainer>
+        <PageContainer>
         {children}
       </PageContainer>
+      </Box>
     </Box>
   );
 };

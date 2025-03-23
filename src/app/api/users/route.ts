@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getUser, updateUserProfile } from "@/app/lib/usersService";
-import { supabase } from "@/app/lib/supabaseClient";
+import { getUser, updateUserProfile } from "@/app/lib-server/usersService";
+import { supabase } from "@/app/lib-server/supabaseClient";
 
 export async function GET(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();

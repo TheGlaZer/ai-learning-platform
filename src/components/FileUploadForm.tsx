@@ -20,6 +20,7 @@ import {
   Radio,
   FormLabel,
 } from "@mui/material";
+import { uploadFileClient } from "@/app/lib-client/fileClient";
 
 interface SummarizationFormInputs {
   file: FileList;
@@ -53,10 +54,31 @@ const FileUploadForm: React.FC = () => {
     },
   });
 
-  const onSubmit: SubmitHandler<SummarizationFormInputs> = (data) => {
+  const onSubmit: SubmitHandler<SummarizationFormInputs> = async (data) => {
     console.log("Form Data Submitted:", data);
-    // Handle file upload and summarization API call here.
+
+    // Extract the file from the FileList
+    const fileList = data.file;
+    if (!fileList || fileList.length === 0) {
+      console.error("No file selected");
+      return;
+    }
+    const file = fileList[0];
+
+    // Hardcoded user and workspace IDs for demonstration.
+    // Replace these with actual values from your authentication or form state.
+    const userId = "user123";
+    const workspaceId = "workspace123";
+
+    try {
+      const uploadResult = await uploadFileClient(userId, workspaceId, file);
+      console.log("File upload result:", uploadResult);
+      // Here, you might trigger your summarization API call with additional data.
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
   };
+  
 
   const onError = (errors: any) => {
     console.error("Form Errors:", errors);

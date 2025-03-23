@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/app/lib/supabaseClient";
-import { uploadFile } from "@/app/lib/filesService";
+import { supabase } from "@/app/lib-server/supabaseClient";
+import { uploadFile } from "@/app/lib-server/filesService";
 import multiparty from "multiparty";
 import fs from "fs";
 import { promisify } from "util";

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation"; // For Next.js 13+ in the app directory; if using pages directory, import from "next/router"
-import { supabase } from "../app/lib/supabaseClient";
+import { supabase } from "../app/lib-server/supabaseClient";
 
 export function useOAuthCallback(redirectUrl: string = "/dashboard") {
   const router = useRouter();

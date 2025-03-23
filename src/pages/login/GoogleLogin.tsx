@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Container, Box, Typography, Alert } from '@mui/material';
 import styled from 'styled-components';
-import { supabase } from '../../app/lib/supabaseClient';
+import { supabase } from '../../app/lib-server/supabaseClient';
 
 const StyledContainer = styled(Container)`
   display: flex;

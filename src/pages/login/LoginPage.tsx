@@ -4,7 +4,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
 import { Container, Box, Typography, TextField, Button, Alert } from '@mui/material';
-import { supabase } from '../../app/lib/supabaseClient';
+import { supabase } from '../../app/lib-server/supabaseClient';
 import GoogleLogin from './GoogleLogin';
 
 interface LoginFormInputs {

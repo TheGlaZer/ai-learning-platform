@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createWorkspace, getUserWorkspaces } from "@/app/lib/workspacesService";
-import { supabase } from "@/app/lib/supabaseClient";
+import { createWorkspace, getUserWorkspaces } from "@/app/lib-server/workspacesService";
+import { supabase } from "@/app/lib-server/supabaseClient";
 
 export async function GET(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -25,10 +25,6 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    console.log("@@@@@@@@@@@@@@@@@@")
-    console.log(
-      user.id, name, description
-    )
     const workspace = await createWorkspace(user.id, name, description);
     return NextResponse.json(workspace);
   }  catch (error: any) {
