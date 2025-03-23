@@ -1,0 +1,25 @@
+{
+  "HomePage": {
+    "title": "Hello world! its ofek !!!",
+    "about": "Go to the about page"
+  },
+  "FileUploadForm": {
+    "uploadFileTitle": "העלה קובץ לסיכום",
+    "fileLabel": "קובץ",
+    "fileRequired": "יש להעלות קובץ",
+    "keyTopicsLabel": "נושאים מרכזיים",
+    "keyTopicsRequired": "אנא ציין נושאים מרכזיים",
+    "summaryLengthLabel": "אורך הסיכום",
+    "summaryLengthShort": "קצר",
+    "summaryLengthMedium": "בינוני",
+    "summaryLengthLong": "ארוך",
+    "summaryLengthRequired": "בחר אורך סיכום",
+    "preferredFormatLabel": "פורמט מועדף",
+    "preferredFormatBulletPoints": "נקודות תבליט",
+    "preferredFormatParagraphs": "פסקאות",
+    "preferredFormatRequired": "בחר פורמט",
+    "highlightTermsLabel": "הדגש מונחים חשובים?",
+    "summarizeButton": "סכם"
+  }
+}
+  

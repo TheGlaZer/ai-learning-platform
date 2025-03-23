@@ -1,0 +1,26 @@
+{
+  "HomePage": {
+    "title": "Hello world! its ofek !!!",
+    "about": "Go to the about page"
+  },
+  "FileUploadForm": {
+
+    "uploadFileTitle": "Upload File for Summarization",
+    "fileLabel": "File",
+    "fileRequired": "File is required",
+    "keyTopicsLabel": "Key Topics to Focus On",
+    "keyTopicsRequired": "Please specify key topics",
+    "summaryLengthLabel": "Summary Length",
+    "summaryLengthShort": "Short",
+    "summaryLengthMedium": "Medium",
+    "summaryLengthLong": "Long",
+    "summaryLengthRequired": "Select a summary length",
+    "preferredFormatLabel": "Preferred Format",
+    "preferredFormatBulletPoints": "Bullet Points",
+    "preferredFormatParagraphs": "Paragraphs",
+    "preferredFormatRequired": "Select a preferred format",
+    "highlightTermsLabel": "Highlight Important Terms?",
+    "summarizeButton": "Summarize"
+   }
+  }
+  

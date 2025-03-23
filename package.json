@@ -9,17 +9,29 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.3",
+    "@mui/material": "^6.4.3",
+    "@supabase/supabase-js": "^2.48.1",
+    "multiparty": "^4.2.3",
+    "next": "15.1.6",
+    "next-intl": "^3.26.3",
+    "openapi": "^1.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.1.6"
+    "react-hook-form": "^7.54.2",
+    "styled-components": "^6.1.14"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@emotion/babel-plugin": "^11.13.5",
+    "@eslint/eslintrc": "^3",
+    "@types/multiparty": "^4.2.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
-    "@eslint/eslintrc": "^3"
+    "typescript": "^5"
   }
 }
