@@ -19,17 +19,20 @@ export async function getUserWorkspacesClient(userId: string): Promise<Workspace
  * @param userId      - The user ID creating the workspace.
  * @param name        - The name of the workspace.
  * @param description - Optional description of the workspace.
+ * @param token       - Access token for authentication.
  * @returns A promise that resolves to the newly created Workspace.
  */
 export async function createWorkspaceClient(
   userId: string,
   name: string,
-  description?: string
+  description?: string,
+  token?: string | null
 ): Promise<Workspace> {
   const response = await axiosInstance.post('/api/workspaces', {
     userId,
     name,
     description,
+    token // Include the token in the request body
   });
   return response.data;
 }

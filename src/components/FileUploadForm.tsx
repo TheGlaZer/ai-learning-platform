@@ -21,6 +21,7 @@ import {
   FormLabel,
 } from "@mui/material";
 import { uploadFileClient } from "@/app/lib-client/fileClient";
+import { useAuth } from "@/contexts/AuthContext"; // Import the useAuth hook
 
 interface SummarizationFormInputs {
   file: FileList;
@@ -40,6 +41,7 @@ const StyledContainer = styled(Container)`
 const FileUploadForm: React.FC = () => {
   // Use translations from the "FileUploadForm" namespace
   const t = useTranslations("FileUploadForm");
+  const { accessToken, userId } = useAuth(); // Get the accessToken and userId from AuthContext
 
   const {
     register,
@@ -65,13 +67,17 @@ const FileUploadForm: React.FC = () => {
     }
     const file = fileList[0];
 
-    // Hardcoded user and workspace IDs for demonstration.
-    // Replace these with actual values from your authentication or form state.
-    const userId = "user123";
-    const workspaceId = "workspace123";
+    // Use authenticated userId from AuthContext and a workspaceId
+    // Note: You may want to get the workspaceId from a different source
+    const workspaceId = "bb3c2f83-ab8b-47d4-8087-c8a6e7e17d96";
+
+    if (!userId || !accessToken) {
+      console.error("User not authenticated");
+      return;
+    }
 
     try {
-      const uploadResult = await uploadFileClient(userId, workspaceId, file);
+      const uploadResult = await uploadFileClient(userId, workspaceId, file, accessToken);
       console.log("File upload result:", uploadResult);
       // Here, you might trigger your summarization API call with additional data.
     } catch (error) {

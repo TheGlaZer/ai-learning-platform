@@ -3,27 +3,42 @@ import { createWorkspace, getUserWorkspaces } from "@/app/lib-server/workspacesS
 import { supabase } from "@/app/lib-server/supabaseClient";
 
 export async function GET(req: Request) {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  try {
-    const workspaces = await getUserWorkspaces(user.id);
-    return NextResponse.json(workspaces);
-  }catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+  // Get user ID from query parameter
+  const url = new URL(req.url);
+  const userId = url.searchParams.get("userId");
+  
+  // If no userId provided, use authenticated user
+  if (!userId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
+    try {
+      const workspaces = await getUserWorkspaces(user.id);
+      return NextResponse.json(workspaces);
+    } catch (error) {
+      if (error instanceof Error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      return NextResponse.json({ error: "Unknown error occurred" }, { status: 500 });
     }
-  return NextResponse.json({ error: "Unknown error occurred" }, { status: 500 });
+  } else {
+    // Use provided userId from query parameter
+    try {
+      const workspaces = await getUserWorkspaces(userId);
+      return NextResponse.json(workspaces);
+    } catch (error) {
+      if (error instanceof Error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      return NextResponse.json({ error: "Unknown error occurred" }, { status: 500 });
+    }
   }
 }
 
 export async function POST(req: Request) {
   const { name, description, token } = await req.json();
   const { data: { user } } = await supabase.auth.getUser(token);
-
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   try {
     const workspace = await createWorkspace(user.id, name, description);
     return NextResponse.json(workspace);

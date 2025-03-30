@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation"; // For Next.js 13+ in the app directory; if using pages directory, import from "next/router"
+import { useRouter } from "next/navigation"; 
 import { supabase } from "../app/lib-server/supabaseClient";
+import { useAuth } from "../contexts/AuthContext";
 
 export function useOAuthCallback(redirectUrl: string = "/dashboard") {
   const router = useRouter();
+  const { updateAuthState } = useAuth();
 
   useEffect(() => {
     async function handleOAuthCallback() {
@@ -20,7 +22,6 @@ export function useOAuthCallback(redirectUrl: string = "/dashboard") {
 
         if (access_token && refresh_token) {
           // Manually set the session using the parsed tokens.
-          // Note: Depending on your Supabase version, you may need to adjust the session object.
           const { data, error } = await supabase.auth.setSession({
             access_token,
             refresh_token,
@@ -29,6 +30,15 @@ export function useOAuthCallback(redirectUrl: string = "/dashboard") {
             console.error("Error setting session:", error.message);
           } else {
             console.log("Session successfully set:", data);
+            
+            // Save tokens to global context
+            if (data.session) {
+              updateAuthState(
+                data.session.access_token,
+                data.session.refresh_token,
+                data.user?.id || null
+              );
+            }
           }
         }
 
@@ -39,7 +49,6 @@ export function useOAuthCallback(redirectUrl: string = "/dashboard") {
         router.push(redirectUrl);
       }
     }
-
     handleOAuthCallback();
-  }, [router, redirectUrl]);
+  }, [router, redirectUrl, updateAuthState]);
 }

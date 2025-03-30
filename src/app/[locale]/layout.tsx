@@ -2,10 +2,9 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import Layout from '@/components/Layout';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from '@/theme/theme';
-
+import AuthLayout from '@/components/AuthLayout';
 
 export default async function LocaleLayout({
   children,
@@ -21,15 +20,13 @@ export default async function LocaleLayout({
 
   // Providing all messages to the client
   // side is the easiest way to get started
-  const messages = await getMessages();
+  // const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider messages={messages}>
+    // <NextIntlClientProvider messages={messages}>
       <ThemeProvider theme={theme}>
-        <Layout>
-          {children}
-        </Layout>
+        {children}
       </ThemeProvider>
-    </NextIntlClientProvider>
+    // </NextIntlClientProvider>
   );
 }

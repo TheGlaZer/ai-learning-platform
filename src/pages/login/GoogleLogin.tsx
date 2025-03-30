@@ -17,13 +17,15 @@ const GoogleLogin = () => {
     const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
     const handleGoogleSignIn = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const reponse = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 // Optionally specify redirect URL if not using the default one set in Supabase.
                 redirectTo: 'http://localhost:3000/he/oauth-callback'
             },
         });
+        const { error } = reponse;
+        console.log("response => ", reponse);
 
         if (error) {
             setErrorMsg(error.message);

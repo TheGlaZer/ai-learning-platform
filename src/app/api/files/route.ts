@@ -1,57 +1,81 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/app/lib-server/supabaseClient";
-import { uploadFile } from "@/app/lib-server/filesService";
-import multiparty from "multiparty";
-import fs from "fs";
-import { promisify } from "util";
+import { uploadFile, getFilesByWorkspace } from "@/app/lib-server/filesService";
 import type { FileMetadata } from "@/app/models/file";
 
-// Define types for form parsing results
-interface ParsedForm {
-  fields: Record<string, string[] | undefined> ;
-  files: Record<string, multiparty.File[] | undefined>;
+export async function GET(req: Request) {
+  try {
+    // Get workspace ID from query parameter
+    const url = new URL(req.url);
+    const workspaceId = url.searchParams.get("workspaceId");
+
+    if (!workspaceId) {
+      return NextResponse.json(
+        { error: "Missing required query parameter: workspaceId" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch files for the specified workspace
+    const files = await getFilesByWorkspace(workspaceId);
+    
+    return NextResponse.json(files);
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || "Failed to retrieve files" },
+      { status: 500 }
+    );
+  }
 }
 
-// Use promisify to convert callback-based parse into a Promise
-const parseForm = (req: any): Promise<ParsedForm> =>
-  new Promise((resolve, reject) => {
-    const form = new multiparty.Form();
-    form.parse(req, (err, fields, files) => {
-      if (err) reject(err);
-      else resolve({ fields, files });
-    });
-  });
-
-
-// POST: Upload a file to a workspace
 export async function POST(req: Request) {
   try {
-    // Parse the form data using multiparty
-    const { fields, files } = await parseForm(req);
-
-    // Extract form data
-    const workspaceId = fields.workspaceId?.[0];
-    const userId = fields.userId?.[0];
-    const file = files.file?.[0]; // The uploaded file object
-
+    console.log("@@@@@ start 1 @@@@@@")
+    // Extract the authorization token from request headers
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader ? authHeader.replace('Bearer ', '') : null;
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: "Unauthorized: Missing authentication token" },
+        { status: 401 }
+      );
+    }
+    console.log("@@@@@ start 2 @@@@@@")
+    
+    // Use the built‑in formData parser to get fields and file
+    const formData = await req.formData();
+    
+    // Extract fields (they come as FormDataEntryValue)
+    const workspaceId = formData.get("workspaceId")?.toString();
+    const userId = formData.get("userId")?.toString();
+    const file = formData.get("file") as File; // This is a Blob (Web API File)
+    
     if (!file || !workspaceId || !userId) {
       return NextResponse.json(
         { error: "Missing required fields: file, workspaceId, or userId" },
         { status: 400 }
       );
     }
-
-    // Read the file from the temporary path
-    const fileBuffer = fs.readFileSync(file.path);
-
-    // Construct a File object to pass to your `uploadFile` function
-    const uploadedFile = new File([fileBuffer], file.originalFilename, {
-      type: file.headers["content-type"],
+    
+    // Convert the Blob to a Buffer (if needed by your uploadFile function)
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    
+    // Create a new File object with the Buffer if your uploadFile expects it.
+    // This new File uses the original file's name and type.
+    const uploadedFile = new File([fileBuffer], file.name, {
+      type: file.type,
     });
-
-    // Call your existing uploadFile function
-    const fileMetadata: FileMetadata = await uploadFile(userId, workspaceId, uploadedFile);
-
+    
+    // Call your uploadFile function with the userId, workspaceId, file, and token
+    const fileMetadata: FileMetadata = await uploadFile(
+      userId,
+      workspaceId,
+      uploadedFile,
+      token
+    );
+    console.log("@@@@@ start 3 @@@@@@")
+    
+    
     return NextResponse.json(fileMetadata);
   } catch (error: any) {
     return NextResponse.json(
@@ -60,10 +84,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
-// Disable Next.js body parsing, since multiparty handles it
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};

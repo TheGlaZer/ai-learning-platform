@@ -16,7 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <Box>
       <Header />
       <Box sx={{ display: "flex", pt: 8 }}>
-        <Navbar />
+        {/* <Navbar /> */}
         <PageContainer>
         {children}
       </PageContainer>

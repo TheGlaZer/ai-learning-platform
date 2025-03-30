@@ -25,10 +25,12 @@ const LoginPage = () => {
   const router = useRouter();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const reponse = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     });
+    const {error} = reponse;
+    console.log("response => ", reponse);
     if (error) {
       setErrorMsg(error.message);
     } else {

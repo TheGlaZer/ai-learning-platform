@@ -1,5 +1,10 @@
 import SignUpPage from "@/pages/signup/SignupPage";
+import AuthLayout from "@/components/AuthLayout";
 
 export default function Page(){
-    return <SignUpPage />
+    return (
+        <AuthLayout>
+            <SignUpPage />
+        </AuthLayout>
+    );
 }
