@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
-import { Container, Box, Typography, TextField, Button, Alert } from '@mui/material';
+import { Container, Box, Typography, TextField, Button, Alert, CircularProgress } from '@mui/material';
 import { supabase } from '../../app/lib-server/supabaseClient';
 import GoogleLogin from './GoogleLogin';
 
@@ -22,20 +22,31 @@ const StyledContainer = styled(Container)`
 const LoginPage = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
-    const reponse = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    });
-    const {error} = reponse;
-    console.log("response => ", reponse);
-    if (error) {
-      setErrorMsg(error.message);
-    } else {
-      // Redirect to dashboard or home page after successful login.
-      router.push('/dashboard');
+    setIsLoading(true);
+    setErrorMsg(null);
+    
+    try {
+      const reponse = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      const {error} = reponse;
+      console.log("response => ", reponse);
+      
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        // Redirect to dashboard after successful login
+        router.push('/dashboard');
+      }
+    } catch (error: any) {
+      setErrorMsg(error.message || 'An error occurred during login');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -66,6 +77,7 @@ const LoginPage = () => {
             {...register('email', { required: 'Email is requlaired' })}
             error={!!errors.email}
             helperText={errors.email ? errors.email.message : ''}
+            disabled={isLoading}
           />
           <TextField
             label="Password"
@@ -76,9 +88,18 @@ const LoginPage = () => {
             {...register('password', { required: 'Password is required' })}
             error={!!errors.password}
             helperText={errors.password ? errors.password.message : ''}
+            disabled={isLoading}
           />
-          <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
-            Login
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary" 
+            fullWidth 
+            sx={{ mt: 2 }}
+            disabled={isLoading}
+            startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
+          >
+            {isLoading ? 'Logging in...' : 'Login'}
           </Button>
           <GoogleLogin />
         </form>

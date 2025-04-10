@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
-import { Container, Box, Typography, TextField, Button, Alert } from '@mui/material';
+import { Container, Box, Typography, TextField, Button, Alert, CircularProgress } from '@mui/material';
 import { supabase } from '../../app/lib-server/supabaseClient';
 
 interface SignUpFormInputs {
@@ -22,18 +22,43 @@ const SignUpPage = () => {
     
   const { register, handleSubmit, formState: { errors } } = useForm<SignUpFormInputs>();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const router = useRouter();
 
   const onSubmit: SubmitHandler<SignUpFormInputs> = async (data) => {
-    const { error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-    });
-    if (error) {
-      setErrorMsg(error.message);
-    } else {
-      // Redirect to login page or show a success message.
-      router.push('/login');
+    setIsLoading(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    
+    try {
+      const { error, data: authData } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+      });
+      
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        // If email confirmation is required
+        if (authData?.user?.identities?.length === 0) {
+          setSuccessMsg('Registration successful! Please check your email to confirm your account before logging in.');
+          // Wait 3 seconds before redirecting to login
+          setTimeout(() => {
+            router.push('/login');
+          }, 3000);
+        } else {
+          // If email confirmation is not required, auto-login and redirect to dashboard
+          setSuccessMsg('Registration successful! Redirecting to dashboard...');
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 1500);
+        }
+      }
+    } catch (error: any) {
+      setErrorMsg(error.message || 'An error occurred during registration');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -56,6 +81,7 @@ const SignUpPage = () => {
           Sign Up
         </Typography>
         {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
+        {successMsg && <Alert severity="success">{successMsg}</Alert>}
         <form onSubmit={handleSubmit(onSubmit)}>
           <TextField
             label="Email"
@@ -65,6 +91,7 @@ const SignUpPage = () => {
             {...register('email', { required: 'Email is required' })}
             error={!!errors.email}
             helperText={errors.email ? errors.email.message : ''}
+            disabled={isLoading || !!successMsg}
           />
           <TextField
             label="Password"
@@ -78,9 +105,18 @@ const SignUpPage = () => {
             })}
             error={!!errors.password}
             helperText={errors.password ? errors.password.message : ''}
+            disabled={isLoading || !!successMsg}
           />
-          <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
-            Sign Up
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary" 
+            fullWidth 
+            sx={{ mt: 2 }}
+            disabled={isLoading || !!successMsg}
+            startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
+          >
+            {isLoading ? 'Signing Up...' : 'Sign Up'}
           </Button>
         </form>
       </Box>

@@ -1,20 +1,42 @@
+import createNextIntlPlugin from 'next-intl/plugin';
+ 
+const withNextIntl = createNextIntlPlugin();
+ 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable React strict mode for better development experience
-  reactStrictMode: true,
-  
-  // Environment variables that will be available to the browser
-  env: {
-    // Note: Only add variables here that you want accessible in client-side code
-    // Sensitive variables should stay in .env without NEXT_PUBLIC_ prefix
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-  },
-  
-  // Other Next.js configuration
-  experimental: {
-    // Any experimental features you're using
-  }
+    env: {
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    },
+    compiler: {
+        emotion: {
+          sourceMap: true,
+          autoLabel: "always",         // Always add labels in development
+          labelFormat: "[filename]-[local]", // Use the filename and the local variable name in the label
+        },
+    },
+    // Configure server-side features
+    experimental: {
+      serverComponentsExternalPackages: [
+        'pdf-parse',
+        'mammoth',
+        'jszip',
+        'xml2js'
+      ],
+    },
+    // Allow server components to properly load node modules
+    webpack: (config, { isServer }) => {
+      if (isServer) {
+        // Server-specific webpack config
+        config.resolve.fallback = {
+          ...config.resolve.fallback,
+          fs: false,
+          net: false,
+          tls: false,
+        };
+      }
+      return config;
+    },
 };
-
-export default nextConfig;
+ 
+export default withNextIntl(nextConfig);

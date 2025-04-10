@@ -8,11 +8,14 @@ import AuthLayout from '@/components/AuthLayout';
 
 export default async function LocaleLayout({
   children,
-  params: { locale }
+  params
 }: {
   children: React.ReactNode;
   params: { locale: string };
 }) {
+  // Extract the locale from params
+  const {locale} = await params;
+  
   // Ensure that the incoming `locale` is valid
   if (!routing.locales.includes(locale as any)) {
     notFound();
@@ -20,13 +23,13 @@ export default async function LocaleLayout({
 
   // Providing all messages to the client
   // side is the easiest way to get started
-  // const messages = await getMessages();
+  const messages = await getMessages({ locale });
 
   return (
-    // <NextIntlClientProvider messages={messages}>
+    <NextIntlClientProvider messages={messages} locale={locale}>
       <ThemeProvider theme={theme}>
         {children}
       </ThemeProvider>
-    // </NextIntlClientProvider>
+    </NextIntlClientProvider>
   );
 }

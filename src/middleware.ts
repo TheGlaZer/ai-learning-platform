@@ -7,6 +7,8 @@ import { corsMiddleware } from "./middleware/corsMiddleware";
 const nextIntlMiddleware = createMiddleware(routing);
 
 export default function middleware(req: NextRequest) {
+  console.log('Middleware - Request URL:', req.url);
+  
   // In development mode, if the request is for an API route, apply CORS middleware.
   if (
     process.env.NODE_ENV === "development" &&
@@ -23,9 +25,8 @@ export default function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/",
-    "/(de|en)/:path*",
+    "/(de|en|he)/:path*",
     "/api/:path*",
     "/((?!_next/static|_next/image|favicon.ico).*)",
-    "/(de|en|he)/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };

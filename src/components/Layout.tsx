@@ -2,24 +2,31 @@
 "use client";
 
 import React from "react";
-import { Box } from "@mui/material";
+import { Box, Container, useTheme } from "@mui/material";
 import Header from "./Header";
-import Navbar from "./Navbar";
-import PageContainer from "./PageContainer";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const theme = useTheme();
+  
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Header />
-      <Box sx={{ display: "flex", pt: 8 }}>
-        {/* <Navbar /> */}
-        <PageContainer>
-        {children}
-      </PageContainer>
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          pt: { xs: 10, sm: 10 }, // Extra padding to account for the fixed header
+          pb: 4,
+          px: { xs: 2, sm: 4 }
+        }}
+      >
+        <Container maxWidth="xl">
+          {children}
+        </Container>
       </Box>
     </Box>
   );

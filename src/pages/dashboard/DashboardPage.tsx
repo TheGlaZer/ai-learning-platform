@@ -2,52 +2,72 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress, Grid, Paper } from '@mui/material';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { Workspace } from '@/app/models/workspace';
 import { FileMetadata } from '@/app/models/file';
 import { Quiz } from '@/app/models/quiz';
-import { useWorkspaceManagement } from '@/hooks/useWorkspaceManagement';
+import { Subject } from '@/app/models/subject';
 import { useQuizGeneration } from '@/hooks/useQuizGeneration';
+import { useSubjectManagement } from '@/hooks/useSubjectManagement';
+import { deleteFileClient, updateFileMetadata } from "@/app/lib-client/fileClient";
 
 import WorkspaceList from './components/WorkspaceList';
 import FilesContainer from './components/FilesContainer';
 import WorkspaceDialog from './components/WorkspaceDialog';
 import FileUploadDialog from './components/FileUploadDialog';
 import QuizGenerationDialog from './components/QuizGenerationDialog';
+import SubjectGenerationDialog from './components/SubjectGenerationDialog';
+import SubjectEditDialog from './components/SubjectEditDialog';
+import FileMetadataDialog from './components/FileMetadataDialog';
 
 const DashboardPage = () => {
-  const { userId } = useAuth();
+  const { userId, accessToken } = useAuth();
   const { 
     workspaces,
     workspaceFiles,
     selectedWorkspace,
-    loading,
-    error,
-    fetchWorkspaces,
+    loading: workspacesLoading,
+    error: workspacesError,
     createWorkspace,
     selectWorkspace,
     addFileToWorkspace,
     removeFileFromWorkspace
-  } = useWorkspaceManagement(userId);
+  } = useWorkspace();
   
   const {
     workspaceQuizzes,
     fetchWorkspaceQuizzes,
+    deleteQuiz
   } = useQuizGeneration(userId);
+  
+  const {
+    workspaceSubjects,
+    generatedSubjects,
+    fetchWorkspaceSubjects,
+    createSubject,
+    updateSubject,
+    deleteSubject,
+    generateSubjects,
+  } = useSubjectManagement(userId);
   
   // State for dialogs
   const [openWorkspaceDialog, setOpenWorkspaceDialog] = useState(false);
   const [openFileUploadDialog, setOpenFileUploadDialog] = useState(false);
   const [openQuizGenerationDialog, setOpenQuizGenerationDialog] = useState(false);
+  const [openSubjectGenerationDialog, setOpenSubjectGenerationDialog] = useState(false);
+  const [openSubjectEditDialog, setOpenSubjectEditDialog] = useState(false);
+  
+  // State for subject editing
+  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
 
-  useEffect(() => {
-    if (userId) {
-      fetchWorkspaces(userId);
-    }
-  }, [userId]);
+  // Add state for file editing
+  const [openFileMetadataDialog, setOpenFileMetadataDialog] = useState(false);
+  const [editingFile, setEditingFile] = useState<FileMetadata | null>(null);
 
   useEffect(() => {
     if (selectedWorkspace) {
       fetchWorkspaceQuizzes(selectedWorkspace.id);
+      fetchWorkspaceSubjects(selectedWorkspace.id);
     }
   }, [selectedWorkspace]);
 
@@ -74,19 +94,37 @@ const DashboardPage = () => {
   const handleCloseQuizGenerationDialog = () => {
     setOpenQuizGenerationDialog(false);
   };
+  
+  const handleOpenSubjectGenerationDialog = () => {
+    setOpenSubjectGenerationDialog(true);
+  };
+  
+  const handleCloseSubjectGenerationDialog = () => {
+    setOpenSubjectGenerationDialog(false);
+  };
+  
+  const handleOpenSubjectEditDialog = (subject: Subject) => {
+    setEditingSubject(subject);
+    setOpenSubjectEditDialog(true);
+  };
+  
+  const handleCloseSubjectEditDialog = () => {
+    setEditingSubject(null);
+    setOpenSubjectEditDialog(false);
+  };
 
-  const handleCreateWorkspace = async (name: string, description?: string) => {
-    try {
-      const result = await createWorkspace(
-        name,
-        description
-      );
-      
-      return !!result;
-    } catch (err) {
-      console.error('Error creating workspace:', err);
-      return false;
+  const handleCreateWorkspace = async (name: string, description?: string): Promise<boolean> => {
+    if (userId) {
+      try {
+        const workspace = await createWorkspace(name, description);
+        handleCloseWorkspaceDialog();
+        return !!workspace;
+      } catch (error) {
+        console.error('Error creating workspace:', error);
+        return false;
+      }
     }
+    return false;
   };
 
   const handleFileUploaded = (file: FileMetadata) => {
@@ -99,18 +137,103 @@ const DashboardPage = () => {
     console.log('Quiz generated:', quiz);
     // The quiz is automatically added to workspaceQuizzes by the hook
   };
+  
+  const handleSubjectsGenerated = (subjects: Subject[]) => {
+    console.log('Subjects generated:', subjects);
+    // The subjects are temporarily stored in generatedSubjects by the hook
+    // They will be permanently added when user saves them
+  };
 
-  const handleDeleteFile = (fileId: string) => {
-    if (selectedWorkspace) {
-      removeFileFromWorkspace(selectedWorkspace.id, fileId);
-      // Here you would also call an API to delete the file from the backend
-      console.log('Delete file:', fileId);
+  const handleDeleteFile = async (fileId: string) => {
+    if (selectedWorkspace && accessToken) {
+      try {
+        // Call the API to delete the file from Supabase
+        await deleteFileClient(fileId, accessToken);
+        
+        // If deletion is successful, update the local state
+        removeFileFromWorkspace(selectedWorkspace.id, fileId);
+        console.log('File deleted successfully:', fileId);
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        // You might want to show an error notification to the user here
+      }
+    } else if (!accessToken) {
+      console.error('Cannot delete file: User not authenticated');
     }
   };
 
+  const handleOpenFileMetadataDialog = (file: FileMetadata) => {
+    setEditingFile(file);
+    setOpenFileMetadataDialog(true);
+  };
+  
+  const handleCloseFileMetadataDialog = () => {
+    setEditingFile(null);
+    setOpenFileMetadataDialog(false);
+  };
+  
+  const handleSaveFileMetadata = async (file: FileMetadata, updates: Partial<FileMetadata>) => {
+    if (selectedWorkspace && accessToken) {
+      try {
+        const success = await updateFileMetadata(file.id, updates, accessToken);
+        
+        if (success) {
+          // Update file in the local state
+          const updatedFiles = workspaceFiles[selectedWorkspace.id]?.map(f => 
+            f.id === file.id ? { ...f, ...updates } : f
+          ) || [];
+          
+          // This is a workaround to trigger a re-render with the updated file
+          const updatedWorkspaceFiles = {
+            ...workspaceFiles,
+            [selectedWorkspace.id]: updatedFiles
+          };
+          
+          // Manual update of the state since we can't directly modify the hook's state
+          Object.assign(workspaceFiles, updatedWorkspaceFiles);
+          
+          return true;
+        }
+        
+        return false;
+      } catch (error) {
+        console.error('Error saving file metadata:', error);
+        return false;
+      }
+    }
+    
+    return false;
+  };
+  
   const handleEditFile = (file: FileMetadata) => {
-    // This will be implemented to handle file editing
-    console.log('Edit file:', file);
+    handleOpenFileMetadataDialog(file);
+  };
+  
+  const handleEditSubject = (subject: Subject) => {
+    handleOpenSubjectEditDialog(subject);
+  };
+  
+  const handleSaveSubjectEdit = async (id: string, updates: Partial<Subject>) => {
+    await updateSubject(id, updates);
+  };
+  
+  const handleDeleteSubject = (subject: Subject) => {
+    if (subject.id && selectedWorkspace) {
+      deleteSubject(subject.id);
+      console.log('Delete subject:', subject.id);
+    }
+  };
+
+  const handleAddSubject = async (subject: Partial<Subject>) => {
+    if (selectedWorkspace) {
+      try {
+        return await createSubject(subject);
+      } catch (error) {
+        console.error('Error adding subject:', error);
+        return null;
+      }
+    }
+    return null;
   };
 
   const handleOpenQuiz = (quiz: Quiz) => {
@@ -118,7 +241,22 @@ const DashboardPage = () => {
     console.log('Open quiz:', quiz);
   };
 
-  if (loading) {
+  const handleDeleteQuiz = async (quiz: Quiz) => {
+    if (selectedWorkspace && quiz.id) {
+      try {
+        const success = await deleteQuiz(quiz.id, selectedWorkspace.id);
+        if (success) {
+          console.log('Quiz deleted successfully:', quiz.id);
+        } else {
+          console.error('Failed to delete quiz:', quiz.id);
+        }
+      } catch (error) {
+        console.error('Error deleting quiz:', error);
+      }
+    }
+  };
+
+  if (workspacesLoading) {
     return (
       <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
         <CircularProgress />
@@ -126,10 +264,10 @@ const DashboardPage = () => {
     );
   }
 
-  if (error) {
+  if (workspacesError) {
     return (
       <Box sx={{ p: 4 }}>
-        <Typography color="error">{error}</Typography>
+        <Typography color="error">{workspacesError}</Typography>
       </Box>
     );
   }
@@ -140,75 +278,33 @@ const DashboardPage = () => {
         Dashboard
       </Typography>
       
-      <Grid container spacing={3}>
-        {/* Left sidebar with workspaces */}
-        <Grid item xs={12} md={3}>
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              p: 2, 
-              height: '100%',
-              maxHeight: 'calc(100vh - 200px)',
-              overflowY: 'auto'
-            }}
-          >
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6">
-                Workspaces
-              </Typography>
-              <Box 
-                component="button"
-                sx={{ 
-                  background: 'none',
-                  border: 'none',
-                  color: 'primary.main',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  p: 0,
-                  textTransform: 'uppercase',
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    textDecoration: 'underline'
-                  }
-                }}
-                onClick={handleOpenWorkspaceDialog}
-              >
-                + New
-              </Box>
-            </Box>
-            <WorkspaceList 
-              workspaces={workspaces} 
-              workspaceFiles={workspaceFiles}
-              selectedWorkspace={selectedWorkspace}
-              onWorkspaceSelect={selectWorkspace}
-            />
-          </Paper>
-        </Grid>
-        
-        {/* Right content area with files */}
-        <Grid item xs={12} md={9}>
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              p: 3,
-              minHeight: '400px',
-              maxHeight: 'calc(100vh - 200px)',
-              overflowY: 'auto'
-            }}
-          >
-            <FilesContainer
-              selectedWorkspace={selectedWorkspace}
-              files={selectedWorkspace ? workspaceFiles[selectedWorkspace.id] || [] : []}
-              quizzes={selectedWorkspace ? workspaceQuizzes[selectedWorkspace.id] || [] : []}
-              onDeleteFile={handleDeleteFile}
-              onEditFile={handleEditFile}
-              onUploadFile={handleOpenFileUploadDialog}
-              onGenerateQuiz={handleOpenQuizGenerationDialog}
-              onOpenQuiz={handleOpenQuiz}
-            />
-          </Paper>
-        </Grid>
-      </Grid>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: 3,
+          minHeight: '400px',
+          maxHeight: 'calc(100vh - 200px)',
+          overflowY: 'auto'
+        }}
+      >
+        <FilesContainer
+          selectedWorkspace={selectedWorkspace}
+          files={selectedWorkspace ? workspaceFiles[selectedWorkspace.id] || [] : []}
+          quizzes={selectedWorkspace ? workspaceQuizzes[selectedWorkspace.id] || [] : []}
+          subjects={selectedWorkspace ? workspaceSubjects[selectedWorkspace.id] || [] : []}
+          userId={userId || ''}
+          onDeleteFile={handleDeleteFile}
+          onEditFile={handleEditFile}
+          onUploadFile={handleOpenFileUploadDialog}
+          onGenerateQuiz={handleOpenQuizGenerationDialog}
+          onGenerateSubjects={handleOpenSubjectGenerationDialog}
+          onEditSubject={handleEditSubject}
+          onDeleteSubject={handleDeleteSubject}
+          onOpenQuiz={handleOpenQuiz}
+          onDeleteQuiz={handleDeleteQuiz}
+          onAddSubject={handleAddSubject}
+        />
+      </Paper>
       
       {/* Create Workspace Dialog */}
       <WorkspaceDialog
@@ -238,6 +334,34 @@ const DashboardPage = () => {
           onQuizGenerated={handleQuizGenerated}
         />
       )}
+      
+      {/* Subject Generation Dialog */}
+      {selectedWorkspace && (
+        <SubjectGenerationDialog
+          open={openSubjectGenerationDialog}
+          onClose={handleCloseSubjectGenerationDialog}
+          workspaceId={selectedWorkspace.id}
+          files={selectedWorkspace ? workspaceFiles[selectedWorkspace.id] || [] : []}
+          userId={userId || ''}
+          onSubjectsGenerated={handleSubjectsGenerated}
+        />
+      )}
+      
+      {/* Subject Edit Dialog */}
+      <SubjectEditDialog
+        open={openSubjectEditDialog}
+        onClose={handleCloseSubjectEditDialog}
+        subject={editingSubject}
+        onSave={handleSaveSubjectEdit}
+      />
+
+      {/* Add FileMetadataDialog */}
+      <FileMetadataDialog
+        open={openFileMetadataDialog}
+        onClose={handleCloseFileMetadataDialog}
+        file={editingFile}
+        onSave={handleSaveFileMetadata}
+      />
     </Box>
   );
 };

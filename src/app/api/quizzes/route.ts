@@ -1,82 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateQuiz, getQuizById, getQuizzesByWorkspace } from '@/app/lib-server/quizService';
 import { QuizGenerationParams } from '@/app/models/quiz';
-import { getTokenFromRequest } from '@/app/lib-server/authService';
+import { extractToken } from '@/app/lib-server/authService';
+import { supabase } from '@/app/lib-server/supabaseClient';
 
-// Generate a quiz
-export async function POST(req: NextRequest) {
-  try {
-    const token = getTokenFromRequest(req);
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await req.json();
-    const { fileId, topic, numberOfQuestions, difficultyLevel, userId, workspaceId, aiProvider } = body;
-
-    // Validate required fields
-    if (!fileId || !topic || !numberOfQuestions || !difficultyLevel || !userId || !workspaceId) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    const params: QuizGenerationParams = {
-      fileId,
-      topic,
-      numberOfQuestions,
-      difficultyLevel,
-      userId,
-      workspaceId,
-      aiProvider: aiProvider || 'openai',
-    };
-
-    const quiz = await generateQuiz(params);
-    
-    return NextResponse.json(quiz);
-  } catch (error: any) {
-    console.error('Error generating quiz:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to generate quiz' },
-      { status: 500 }
-    );
-  }
-}
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 minutes timeout for long-running operations
+export const runtime = 'nodejs'; // Force Node.js runtime for this API route
 
 // Get quizzes for a workspace
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   try {
-    const token = getTokenFromRequest(req);
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.log('Quizzes GET route hit!');
+    
+    const url = new URL(req.url);
+    const workspaceId = url.searchParams.get('workspaceId');
+    
+    if (!workspaceId) {
+      return NextResponse.json({ 
+        error: 'Missing workspaceId parameter'
+      }, { status: 400 });
     }
-
-    const { searchParams } = new URL(req.url);
-    const workspaceId = searchParams.get('workspaceId');
-    const quizId = searchParams.get('quizId');
-
-    // If quizId is provided, get a specific quiz
-    if (quizId) {
-      const quiz = await getQuizById(quizId);
-      return NextResponse.json(quiz);
-    }
-
-    // If workspaceId is provided, get quizzes for that workspace
-    if (workspaceId) {
-      const quizzes = await getQuizzesByWorkspace(workspaceId);
-      return NextResponse.json(quizzes);
-    }
-
-    return NextResponse.json(
-      { error: 'Missing required parameters' },
-      { status: 400 }
-    );
+    
+    // Extract token from request
+    const token = await extractToken(req);
+    
+    // Get quizzes with authenticated client
+    const quizzes = await getQuizzesByWorkspace(workspaceId, token || undefined);
+    
+    return NextResponse.json(quizzes);
   } catch (error: any) {
-    console.error('Error fetching quizzes:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch quizzes' },
-      { status: 500 }
-    );
+    console.error('Error in quizzes GET route:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// Generate a quiz
+export async function POST(req: Request) {
+  try {
+    console.log('Simplified quizzes POST route hit!');
+    return NextResponse.json({ message: 'Simplified POST handler works' });
+  } catch (error: any) {
+    console.error('Error in simplified quizzes POST route:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+

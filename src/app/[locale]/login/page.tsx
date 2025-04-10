@@ -1,10 +1,10 @@
 import LoginPage from "@/pages/login/LoginPage";
-import AuthLayout from "@/components/AuthLayout";
+import PublicLayout from "@/components/PublicLayout";
 
 export default function Page(){
     return (
-        <AuthLayout>
+        <PublicLayout>
             <LoginPage />
-        </AuthLayout>
+        </PublicLayout>
     );
 }

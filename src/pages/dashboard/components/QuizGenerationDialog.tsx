@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Dialog, 
   DialogTitle, 
@@ -20,15 +20,22 @@ import {
   Divider,
   Grid,
   Paper,
-  Chip
+  Chip,
+  Tooltip,
+  OutlinedInput,
+  SelectChangeEvent
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import QuizIcon from '@mui/icons-material/Quiz';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import DescriptionIcon from '@mui/icons-material/Description';
+import InfoIcon from '@mui/icons-material/Info';
 import { FileMetadata } from '@/app/models/file';
 import { Quiz, QuizGenerationParams } from '@/app/models/quiz';
+import { Subject } from '@/app/models/subject';
 import { useQuizGeneration } from '@/hooks/useQuizGeneration';
+import { useUserLocale } from '@/hooks/useLocale';
+import { useSubjectManagement } from '@/hooks/useSubjectManagement';
 
 interface QuizGenerationDialogProps {
   open: boolean;
@@ -37,6 +44,7 @@ interface QuizGenerationDialogProps {
   files: FileMetadata[];
   userId: string;
   onQuizGenerated: (quiz: Quiz) => void;
+  subjects?: Subject[];
 }
 
 const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
@@ -45,13 +53,67 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
   workspaceId,
   files,
   userId,
-  onQuizGenerated
+  onQuizGenerated,
+  subjects = []
 }) => {
+  // Get user locale from URL
+  const userLocale = useUserLocale();
+  
+  // Add debug logging for the locale
+  useEffect(() => {
+    console.log('QuizGenerationDialog - Current user locale:', userLocale);
+  }, [userLocale]);
+  
+  const [tabValue, setTabValue] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
   // Form state
   const [selectedFileId, setSelectedFileId] = useState<string>('');
   const [topic, setTopic] = useState<string>('');
   const [numberOfQuestions, setNumberOfQuestions] = useState<number>(5);
   const [difficultyLevel, setDifficultyLevel] = useState<'easy' | 'medium' | 'hard' | 'expert'>('medium');
+  const [userComments, setUserComments] = useState<string>('');
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
+  const [focusSubjectIds, setFocusSubjectIds] = useState<string[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
+  const [subjectSelectionMode, setSubjectSelectionMode] = useState<'all' | 'specific'>('all');
+  const { fetchWorkspaceSubjects } = useSubjectManagement(userId);
+  
+  // Use a ref to prevent infinite loops
+  const initializedRef = useRef(false);
+  
+  // Load subjects when the dialog opens
+  useEffect(() => {
+    if (open && workspaceId) {
+      setLoading(true);
+      const loadSubjects = async () => {
+        try {
+          const workspaceSubjects = await fetchWorkspaceSubjects(workspaceId);
+          const fetchedSubjects = workspaceSubjects.length > 0 ? workspaceSubjects : subjects;
+          setAvailableSubjects(fetchedSubjects);
+          setLoading(false);
+        } catch (error) {
+          console.error('Failed to load subjects:', error);
+          setAvailableSubjects(subjects);
+          setLoading(false);
+        }
+      };
+      
+      loadSubjects();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, workspaceId, subjects]); // only re-run when dialog opens, workspace changes, or prop subjects change
+  
+  // Handle initial selection of all subjects when subjects are loaded
+  useEffect(() => {
+    if (subjectSelectionMode === 'all' && availableSubjects.length > 0 && !initializedRef.current) {
+      initializedRef.current = true;
+      const allSubjectIds = availableSubjects
+        .map(s => s.id)
+        .filter((id): id is string => id !== undefined);
+      setSelectedSubjectIds(allSubjectIds);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableSubjects.length, subjectSelectionMode]);
   
   // Form validation
   const [formErrors, setFormErrors] = useState<{
@@ -77,9 +139,57 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
       setTopic('');
       setNumberOfQuestions(5);
       setDifficultyLevel('medium');
+      setUserComments('');
+      setSelectedSubjectIds([]);
+      setFocusSubjectIds([]);
       setFormErrors({});
+      setSubjectSelectionMode('all');
+      initializedRef.current = false;
       onClose();
     }
+  };
+
+  const handleSubjectSelectionModeChange = (event: SelectChangeEvent<string>) => {
+    const mode = event.target.value as 'all' | 'specific';
+    setSubjectSelectionMode(mode);
+    
+    // If switching to 'all', select all subjects - do this only in the handler, not in a useEffect
+    if (mode === 'all' && availableSubjects.length > 0) {
+      const allSubjectIds = availableSubjects
+        .map(s => s.id)
+        .filter((id): id is string => id !== undefined);
+      setSelectedSubjectIds(allSubjectIds);
+    } else if (mode === 'specific') {
+      // If switching to 'specific', clear the selection
+      setSelectedSubjectIds([]);
+      setFocusSubjectIds([]);
+    }
+  };
+
+  const handleSelectedSubjectsChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    setSelectedSubjectIds(typeof value === 'string' ? value.split(',') : value);
+
+    // Reset focus subjects if they're no longer in the selected subjects
+    setFocusSubjectIds(prev => 
+      prev.filter(id => 
+        (typeof value === 'string' ? value.split(',') : value).includes(id)
+      )
+    );
+  };
+
+  const handleRemoveSubject = (subjectId: string) => {
+    setSelectedSubjectIds(prev => prev.filter(id => id !== subjectId));
+    setFocusSubjectIds(prev => prev.filter(id => id !== subjectId));
+  };
+  
+  const handleRemoveFocusSubject = (subjectId: string) => {
+    setFocusSubjectIds(prev => prev.filter(id => id !== subjectId));
+  };
+
+  const handleFocusSubjectsChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    setFocusSubjectIds(typeof value === 'string' ? value.split(',') : value);
   };
 
   const validateForm = (): boolean => {
@@ -104,13 +214,20 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
   const handleGenerateQuiz = async () => {
     if (!validateForm()) return;
     
+    console.log('Generating quiz with locale:', userLocale);
+    
     const params: Omit<QuizGenerationParams, 'userId'> = {
       fileId: selectedFileId,
       topic,
       numberOfQuestions,
       difficultyLevel,
       workspaceId,
+      locale: userLocale,
+      userComments,
+      selectedSubjects: focusSubjectIds.length > 0 ? focusSubjectIds : selectedSubjectIds
     };
+    
+    console.log('Quiz generation params:', params);
     
     const quiz = await generateQuiz(params);
     
@@ -166,7 +283,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
               Quiz Generated Successfully!
             </Typography>
             <Typography variant="body1" color="text.secondary" gutterBottom>
-              Your quiz "{generatedQuiz.title}" with {generatedQuiz.questions.length} questions has been created.
+              Your quiz "{generatedQuiz?.title || 'Untitled'}" with {generatedQuiz?.questions?.length || 0} questions has been created.
             </Typography>
           </Box>
         ) : (
@@ -246,87 +363,218 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
                   </FormControl>
                 </Grid>
               </Grid>
+              
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                4. Additional instructions 
+                <Tooltip title="Your instructions will be given high priority in the quiz generation process">
+                  <IconButton size="small">
+                    <InfoIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Typography>
+              <TextField
+                label="Add your own comments/instructions (high priority)"
+                fullWidth
+                multiline
+                rows={4}
+                value={userComments}
+                onChange={(e) => setUserComments(e.target.value)}
+                disabled={isGenerating}
+                placeholder="e.g., 'Focus on theoretical concepts', 'Include at least 2 coding questions', 'Make questions about specific sections...'"
+                sx={{ mb: 3 }}
+              />
             </Grid>
             
             <Grid item xs={12} md={6}>
-              <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 2, height: '100%', border: '1px solid', borderColor: 'divider' }}>
-                <Typography variant="h6" gutterBottom>
-                  Preview
-                </Typography>
-                
-                {selectedFile ? (
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      Selected File:
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} />
-                      <Typography>{selectedFile.name}</Typography>
-                    </Box>
-                    
-                    {topic && (
-                      <>
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                          Topic:
-                        </Typography>
-                        <Chip
-                          label={topic}
-                          color="primary"
-                          size="small"
-                          sx={{ mb: 2 }}
-                        />
-                      </>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                5. Select subjects
+                <Tooltip title="Select which subjects to include and focus on in the quiz">
+                  <IconButton size="small">
+                    <InfoIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Typography>
+              
+              {/* Subject selection mode */}
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel id="subject-mode-select-label">Subject Selection Mode</InputLabel>
+                <Select
+                  labelId="subject-mode-select-label"
+                  value={subjectSelectionMode}
+                  onChange={handleSubjectSelectionModeChange}
+                  disabled={isGenerating || availableSubjects.length === 0}
+                  label="Subject Selection Mode"
+                >
+                  <MenuItem value="all">All Subjects</MenuItem>
+                  <MenuItem value="specific">Specific Subjects</MenuItem>
+                </Select>
+                <FormHelperText>
+                  Choose whether to include all subjects or select specific ones
+                </FormHelperText>
+              </FormControl>
+              
+              {/* Subjects to include - only shown in specific mode */}
+              {subjectSelectionMode === 'specific' && (
+                <FormControl fullWidth sx={{ mb: 3 }}>
+                  <InputLabel id="subjects-select-label">Subjects to Include</InputLabel>
+                  <Select
+                    labelId="subjects-select-label"
+                    multiple
+                    value={selectedSubjectIds}
+                    onChange={handleSelectedSubjectsChange}
+                    input={<OutlinedInput label="Subjects to Include" />}
+                    disabled={isGenerating || availableSubjects.length === 0 || loading}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((id) => {
+                          const subject = availableSubjects.find(s => s.id === id);
+                          return subject ? (
+                            <Chip 
+                              key={id} 
+                              label={subject.name} 
+                              size="small"
+                              onDelete={() => handleRemoveSubject(id)}
+                              onMouseDown={(event) => event.stopPropagation()}
+                            />
+                          ) : null;
+                        })}
+                      </Box>
                     )}
-                    
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      Configuration:
-                    </Typography>
-                    <Typography variant="body2">
-                      {numberOfQuestions} {numberOfQuestions === 1 ? 'question' : 'questions'} • {difficultyLevel} difficulty
-                    </Typography>
-                  </Box>
-                ) : (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80%', color: 'text.secondary' }}>
-                    <Typography variant="body2">
-                      Select a file and configure your quiz options
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
+                    MenuProps={{
+                      PaperProps: {
+                        style: {
+                          maxHeight: 300
+                        }
+                      }
+                    }}
+                  >
+                    {availableSubjects.map((subject) => (
+                      <MenuItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>
+                    Select subjects to include in the quiz
+                  </FormHelperText>
+                </FormControl>
+              )}
+              
+              {/* Display selected subjects in 'all' mode */}
+              {subjectSelectionMode === 'all' && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    All subjects will be included in the quiz
+                  </Typography>
+                  <Paper variant="outlined" sx={{ p: 2, maxHeight: '150px', overflowY: 'auto' }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {availableSubjects.map((subject) => (
+                        <Chip 
+                          key={subject.id} 
+                          label={subject.name} 
+                          size="small"
+                        />
+                      ))}
+                    </Box>
+                  </Paper>
+                </Box>
+              )}
+              
+              {/* Subjects to focus on */}
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputLabel id="focus-subjects-select-label">Subjects to Focus On (High Priority)</InputLabel>
+                <Select
+                  labelId="focus-subjects-select-label"
+                  multiple
+                  value={focusSubjectIds}
+                  onChange={handleFocusSubjectsChange}
+                  input={<OutlinedInput label="Subjects to Focus On (High Priority)" />}
+                  disabled={isGenerating || selectedSubjectIds.length === 0 || loading}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((id) => {
+                        const subject = availableSubjects.find(s => s.id === id);
+                        return subject ? (
+                          <Chip 
+                            key={id} 
+                            label={subject.name} 
+                            size="small" 
+                            color="primary"
+                            onDelete={() => handleRemoveFocusSubject(id)}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          />
+                        ) : null;
+                      })}
+                    </Box>
+                  )}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300
+                      }
+                    }
+                  }}
+                >
+                  {subjectSelectionMode === 'all' 
+                    ? availableSubjects.map((subject) => (
+                        <MenuItem key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </MenuItem>
+                      ))
+                    : selectedSubjectIds.map((id) => {
+                        const subject = availableSubjects.find(s => s.id === id);
+                        return subject ? (
+                          <MenuItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </MenuItem>
+                        ) : null;
+                      })
+                  }
+                </Select>
+                <FormHelperText>
+                  Select subjects to prioritize in the quiz
+                </FormHelperText>
+              </FormControl>
+
+              {availableSubjects.length === 0 && (
+                <Paper 
+                  variant="outlined" 
+                  sx={{ p: 2, bgcolor: '#f5f5f5', textAlign: 'center' }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    No subjects available. Create subjects in your workspace first.
+                  </Typography>
+                </Paper>
+              )}
             </Grid>
           </Grid>
         )}
         
         {isGenerating && (
           <Box sx={{ mt: 3 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Generating your quiz... This may take a minute.
-            </Typography>
-            <LinearProgress 
-              variant="determinate" 
-              value={generationProgress} 
-              sx={{ height: 8, borderRadius: 4 }}
-            />
-            <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'right' }}>
-              {Math.round(generationProgress)}%
+            <LinearProgress variant="determinate" value={generationProgress} />
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
+              Generating your quiz... {Math.round(generationProgress)}%
             </Typography>
           </Box>
         )}
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button onClick={handleClose} disabled={isGenerating}>
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button onClick={handleClose} color="inherit" disabled={isGenerating}>
           Cancel
         </Button>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleGenerateQuiz}
-          disabled={isGenerating || !!generatedQuiz}
-          startIcon={isGenerating ? null : <AutoAwesomeIcon />}
-        >
-          {isGenerating ? 'Generating...' : 'Generate Quiz'}
-        </Button>
+        {!generatedQuiz && (
+          <Button 
+            onClick={handleGenerateQuiz} 
+            variant="contained" 
+            color="primary"
+            disabled={isGenerating}
+            startIcon={<AutoAwesomeIcon />}
+          >
+            Generate Quiz
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

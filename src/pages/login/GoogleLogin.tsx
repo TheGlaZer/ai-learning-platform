@@ -1,10 +1,12 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Container, Box, Typography, Alert } from '@mui/material';
+import { Button, Container, Box, Typography, Alert, CircularProgress } from '@mui/material';
 import styled from 'styled-components';
 import { supabase } from '../../app/lib-server/supabaseClient';
+import GoogleIcon from '@mui/icons-material/Google';
+import { getCurrentOrigin } from '@/app/utils/getCurrentOrigin';
 
 const StyledContainer = styled(Container)`
   display: flex;
@@ -14,24 +16,33 @@ const StyledContainer = styled(Container)`
 
 const GoogleLogin = () => {
     const router = useRouter();
-    const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleGoogleSignIn = async () => {
-        const reponse = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                // Optionally specify redirect URL if not using the default one set in Supabase.
-                redirectTo: 'http://localhost:3000/he/oauth-callback'
-            },
-        });
-        const { error } = reponse;
-        console.log("response => ", reponse);
+        setIsLoading(true);
+        setErrorMsg(null);
+        
+        try {
+            const currentOrigin = getCurrentOrigin();
+            const reponse = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${currentOrigin}/he/oauth-callback`
+                },
+            });
+            const { error } = reponse;
+            console.log("response => ", reponse);
 
-        if (error) {
-            setErrorMsg(error.message);
-        } else {
-            // Supabase will handle the redirect; you can also show a loader if needed.
-            setErrorMsg(null);
+            if (error) {
+                setErrorMsg(error.message);
+                setIsLoading(false); // Reset loading state on error
+            }
+            // If successful, Supabase will redirect to the callback URL
+            // No need to reset loading state here as we're redirecting away
+        } catch (error: any) {
+            setErrorMsg(error.message || 'An error occurred during Google login');
+            setIsLoading(false);
         }
     };
 
@@ -44,8 +55,10 @@ const GoogleLogin = () => {
                 fullWidth
                 onClick={handleGoogleSignIn}
                 sx={{ mt: 2 }}
+                disabled={isLoading}
+                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <GoogleIcon />}
             >
-                Sign in with Google
+                {isLoading ? 'Connecting...' : 'Sign in with Google'}
             </Button>
         </StyledContainer>
     );

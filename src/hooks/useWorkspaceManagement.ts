@@ -28,17 +28,17 @@ export const useWorkspaceManagement = (userId: string | null): UseWorkspaceManag
   const { accessToken } = useAuth();
 
   const fetchWorkspaces = async (userId: string) => {
-    if (!userId) return;
+    if (!userId || !accessToken) return;
     
     try {
       setLoading(true);
-      const workspacesData = await getUserWorkspacesClient(userId);
+      const workspacesData = await getUserWorkspacesClient(userId, accessToken);
       setWorkspaces(workspacesData);
       
       // Fetch files for each workspace
       const filesData: Record<string, FileMetadata[]> = {};
       for (const workspace of workspacesData) {
-        const files = await getWorkspaceFilesClient(workspace.id);
+        const files = await getWorkspaceFilesClient(workspace.id, accessToken);
         filesData[workspace.id] = files;
       }
       setWorkspaceFiles(filesData);
@@ -51,18 +51,17 @@ export const useWorkspaceManagement = (userId: string | null): UseWorkspaceManag
       setError(null);
     } catch (err) {
       console.error('Error fetching workspace data:', err);
-      setError('Failed to load workspaces. Please try again later.');
+      setError(err instanceof Error ? err.message : 'Failed to load workspaces. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
 
   const createWorkspace = async (name: string, description?: string): Promise<Workspace | null> => {
-    if (!userId) return null;
+    if (!userId || !accessToken) return null;
     
     try {
       setLoading(true);
-      // Pass the access token to the createWorkspaceClient function
       const newWorkspace = await createWorkspaceClient(userId, name, description, accessToken);
       
       // Update the workspaces list with the new workspace
@@ -80,7 +79,7 @@ export const useWorkspaceManagement = (userId: string | null): UseWorkspaceManag
       return newWorkspace;
     } catch (err) {
       console.error('Error creating workspace:', err);
-      setError('Failed to create workspace. Please try again later.');
+      setError(err instanceof Error ? err.message : 'Failed to create workspace. Please try again later.');
       return null;
     } finally {
       setLoading(false);

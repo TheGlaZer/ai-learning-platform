@@ -11,6 +11,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   updateAuthState: (accessToken: string | null, refreshToken: string | null, userId: string | null) => void;
   logout: () => Promise<void>;
+  refreshSession: () => Promise<boolean>;
 };
 
 // Create the context with undefined as default value
@@ -34,6 +35,44 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
+
+  // Refresh session function
+  const refreshSession = async (): Promise<boolean> => {
+    try {
+      // If there's no refresh token, we can't refresh the session
+      if (!refreshToken) {
+        console.log('No refresh token available - unable to refresh session');
+        return false;
+      }
+      
+      // Don't refresh more often than every 5 minutes to avoid excessive calls
+      const now = Date.now();
+      if (now - lastRefreshTime < 5 * 60 * 1000) {
+        return isAuthenticated;
+      }
+      
+      console.log('Attempting to refresh authentication session');
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error || !data.session) {
+        console.error('Error refreshing session:', error);
+        return false;
+      }
+      
+      console.log('Session refreshed successfully');
+      setAccessToken(data.session.access_token);
+      setRefreshToken(data.session.refresh_token);
+      setUserId(data.session.user.id);
+      setIsAuthenticated(true);
+      setLastRefreshTime(now);
+      
+      return true;
+    } catch (error) {
+      console.error('Error refreshing session:', error);
+      return false;
+    }
+  };
 
   // Check for existing session on mount
   useEffect(() => {
@@ -45,6 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setRefreshToken(session.refresh_token);
         setUserId(session.user.id);
         setIsAuthenticated(true);
+        setLastRefreshTime(Date.now());
       }
     };
     
@@ -58,6 +98,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setRefreshToken(session.refresh_token);
           setUserId(session.user.id);
           setIsAuthenticated(true);
+          setLastRefreshTime(Date.now());
         } else {
           setAccessToken(null);
           setRefreshToken(null);
@@ -82,6 +123,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setRefreshToken(newRefreshToken);
     setUserId(newUserId);
     setIsAuthenticated(!!newAccessToken && !!newUserId);
+    if (newAccessToken) {
+      setLastRefreshTime(Date.now());
+    }
   };
 
   // Logout function
@@ -99,8 +143,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     userId,
     isAuthenticated,
     updateAuthState,
-    logout
+    logout,
+    refreshSession
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+// This component is exported without "use client" directive
+// and can be imported by server components
+export function AuthProviderWrapper({ children }: { children: ReactNode }) {
+  return <AuthProvider>{children}</AuthProvider>;
+}

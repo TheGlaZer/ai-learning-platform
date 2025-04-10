@@ -1,7 +1,8 @@
 "use client";
 import { useState } from 'react';
 import { Quiz, QuizGenerationParams } from '@/app/models/quiz';
-import { generateQuizClient, getWorkspaceQuizzesClient } from '@/app/lib-client/quizClient';
+import { generateQuizClient, getWorkspaceQuizzesClient, deleteQuizClient } from '@/app/lib-client/quizClient';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useQuizGeneration = (userId: string | null) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -9,6 +10,7 @@ export const useQuizGeneration = (userId: string | null) => {
   const [generatedQuiz, setGeneratedQuiz] = useState<Quiz | null>(null);
   const [workspaceQuizzes, setWorkspaceQuizzes] = useState<{ [workspaceId: string]: Quiz[] }>({});
   const [generationProgress, setGenerationProgress] = useState<number>(0);
+  const { accessToken } = useAuth();
 
   const resetState = () => {
     setIsGenerating(false);
@@ -21,7 +23,7 @@ export const useQuizGeneration = (userId: string | null) => {
     setError(null);
     
     try {
-      const quizzes = await getWorkspaceQuizzesClient(workspaceId);
+      const quizzes = await getWorkspaceQuizzesClient(workspaceId, accessToken!);
       setWorkspaceQuizzes(prev => ({
         ...prev,
         [workspaceId]: quizzes
@@ -42,6 +44,12 @@ export const useQuizGeneration = (userId: string | null) => {
     resetState();
     setIsGenerating(true);
     
+    // Log the params including locale
+    console.log('useQuizGeneration - Generating quiz with params:', {
+      ...params,
+      locale: params.locale || 'not set'
+    });
+    
     try {
       // Create a simulated progress bar
       const progressInterval = setInterval(() => {
@@ -51,7 +59,14 @@ export const useQuizGeneration = (userId: string | null) => {
         });
       }, 600);
       
-      // Generate the quiz
+      // Add the authorization header via axios instance
+      // The accessToken will be added to the request headers automatically
+      // if it's present in the AuthContext
+      if (!accessToken) {
+        throw new Error('No access token available. Please log in again.');
+      }
+      
+      // Pass user ID and ensure axiosInstance uses the auth token for the request
       const quiz = await generateQuizClient({
         ...params,
         userId
@@ -78,6 +93,31 @@ export const useQuizGeneration = (userId: string | null) => {
     }
   };
 
+  const deleteQuiz = async (quizId: string, workspaceId: string): Promise<boolean> => {
+    setError(null);
+    
+    try {
+      if (!accessToken) {
+        throw new Error('No access token available. Please log in again.');
+      }
+      
+      const success = await deleteQuizClient(quizId, accessToken);
+      
+      if (success) {
+        // Update the workspace quizzes list to remove the deleted quiz
+        setWorkspaceQuizzes(prev => ({
+          ...prev,
+          [workspaceId]: (prev[workspaceId] || []).filter(quiz => quiz.id !== quizId)
+        }));
+      }
+      
+      return success;
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete quiz');
+      return false;
+    }
+  };
+
   return {
     isGenerating,
     error,
@@ -86,6 +126,7 @@ export const useQuizGeneration = (userId: string | null) => {
     generationProgress,
     generateQuiz,
     fetchWorkspaceQuizzes,
+    deleteQuiz,
     resetState
   };
 };

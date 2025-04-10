@@ -1,228 +1,271 @@
 "use client";
-import React from 'react';
-import { 
-  Card, 
+import React, { useState } from 'react';
+import {
+  Card,
+  CardActionArea,
   CardContent,
-  CardActions,
-  Typography,
   Box,
-  IconButton,
+  Typography,
+  Avatar,
   Chip,
-  Tooltip,
-  Divider,
-  Avatar
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
-import { FileMetadata } from '@/app/models/file';
-import DeleteIcon from '@mui/icons-material/Delete';
+import GetAppIcon from '@mui/icons-material/GetApp';
 import EditIcon from '@mui/icons-material/Edit';
-import DownloadIcon from '@mui/icons-material/Download';
-import { format } from 'date-fns';
+import DeleteIcon from '@mui/icons-material/Delete';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import DescriptionIcon from '@mui/icons-material/Description';
+import ArticleIcon from '@mui/icons-material/Article';
+import ImageIcon from '@mui/icons-material/Image';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import { FileMetadata } from '@/app/models/file';
+
+// Type to map file extensions to display types
+interface FileTypeMap {
+  [key: string]: {
+    label: string;
+    icon: React.ReactNode;
+    color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+  };
+}
+
+// Add more types as needed
+const FILE_TYPES: FileTypeMap = {
+  pdf: { 
+    label: 'PDF', 
+    icon: <PictureAsPdfIcon sx={{ fontSize: 24 }} />, 
+    color: 'error'
+  },
+  doc: { 
+    label: 'DOC', 
+    icon: <DescriptionIcon sx={{ fontSize: 24 }} />, 
+    color: 'primary'
+  },
+  docx: { 
+    label: 'DOCX', 
+    icon: <DescriptionIcon sx={{ fontSize: 24 }} />, 
+    color: 'primary'
+  },
+  txt: { 
+    label: 'TXT', 
+    icon: <ArticleIcon sx={{ fontSize: 24 }} />, 
+    color: 'secondary'
+  },
+  jpg: { 
+    label: 'JPG', 
+    icon: <ImageIcon sx={{ fontSize: 24 }} />, 
+    color: 'success'
+  },
+  jpeg: { 
+    label: 'JPEG', 
+    icon: <ImageIcon sx={{ fontSize: 24 }} />, 
+    color: 'success'
+  },
+  png: { 
+    label: 'PNG', 
+    icon: <ImageIcon sx={{ fontSize: 24 }} />, 
+    color: 'success'
+  }
+};
+
+// Default for any unrecognized file type
+const DEFAULT_FILE_TYPE = { 
+  label: 'FILE', 
+  icon: <InsertDriveFileIcon sx={{ fontSize: 24 }} />, 
+  color: 'default' as const
+};
 
 interface FileCardProps {
   file: FileMetadata;
-  onDelete: () => void;
-  onEdit: () => void;
+  onClick: (file: FileMetadata) => void;
+  onDelete?: (file: FileMetadata) => void;
+  onEdit?: (file: FileMetadata) => void;
 }
 
-const FileCard: React.FC<FileCardProps> = ({ file, onDelete, onEdit }) => {
-  // Get appropriate file icon path by file extension or type
-  const getFileIconPath = (fileName: string, fileType: string): string => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
+export const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = (event?: React.MouseEvent<HTMLElement>) => {
+    if (event) {
+      event.stopPropagation();
+    }
+    setAnchorEl(null);
+  };
+
+  const handleMenuCloseGeneric = () => {
+    setAnchorEl(null);
+  };
+
+  const handleClick = () => {
+    onClick(file);
+  };
+
+  const handleDownload = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    handleMenuClose();
     
-    if (extension === 'doc' || extension === 'docx' || fileType === 'word') {
-      return '/word-icon.svg';
+    // Create an anchor element and set the href to the file URL
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleEdit = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
     }
-    if (extension === 'ppt' || extension === 'pptx' || fileType === 'powerpoint') {
-      return '/powerpoint-icon.svg';
+    handleMenuClose();
+    onEdit?.(file);
+  };
+
+  const handleDelete = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
     }
-    if (extension === 'pdf' || fileType === 'pdf') {
-      return '/pdf-icon.svg';
-    }
-    
-    // Default icons based on file_type
-    switch (fileType) {
-      case 'document':
-        return '/word-icon.svg';
-      case 'presentation':
-        return '/powerpoint-icon.svg';
-      case 'summary':
-        return '/pdf-icon.svg';
-      case 'quiz':
-        return '/file.svg';
-      default:
-        return '/file.svg';
+    handleMenuClose();
+    // Confirm before deleting
+    if (window.confirm(`Are you sure you want to delete "${file.name}"?`)) {
+      onDelete?.(file);
     }
   };
 
-  // Format the date nicely
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM d, yyyy');
-    } catch (e) {
-      return 'Unknown date';
-    }
-  };
+  // Get the file extension (lowercase)
+  let fileExtension = '';
+  const lastDotIndex = file.name.lastIndexOf('.');
+  if (lastDotIndex !== -1) {
+    fileExtension = file.name.substring(lastDotIndex + 1).toLowerCase();
+  }
 
-  // Get appropriate color for file type chip
-  const getChipColor = (fileType: string): "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" => {
-    switch (fileType) {
-      case 'document':
-      case 'word':
-        return 'primary';
-      case 'presentation':
-      case 'powerpoint':
-        return 'warning';
-      case 'pdf':
-        return 'error';
-      case 'summary':
-        return 'secondary';
-      case 'quiz':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
+  // Determine the file type display
+  const fileTypeInfo = FILE_TYPES[fileExtension] || DEFAULT_FILE_TYPE;
 
-  // Get appropriate background color for file icon
-  const getIconBgColor = (fileType: string): string => {
-    switch (fileType) {
-      case 'document':
-      case 'word':
-        return 'rgba(25, 118, 210, 0.08)';
-      case 'presentation':
-      case 'powerpoint':
-        return 'rgba(255, 167, 38, 0.08)';
-      case 'pdf':
-        return 'rgba(211, 47, 47, 0.08)';
-      case 'summary':
-        return 'rgba(156, 39, 176, 0.08)';
-      case 'quiz':
-        return 'rgba(2, 136, 209, 0.08)';
-      default:
-        return 'rgba(0, 0, 0, 0.04)';
-    }
-  };
+  // Format the creation date
+  const formattedDate = file.created_at 
+    ? new Date(file.created_at).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    : 'Unknown date';
 
-  // Get display label for the file type
-  const getFileTypeLabel = (fileName: string, fileType: string): string => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    
-    if (extension === 'doc' || extension === 'docx') return 'Word';
-    if (extension === 'ppt' || extension === 'pptx') return 'PowerPoint';
-    if (extension === 'pdf') return 'PDF';
-    
-    return fileType.charAt(0).toUpperCase() + fileType.slice(1);
-  };
-
-  const iconPath = getFileIconPath(file.name, file.file_type);
-  const fileTypeLabel = getFileTypeLabel(file.name, file.file_type);
-  
   return (
-    <Card 
-      elevation={2}
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 6,
-        },
-        borderRadius: '12px',
-        overflow: 'hidden',
-        border: '1px solid rgba(0, 0, 0, 0.06)'
-      }}
-    >
-      <CardContent sx={{ pt: 2, pb: 1, px: 2, flexGrow: 1 }}>
-        <Box sx={{ display: 'flex', mb: 2 }}>
-          <Avatar 
-            variant="rounded"
-            src={iconPath}
-            alt={`${fileTypeLabel} file`}
-            sx={{ 
-              width: 40, 
-              height: 40, 
-              mr: 2,
-              bgcolor: getIconBgColor(file.file_type),
-              p: 1,
-            }}
-          />
-          
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" component="div" sx={{ 
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              fontWeight: 600,
-              lineHeight: 1.2,
-              mb: 0.5
-            }}>
-              {file.name}
-            </Typography>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Chip 
-                label={fileTypeLabel}
-                size="small"
-                color={getChipColor(file.file_type)}
+    <>
+      <Card
+        sx={{
+          mb: 2,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': {
+            transform: 'translateY(-3px)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          },
+          maxWidth: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <CardActionArea
+          onClick={handleClick}
+          sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+        >
+          <CardContent sx={{ p: 2, pb: 1.5, flexGrow: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', maxWidth: 'calc(100% - 50px)' }}>
+                <Avatar 
+                  sx={{ 
+                    mr: 1, 
+                    width: 32, 
+                    height: 32, 
+                    bgcolor: `${fileTypeInfo.color}.light`,
+                    color: `${fileTypeInfo.color}.main`
+                  }}
+                >
+                  {fileTypeInfo.icon}
+                </Avatar>
+                <Typography variant="subtitle1" noWrap sx={{ fontWeight: 500 }}>
+                  {file.name}
+                </Typography>
+              </Box>
+              <IconButton 
+                size="small" 
+                onClick={handleMenuOpen}
                 sx={{ 
-                  height: '22px', 
-                  '& .MuiChip-label': { 
-                    px: 1,
-                    fontSize: '0.7rem',
-                    fontWeight: 500
-                  } 
+                  ml: 'auto', 
+                  p: 0.5,
+                  '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' } 
                 }}
-              />
-              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                {formatDate(file.created_at)}
-              </Typography>
+              >
+                <MoreVertIcon fontSize="small" />
+              </IconButton>
             </Box>
-          </Box>
-        </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                {formattedDate}
+              </Typography>
+              <Chip 
+                label={fileTypeInfo.label} 
+                size="small" 
+                color={fileTypeInfo.color}
+                variant="outlined"
+                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.65rem' } }}
+              />
+            </Box>
+          </CardContent>
+        </CardActionArea>
+      </Card>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleMenuCloseGeneric}
+        onClick={handleMenuClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <MenuItem onClick={handleDownload}>
+          <ListItemIcon>
+            <GetAppIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Download</ListItemText>
+        </MenuItem>
         
-        {file.metadata && (
-          <>
-            <Divider sx={{ my: 1.5 }} />
-            <Typography variant="body2" color="text.secondary" sx={{ 
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-            }}>
-              {file.metadata.description || 'No description available'}
-            </Typography>
-          </>
+        {onEdit && (
+          <MenuItem onClick={handleEdit}>
+            <ListItemIcon>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Edit Details</ListItemText>
+          </MenuItem>
         )}
-      </CardContent>
-      
-      <CardActions disableSpacing sx={{ 
-        justifyContent: 'flex-end', 
-        p: 1, 
-        bgcolor: 'rgba(0, 0, 0, 0.02)',
-        borderTop: '1px solid rgba(0, 0, 0, 0.05)'
-      }}>
-        <Tooltip title="Download">
-          <IconButton size="small" color="primary" sx={{ mr: 0.5 }}>
-            <DownloadIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Edit file">
-          <IconButton onClick={onEdit} size="small" color="primary" sx={{ mr: 0.5 }}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete file">
-          <IconButton onClick={onDelete} size="small" color="error">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </CardActions>
-    </Card>
+        
+        {onDelete && (
+          <MenuItem onClick={handleDelete}>
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Delete File</ListItemText>
+          </MenuItem>
+        )}
+      </Menu>
+    </>
   );
 };
 

@@ -2,24 +2,27 @@ import { NextRequest } from 'next/server';
 import { supabase } from './supabaseClient';
 
 /**
- * Extract the authentication token from the incoming request
- * Looks for the token in the Authorization header
+ * Get authentication token from request
+ * Tries to extract from Authorization header first, then from body if header is not present
  */
-export function getTokenFromRequest(req: NextRequest): string | null {
-  const authHeader = req.headers.get('authorization');
+export const extractToken = async (request: Request): Promise<string | null> => {
+  // First try to get from Authorization header
+  const authHeader = request.headers.get('authorization');
+  if (authHeader) {
+    return authHeader.replace('Bearer ', '');
+  }
   
-  if (!authHeader) {
+  // If not in header, try the request body
+  try {
+    // Clone the request to avoid consuming the body
+    const clonedRequest = request.clone();
+    const body = await clonedRequest.json();
+    return body.token || null;
+  } catch (e) {
+    // Body might be empty or not valid JSON
     return null;
   }
-  
-  // Extract the token from the Bearer format
-  const parts = authHeader.split(' ');
-  if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
-    return parts[1];
-  }
-  
-  return null;
-}
+};
 
 /**
  * Validate a token and get the user ID
@@ -45,7 +48,7 @@ export async function validateToken(token: string): Promise<string | null> {
  * Returns the user ID if authenticated, null otherwise
  */
 export async function verifyAuth(req: NextRequest): Promise<string | null> {
-  const token = getTokenFromRequest(req);
+  const token = await extractToken(req);
   if (!token) {
     return null;
   }

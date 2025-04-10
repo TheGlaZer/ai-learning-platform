@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { uploadFile, getFilesByWorkspace } from "@/app/lib-server/filesService";
+import { uploadFile, getFilesByWorkspace, deleteFile } from "@/app/lib-server/filesService";
 import type { FileMetadata } from "@/app/models/file";
 
 export async function GET(req: Request) {
@@ -15,8 +15,12 @@ export async function GET(req: Request) {
       );
     }
 
-    // Fetch files for the specified workspace
-    const files = await getFilesByWorkspace(workspaceId);
+    // Extract the authorization token from request headers
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader ? authHeader.replace('Bearer ', '') : null;
+
+    // Fetch files for the specified workspace (with auth token)
+    const files = await getFilesByWorkspace(workspaceId, token || undefined);
     
     return NextResponse.json(files);
   } catch (error: any) {
@@ -29,7 +33,6 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    console.log("@@@@@ start 1 @@@@@@")
     // Extract the authorization token from request headers
     const authHeader = req.headers.get('authorization');
     const token = authHeader ? authHeader.replace('Bearer ', '') : null;
@@ -40,8 +43,6 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
-    console.log("@@@@@ start 2 @@@@@@")
-    
     // Use the built‑in formData parser to get fields and file
     const formData = await req.formData();
     
@@ -80,6 +81,43 @@ export async function POST(req: Request) {
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Upload failed" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    // Extract the authorization token from request headers
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader ? authHeader.replace('Bearer ', '') : null;
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: "Unauthorized: Missing authentication token" },
+        { status: 401 }
+      );
+    }
+
+    // Get file ID from query parameter
+    const url = new URL(req.url);
+    const fileId = url.searchParams.get("fileId");
+
+    if (!fileId) {
+      return NextResponse.json(
+        { error: "Missing required query parameter: fileId" },
+        { status: 400 }
+      );
+    }
+
+    // Delete the file with the provided ID
+    await deleteFile(fileId, token);
+    
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Error in DELETE /api/files:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to delete file" },
       { status: 500 }
     );
   }

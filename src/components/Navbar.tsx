@@ -12,7 +12,9 @@ import {
   ListItemText,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import styled from "@emotion/styled"; // Still use Emotion's styled
+import { useAuth } from "@/contexts/AuthContext";
 
 export const StyledNavbar = styled(Box)`
   width: 200px;
@@ -37,10 +39,13 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
+  { label: "Analytics", href: "/analytics", icon: <BarChartIcon /> },
   // Add more nav items here later
 ];
 
 const Navbar: React.FC = () => {
+  const { userId } = useAuth();
+  
   return (
     <StyledNavbar>
       <NavList>

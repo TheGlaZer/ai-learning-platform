@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Layout from "./Layout";
+import AppLayout from "./AppLayout";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -9,9 +9,9 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
-    <Layout>
+    <AppLayout>
       {children}
-    </Layout>
+    </AppLayout>
   );
 };
 
