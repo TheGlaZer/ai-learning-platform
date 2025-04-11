@@ -1,3 +1,7 @@
 {
-  "serverlessFunctionMaxDuration": 60
+  "functions": {
+    "**/*": {
+      "maxDuration": 60
+    }
+  }
 } 
