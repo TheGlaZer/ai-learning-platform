@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/quizzes-v2": {
+      "maxDuration": 60
+    }
+  }
+} 
