@@ -81,15 +81,20 @@ const DEFAULT_FILE_TYPE = {
 };
 
 interface FileCardProps {
-  file: FileMetadata;
-  onClick: (file: FileMetadata) => void;
+  file?: FileMetadata;
+  onClick?: (file: FileMetadata) => void;
   onDelete?: (file: FileMetadata) => void;
   onEdit?: (file: FileMetadata) => void;
 }
 
-export const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) => {
+const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  // Early return if file is undefined
+  if (!file) {
+    return null;
+  }
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -108,7 +113,7 @@ export const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onE
   };
 
   const handleClick = () => {
-    onClick(file);
+    onClick?.(file);
   };
 
   const handleDownload = (e?: React.MouseEvent) => {
@@ -117,13 +122,15 @@ export const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onE
     }
     handleMenuClose();
     
-    // Create an anchor element and set the href to the file URL
-    const link = document.createElement('a');
-    link.href = file.url;
-    link.download = file.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (typeof window !== 'undefined' && file.url) {
+      // Create an anchor element and set the href to the file URL
+      const link = document.createElement('a');
+      link.href = file.url;
+      link.download = file.name || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const handleEdit = (e?: React.MouseEvent) => {
@@ -139,17 +146,18 @@ export const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onE
       e.stopPropagation();
     }
     handleMenuClose();
-    // Confirm before deleting
-    if (window.confirm(`Are you sure you want to delete "${file.name}"?`)) {
+    if (typeof window !== 'undefined' && window.confirm(`Are you sure you want to delete "${file.name || 'this file'}"?`)) {
       onDelete?.(file);
     }
   };
 
   // Get the file extension (lowercase)
   let fileExtension = '';
-  const lastDotIndex = file.name.lastIndexOf('.');
-  if (lastDotIndex !== -1) {
-    fileExtension = file.name.substring(lastDotIndex + 1).toLowerCase();
+  if (file.name) {
+    const lastDotIndex = file.name.lastIndexOf('.');
+    if (lastDotIndex !== -1) {
+      fileExtension = file.name.substring(lastDotIndex + 1).toLowerCase();
+    }
   }
 
   // Determine the file type display
@@ -200,7 +208,7 @@ export const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onE
                   {fileTypeInfo.icon}
                 </Avatar>
                 <Typography variant="subtitle1" noWrap sx={{ fontWeight: 500 }}>
-                  {file.name}
+                  {file.name || 'Unnamed File'}
                 </Typography>
               </Box>
               <IconButton 

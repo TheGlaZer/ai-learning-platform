@@ -1,5 +1,5 @@
 import React from 'react';
-import styled, { css } from 'styled-components';
+import styled, { css } from '@emotion/styled';
 import { Tooltip } from '@mui/material';
 
 interface PercentageSliderProps {

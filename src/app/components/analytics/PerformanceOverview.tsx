@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled from '@emotion/styled';
 import { UserPerformanceAnalytics } from '@/app/models/quizAnswer';
 import { PercentageSlider } from './PercentageSlider';
 import { AnalyticsCard } from './AnalyticsCard';

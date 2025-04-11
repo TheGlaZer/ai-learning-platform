@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import styled from 'styled-components';
+import styled from '@emotion/styled';
 import { Container, Box, Typography, TextField, Button, Alert, CircularProgress } from '@mui/material';
 import { supabase } from '../../app/lib-server/supabaseClient';
 import GoogleLogin from './GoogleLogin';

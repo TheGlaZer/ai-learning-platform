@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import styled from '@emotion/styled';
 import {
   Card,
   CardContent,
@@ -42,8 +42,8 @@ const StyledActionArea = styled(CardActionArea)`
 `;
 
 interface SubjectCardProps {
-  subject: Subject;
-  onClick: (subject: Subject) => void;
+  subject?: Subject;
+  onClick?: (subject: Subject) => void;
   onEdit?: (subject: Subject) => void;
   onDelete?: (subject: Subject) => void;
 }
@@ -51,6 +51,11 @@ interface SubjectCardProps {
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onDelete }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  // Early return if subject is undefined
+  if (!subject) {
+    return null;
+  }
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -64,12 +69,8 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
     setAnchorEl(null);
   };
 
-  const handleMenuCloseGeneric = () => {
-    setAnchorEl(null);
-  };
-
   const handleClick = () => {
-    onClick(subject);
+    onClick?.(subject);
   };
 
   const handleEdit = (e?: React.MouseEvent) => {
@@ -85,8 +86,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
       e.stopPropagation();
     }
     handleMenuClose();
-    // Confirm before deleting
-    if (window.confirm(`Are you sure you want to delete "${subject.name}"?`)) {
+    if (typeof window !== 'undefined' && window.confirm(`Are you sure you want to delete "${subject.name || 'this subject'}"?`)) {
       onDelete?.(subject);
     }
   };
@@ -109,7 +109,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
               <Box sx={{ display: 'flex', alignItems: 'center', maxWidth: 'calc(100% - 50px)' }}>
                 <SubjectIcon color="primary" sx={{ mr: 1, fontSize: '1.2rem' }} />
                 <Typography variant="subtitle1" noWrap sx={{ fontWeight: 500 }}>
-                  {subject.name}
+                  {subject.name || 'Unnamed Subject'}
                 </Typography>
               </Box>
               <IconButton 
@@ -146,7 +146,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
       <Menu
         anchorEl={anchorEl}
         open={open}
-        onClose={handleMenuCloseGeneric}
+        onClose={handleMenuClose}
         onClick={handleMenuClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}

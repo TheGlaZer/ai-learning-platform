@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Container, Box, Typography, Alert, CircularProgress } from '@mui/material';
-import styled from 'styled-components';
+import styled from '@emotion/styled';
 import { supabase } from '../../app/lib-server/supabaseClient';
 import GoogleIcon from '@mui/icons-material/Google';
 import { getCurrentOrigin } from '@/app/utils/getCurrentOrigin';

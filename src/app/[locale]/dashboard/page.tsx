@@ -1,4 +1,4 @@
-import DashboardPage from "@/pages/dashboard/DashboardPage";
+import DashboardPage from "@/_pages/dashboard/DashboardPage";
 import DashboardLayout from "@/components/DashboardLayout";
 import AuthGuard from "@/components/AuthGuard";
 

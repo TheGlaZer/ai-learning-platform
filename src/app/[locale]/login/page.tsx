@@ -1,4 +1,4 @@
-import LoginPage from "@/pages/login/LoginPage";
+import LoginPage from "@/_pages/login/LoginPage";
 import PublicLayout from "@/components/PublicLayout";
 
 export default function Page(){

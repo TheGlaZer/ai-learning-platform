@@ -20,7 +20,7 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
 }) => {
   return (
     <>
-      {workspaces.length === 0 ? (
+      {workspaces?.length == 0 ? (
         <Card sx={{ mb: 2 }}>
           <CardContent>
             <Typography variant="body1" color="text.secondary">
@@ -29,7 +29,7 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
           </CardContent>
         </Card>
       ) : (
-        workspaces.map((workspace) => (
+        workspaces?.map((workspace) => (
           <WorkspaceCard 
             key={workspace.id}
             workspace={workspace} 

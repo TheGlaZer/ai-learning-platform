@@ -26,7 +26,7 @@ import { Workspace } from '@/app/models/workspace';
 import { useState } from 'react';
 import { createWorkspaceClient } from '@/app/lib-client/workspaceClient';
 import { useAuth } from '@/contexts/AuthContext';
-import WorkspaceDialog from '@/pages/dashboard/components/WorkspaceDialog';
+import WorkspaceDialog from '@/_pages/dashboard/components/WorkspaceDialog';
 
 interface WorkspaceSidebarProps {
   width?: number;
