@@ -1,6 +1,6 @@
 {
   "functions": {
-    "src/app/api/quizzes-v2/route.ts": {
+    "api/**/*": {
       "maxDuration": 60
     }
   }
