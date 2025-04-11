@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import styled, { css, keyframes } from '@emotion/styled';
+import styled from '@emotion/styled';
+import { css, keyframes } from '@emotion/react';
 import { PerformanceOverview } from '@/app/components/analytics/PerformanceOverview';
 import { PerformanceCharts } from '@/app/components/analytics/PerformanceCharts';
 import { UserPerformanceAnalytics } from '@/app/models/quizAnswer';
