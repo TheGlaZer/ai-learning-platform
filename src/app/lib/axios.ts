@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getCurrentOrigin } from '@/app/utils/getCurrentOrigin';
+import { transformUrl } from '@/app/utils/apiUtils';
 import { createClient } from '@supabase/supabase-js';
 
 // Create a supabase client just for auth purposes
@@ -8,7 +8,7 @@ const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const axiosInstance = axios.create({
-  baseURL: getCurrentOrigin(),
+  // No baseURL - we will use full URLs for each request
   headers: {
     'Content-Type': 'application/json',
   },
@@ -17,6 +17,11 @@ const axiosInstance = axios.create({
 // Add a request interceptor to handle errors and add auth token
 axiosInstance.interceptors.request.use(
   async (config) => {
+    // Transform the URL to handle API paths correctly
+    if (config.url) {
+      config.url = transformUrl(config.url);
+    }
+    
     if (typeof window !== 'undefined') {
       try {
         // Get the current session using Supabase's method
