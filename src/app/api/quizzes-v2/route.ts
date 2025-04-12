@@ -5,7 +5,7 @@ import { QuizGenerationParams } from '@/app/models/quiz';
 import { extractToken } from '@/app/lib-server/authService';
 
 export const dynamic = 'force-dynamic'; // This ensures the route is not statically optimized
-export const maxDuration = 300; // 5 minutes
+export const maxDuration = 60; // 5 minutes
 export const runtime = 'nodejs'; // Force Node.js runtime for this API route
 
 export async function GET(req: Request) {

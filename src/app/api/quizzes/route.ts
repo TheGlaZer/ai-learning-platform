@@ -5,7 +5,7 @@ import { extractToken } from '@/app/lib-server/authService';
 import { supabase } from '@/app/lib-server/supabaseClient';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutes timeout for long-running operations
+export const maxDuration = 60; // 5 minutes timeout for long-running operations
 export const runtime = 'nodejs'; // Force Node.js runtime for this API route
 
 // Get quizzes for a workspace
