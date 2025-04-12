@@ -24,11 +24,13 @@ const GoogleLogin = () => {
         setErrorMsg(null);
         
         try {
-            const currentOrigin = getCurrentOrigin();
+            // Simply use window.location.origin which will be correct in both environments
+            const redirectUrl = `${window.location.origin}/he/oauth-callback`;
+                
             const reponse = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${currentOrigin}/he/oauth-callback`
+                    redirectTo: redirectUrl
                 },
             });
             const { error } = reponse;
