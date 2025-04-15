@@ -1,3 +1,10 @@
+/**
+ * FILE PROCESSING UTILITIES - SERVER ONLY FUNCTIONALITY
+ * 
+ * IMPORTANT: This file contains server-side functionality that uses Node.js modules.
+ * Do not import this file directly in client components.
+ * Use API routes to access this functionality from the client.
+ */
 import { fileTypeProcessors } from './fileTypeProcessors';
 import { FileTypeProcessorOptions } from './types';
 import { detectLanguage } from './textProcessing';

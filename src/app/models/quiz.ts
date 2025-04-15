@@ -9,6 +9,7 @@ export interface QuizQuestion {
   options: QuizOption[];
   correctAnswer: string;
   explanation: string;
+  relatedSubject?: string; // The specific subject this question tests
 }
 
 export interface Quiz {
@@ -38,4 +39,7 @@ export interface QuizGenerationParams {
   selectedSubjects?: string[]; // IDs of specific subjects to focus on in the quiz
   includeFileReferences?: boolean; // Whether to include file references (page/line numbers) in the explanations
   previousQuestions?: string[]; // List of previous question texts to avoid repetition
+  includePastExam?: boolean; // Whether to include a past exam for reference
+  pastExamContent?: string; // Content extracted from the past exam file
+  pastExamId?: string; // ID of the selected past exam (alternative to pastExamContent)
 }

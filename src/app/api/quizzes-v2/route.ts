@@ -65,7 +65,9 @@ export async function POST(req: Request) {
       locale,
       userComments,
       selectedSubjects,
-      includeFileReferences
+      includeFileReferences,
+      includePastExam,
+      pastExamContent
     } = body;
 
     // Validate required fields
@@ -80,6 +82,7 @@ export async function POST(req: Request) {
     // Log the locale for debugging
     console.log(`Using locale from request: ${locale || 'not provided'}`);
     console.log(`File reference inclusion: ${includeFileReferences !== false ? 'enabled' : 'disabled'}`);
+    console.log(`Past exam inclusion: ${includePastExam ? 'enabled' : 'disabled'}`);
 
     const params: QuizGenerationParams = {
       fileId,
@@ -93,7 +96,9 @@ export async function POST(req: Request) {
       locale,  // Pass the locale to the quiz generation function
       userComments,
       selectedSubjects,
-      includeFileReferences
+      includeFileReferences,
+      includePastExam,
+      pastExamContent
     };
 
     console.log('Generating quiz with params:', params);

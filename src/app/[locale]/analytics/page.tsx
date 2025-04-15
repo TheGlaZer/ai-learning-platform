@@ -13,6 +13,8 @@ import { useSubjects } from '@/app/lib-client/hooks/useSubjects';
 import { AnalyticsLoading } from '@/app/components/analytics/AnalyticsLoading';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import * as colors from '../../../../colors';
 
 // Styled Components
 const Container = styled.div`
@@ -34,6 +36,7 @@ const Header = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 `;
 
 const HeaderContent = styled.div``;
@@ -41,19 +44,20 @@ const HeaderContent = styled.div``;
 const PageTitle = styled.h1`
   font-size: 1.875rem;
   font-weight: 700;
-  color: #111827;
+  color: ${colors.text.primary};
 `;
 
 const PageDescription = styled.p`
   margin-top: 0.5rem;
   font-size: 0.875rem;
-  color: #4b5563;
+  color: ${colors.text.secondary};
 `;
 
 const WorkspaceInfo = styled.p`
   font-size: 0.875rem;
-  color: #2563eb;
+  color: ${colors.primary.main};
   margin-top: 0.25rem;
+  font-weight: 500;
 `;
 
 const spin = keyframes`
@@ -66,132 +70,137 @@ const spin = keyframes`
 `;
 
 const RefreshButton = styled.button<{ $isLoading?: boolean }>`
-  margin-left: 1rem;
-  background-color: #3b82f6;
-  color: white;
+  background-color: ${colors.primary.main};
+  color: ${colors.text.white};
   padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
   display: flex;
   align-items: center;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
   
   &:hover {
-    background-color: #1d4ed8;
+    background-color: ${colors.primary.dark};
   }
   
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
   }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px ${colors.primary.transparent};
+  }
 `;
 
 const RefreshIcon = styled.svg<{ $isSpinning?: boolean }>`
-  height: 1rem;
-  width: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
   margin-right: 0.5rem;
   
   ${props => props.$isSpinning && css`
-    animation: ${spin} 1s linear infinite;
+    animation: ${spin} 1.5s linear infinite;
   `}
 `;
 
-const AlertContainer = styled.div<{ $type?: 'error' | 'auth' | 'warning' | 'info' }>`
-  border: 1px solid;
-  padding: 0.75rem 1rem;
-  border-radius: 0.25rem;
-  margin-bottom: 1.5rem;
+const AlertContainer = styled.div<{ $type: 'error' | 'warning' | 'auth' }>`
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 2rem;
   
   ${props => {
     switch (props.$type) {
-      case 'auth':
-        return css`
-          background-color: #fef3c7;
-          border-color: #f59e0b;
-          color: #92400e;
-        `;
       case 'error':
         return css`
-          background-color: #fee2e2;
-          border-color: #f87171;
-          color: #b91c1c;
+          background-color: ${colors.secondary.main}22;
+          border: 1px solid ${colors.secondary.main};
         `;
       case 'warning':
         return css`
-          background-color: #fef3c7;
-          border-color: #f59e0b;
-          color: #92400e;
+          background-color: ${colors.accent.yellow.main}22;
+          border: 1px solid ${colors.accent.yellow.main};
         `;
-      case 'info':
+      case 'auth':
         return css`
-          background-color: #e0f2fe;
-          border-color: #60a5fa;
-          color: #1e40af;
+          background-color: ${colors.primary.main}22;
+          border: 1px solid ${colors.primary.main};
         `;
       default:
-        return css`
-          background-color: #f3f4f6;
-          border-color: #d1d5db;
-          color: #111827;
-        `;
+        return '';
     }
   }}
 `;
 
-const AlertTitle = styled.p`
-  font-weight: 700;
+const AlertTitle = styled.h3`
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: ${colors.text.primary};
 `;
 
-const AlertText = styled.p``;
+const AlertText = styled.p`
+  font-size: 0.875rem;
+  color: ${colors.text.secondary};
+`;
 
 const SignInButton = styled.button`
-  margin-top: 0.5rem;
-  background-color: #f59e0b;
-  color: white;
-  font-weight: 700;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+  background-color: ${colors.primary.main};
+  color: ${colors.text.white};
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
   font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  border: none;
+  cursor: pointer;
   
   &:hover {
-    background-color: #d97706;
+    background-color: ${colors.primary.dark};
   }
 `;
 
 const WorkspaceSelectAlert = styled.div`
-  background-color: #eff6ff;
-  border: 1px solid #93c5fd;
-  color: #1e40af;
-  padding: 1.25rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  background-color: white;
+  border-radius: 0.75rem;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 `;
 
 const WorkspaceAlertTitle = styled.h3`
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  color: ${colors.text.primary};
 `;
 
 const WorkspaceAlertText = styled.p`
-  margin-bottom: 1rem;
+  color: ${colors.text.secondary};
+  margin-bottom: 1.5rem;
 `;
 
 const WorkspaceAlertSmallText = styled.p`
   font-size: 0.875rem;
+  color: ${colors.text.secondary};
+  margin-bottom: 1rem;
 `;
 
 const DashboardButton = styled.button`
-  background-color: #2563eb;
-  color: white;
+  background-color: ${colors.primary.main};
+  color: ${colors.text.white};
   font-weight: 500;
   padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
+  border-radius: 0.375rem;
   font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
   
   &:hover {
-    background-color: #1d4ed8;
+    background-color: ${colors.primary.dark};
   }
 `;
 
@@ -202,30 +211,37 @@ const AnalyticsContainer = styled.div`
 `;
 
 const NoDataContainer = styled.div`
-  padding: 1.5rem;
+  padding: 2rem;
   background-color: white;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  text-align: center;
 `;
 
 const NoDataTitle = styled.h3`
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  color: ${colors.text.primary};
 `;
 
 const NoDataText = styled.p`
-  color: #4b5563;
-  margin-bottom: 1rem;
+  color: ${colors.text.secondary};
+  margin-bottom: 1.5rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 const NoDataHint = styled.p`
   font-size: 0.875rem;
-  color: #6b7280;
+  color: ${colors.text.secondary};
+  font-style: italic;
 `;
 
 export default function AnalyticsPage() {
   const router = useRouter();
+  const t = useTranslations('Analytics');
   
   // Get the current workspace from context
   const { selectedWorkspace, workspaces, loading: workspacesLoading } = useWorkspace();
@@ -259,13 +275,13 @@ export default function AnalyticsPage() {
         <Container>
           <Header>
             <HeaderContent>
-              <PageTitle>Learning Analytics</PageTitle>
+              <PageTitle>{t('pageTitle')}</PageTitle>
               <PageDescription>
-                Track your progress and identify areas for improvement
+                {t('pageDescription')}
               </PageDescription>
               {selectedWorkspace && (
                 <WorkspaceInfo>
-                  Workspace: {selectedWorkspace.name}
+                  {t('workspaceInfo', { name: selectedWorkspace.name })}
                 </WorkspaceInfo>
               )}
             </HeaderContent>
@@ -275,6 +291,7 @@ export default function AnalyticsPage() {
                 onClick={refreshAnalytics}
                 disabled={isLoading}
                 $isLoading={isLoading}
+                aria-label={isLoading ? t('refreshingButton') : t('refreshButton')}
               >
                 <RefreshIcon 
                   xmlns="http://www.w3.org/2000/svg" 
@@ -285,18 +302,18 @@ export default function AnalyticsPage() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </RefreshIcon>
-                {isLoading ? 'Refreshing...' : 'Refresh'}
+                {isLoading ? t('refreshingButton') : t('refreshButton')}
               </RefreshButton>
             )}
           </Header>
           
           {errorMessage && (
             <AlertContainer $type={isAuthError ? 'auth' : 'error'} role="alert">
-              <AlertTitle>{isAuthError ? 'Authentication Error' : 'Error'}</AlertTitle>
+              <AlertTitle>{isAuthError ? t('authErrorTitle') : t('errorTitle')}</AlertTitle>
               <AlertText>{errorMessage}</AlertText>
               {isAuthError && (
                 <SignInButton onClick={handleRetryAuth}>
-                  Sign in again
+                  {t('signInButton')}
                 </SignInButton>
               )}
             </AlertContainer>
@@ -304,18 +321,18 @@ export default function AnalyticsPage() {
           
           {!hasUser ? (
             <AlertContainer $type="warning" role="alert">
-              <AlertTitle>Authentication Required</AlertTitle>
-              <AlertText>Please sign in to view analytics.</AlertText>
+              <AlertTitle>{t('authErrorTitle')}</AlertTitle>
+              <AlertText>{t('authRequired')}</AlertText>
             </AlertContainer>
           ) : !selectedWorkspace && !workspacesLoading ? (
             <WorkspaceSelectAlert role="alert">
-              <WorkspaceAlertTitle>No Workspace Selected</WorkspaceAlertTitle>
-              <WorkspaceAlertText>Please select a workspace from the sidebar to view your analytics.</WorkspaceAlertText>
+              <WorkspaceAlertTitle>{t('noWorkspace')}</WorkspaceAlertTitle>
+              <WorkspaceAlertText>{t('selectWorkspacePrompt')}</WorkspaceAlertText>
               {workspaces.length === 0 ? (
-                <WorkspaceAlertSmallText>You don't have any workspaces yet. Create one to get started.</WorkspaceAlertSmallText>
+                <WorkspaceAlertSmallText>{t('noWorkspacesYet')}</WorkspaceAlertSmallText>
               ) : (
                 <DashboardButton onClick={handleGoToDashboard}>
-                  Go to Dashboard
+                  {t('dashboardButton')}
                 </DashboardButton>
               )}
             </WorkspaceSelectAlert>
@@ -324,7 +341,7 @@ export default function AnalyticsPage() {
           ) : analytics ? (
             <AnalyticsContainer>
               <PerformanceOverview 
-                analytics={analytics as UserPerformanceAnalytics} 
+                analytics={analytics} 
                 isLoading={isLoading && !isInitialLoad}
                 getSubjectName={getSubjectName}
               />
@@ -336,12 +353,12 @@ export default function AnalyticsPage() {
             </AnalyticsContainer>
           ) : selectedWorkspace ? (
             <NoDataContainer>
-              <NoDataTitle>No Analytics Data</NoDataTitle>
+              <NoDataTitle>{t('noDataTitle')}</NoDataTitle>
               <NoDataText>
-                No analytics data is available for this workspace yet. Complete some quizzes to see your performance analytics.
+                {t('noDataText')}
               </NoDataText>
               <NoDataHint>
-                Try taking quizzes on different subjects to track your progress and see detailed analytics here.
+                {t('noDataHint')}
               </NoDataHint>
             </NoDataContainer>
           ) : null}

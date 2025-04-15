@@ -1,110 +1,60 @@
 "use client"
-import React, { useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
-import styled from '@emotion/styled';
-import { Container, Box, Typography, TextField, Button, Alert, CircularProgress } from '@mui/material';
-import { supabase } from '../../app/lib-server/supabaseClient';
-import GoogleLogin from './GoogleLogin';
+import React from 'react';
+import { Grid, useMediaQuery, useTheme } from '@mui/material';
+import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 
-interface LoginFormInputs {
-  email: string;
-  password: string;
-}
+import PublicLayout from '@/components/PublicLayout';
+import { LoginForm, WelcomeBanner, PageContainer, BrandingBox } from './components';
+import Logo from '@/components/Logo';
 
-const StyledContainer = styled(Container)`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 100vh;
-`;
-
-const LoginPage = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const router = useRouter();
-
-  const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
-    setIsLoading(true);
-    setErrorMsg(null);
-    
-    try {
-      const reponse = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-      const {error} = reponse;
-      console.log("response => ", reponse);
-      
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
-        // Redirect to dashboard after successful login
-        router.push('/dashboard');
-      }
-    } catch (error: any) {
-      setErrorMsg(error.message || 'An error occurred during login');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+const LoginPage: React.FC = () => {
+  const t = useTranslations('LoginPage');
+  const theme = useTheme();
+  const locale = useLocale();
+  const isRtl = locale === 'he';
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   return (
-    <StyledContainer maxWidth="sm">
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-          p: 3,
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          backgroundColor: '#fff',
+    <PublicLayout>
+      <PageContainer 
+        sx={{ 
+          direction: isRtl ? 'rtl' : 'ltr',
+          pb: 4
         }}
       >
-        <Typography variant="h4" align="center" gutterBottom>
-          Login
-        </Typography>
-        {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <TextField
-            label="Email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            {...register('email', { required: 'Email is requlaired' })}
-            error={!!errors.email}
-            helperText={errors.email ? errors.email.message : ''}
-            disabled={isLoading}
-          />
-          <TextField
-            label="Password"
-            type="password"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            {...register('password', { required: 'Password is required' })}
-            error={!!errors.password}
-            helperText={errors.password ? errors.password.message : ''}
-            disabled={isLoading}
-          />
-          <Button 
-            type="submit" 
-            variant="contained" 
-            color="primary" 
-            fullWidth 
-            sx={{ mt: 2 }}
-            disabled={isLoading}
-            startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
+        {isMobile && (
+          <BrandingBox>
+            <Logo width={48} height={48} variant="auto" />
+          </BrandingBox>
+        )}
+        
+        <Grid 
+          container 
+          spacing={3} 
+          sx={{ 
+            maxWidth: 1000,
+            width: '100%'
+          }}
+        >
+          <Grid item xs={12} md={5} sx={{ display: 'flex', justifyContent: 'center' }}>
+            <LoginForm />
+          </Grid>
+          
+          <Grid 
+            item 
+            xs={12} 
+            md={7} 
+            sx={{ 
+              display: { xs: 'none', md: 'flex' },
+              alignItems: 'center'
+            }}
           >
-            {isLoading ? 'Logging in...' : 'Login'}
-          </Button>
-          <GoogleLogin />
-        </form>
-      </Box>
-    </StyledContainer>
+            <WelcomeBanner />
+          </Grid>
+        </Grid>
+      </PageContainer>
+    </PublicLayout>
   );
 };
 

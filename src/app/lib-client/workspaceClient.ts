@@ -95,15 +95,25 @@ export async function updateWorkspaceClient(
  */
 export async function deleteWorkspaceClient(workspaceId: string, token: string): Promise<void> {
   try {
-    await axiosInstance.delete(`/api/workspaces/${workspaceId}`, {
+    const response = await axiosInstance.delete(`/api/workspaces/${workspaceId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
+    
+    // Check for successful response
+    if (response.status !== 200) {
+      throw new Error(`Failed to delete workspace with status: ${response.status}`);
+    }
+    
+    return response.data;
   } catch (error) {
     if (error instanceof AxiosError) {
       if (error.response?.status === 401) {
         throw new Error('Authentication error: Please log in again to delete workspace');
+      }
+      if (error.response?.status === 404) {
+        throw new Error('Workspace not found. It may have already been deleted.');
       }
       if (error.response?.data?.error) {
         throw new Error(error.response.data.error);

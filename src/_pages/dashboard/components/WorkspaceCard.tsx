@@ -1,12 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import {
-  Card,
-  CardContent,
   CardActionArea,
-  Typography,
-  Box,
-  IconButton,
+  CardContent,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -15,7 +11,20 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import FolderIcon from '@mui/icons-material/Folder';
 import { Workspace } from '@/app/models/workspace';
+import {
+  BaseCard,
+  CardHeader,
+  CardTitleContainer,
+  CardIconAvatar,
+  CardTitle,
+  CardMenuButton,
+  CardFooter,
+  CardDate
+} from './DashboardStyledComponents';
+import { accent } from '../../../../colors';
+import LinearProgress from '@mui/material/LinearProgress';
 
 interface WorkspaceCardProps {
   workspace?: Workspace;
@@ -78,53 +87,35 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = ({ workspace, onClick, onEdi
 
   return (
     <>
-      <Card
-        sx={{
-          mb: 2,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          '&:hover': {
-            transform: 'translateY(-3px)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-          },
-          maxWidth: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
-        <CardActionArea
-          onClick={handleClick}
-          sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
-        >
-          <CardContent sx={{ p: 2, pb: 1.5, flexGrow: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 0.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', maxWidth: 'calc(100% - 50px)' }}>
-                <Typography variant="subtitle1" noWrap sx={{ fontWeight: 500 }}>
+      <BaseCard sx={{ mb: 2 }}>
+        <CardActionArea onClick={handleClick}>
+          <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
+            <CardHeader>
+              <CardTitleContainer>
+                <CardIconAvatar sx={{ bgcolor: accent.yellow.light, width: 28, height: 28 }}>
+                  <FolderIcon fontSize="small" />
+                </CardIconAvatar>
+                <CardTitle variant="subtitle1">
                   {workspace.name || 'Unnamed Workspace'}
-                </Typography>
-              </Box>
-              <IconButton 
-                size="small" 
+                </CardTitle>
+              </CardTitleContainer>
+              <CardMenuButton
+                size="small"
                 onClick={handleMenuOpen}
-                sx={{ 
-                  ml: 'auto', 
-                  p: 0.5,
-                  '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' } 
-                }}
+                aria-label="workspace options"
               >
                 <MoreVertIcon fontSize="small" />
-              </IconButton>
-            </Box>
+              </CardMenuButton>
+            </CardHeader>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-              <Typography variant="caption" color="text.secondary">
+            <CardFooter>
+              <CardDate variant="caption">
                 {formattedDate}
-              </Typography>
-            </Box>
+              </CardDate>
+            </CardFooter>
           </CardContent>
         </CardActionArea>
-      </Card>
+      </BaseCard>
 
       <Menu
         anchorEl={anchorEl}
@@ -133,13 +124,21 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = ({ workspace, onClick, onEdi
         onClick={handleMenuClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          elevation: 2,
+          sx: { 
+            minWidth: 180,
+            borderRadius: '8px',
+            mt: 0.5
+          }
+        }}
       >
         {onEdit && (
           <MenuItem onClick={handleEdit}>
             <ListItemIcon>
               <EditIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Edit Workspace</ListItemText>
+            <ListItemText primary="Edit Workspace" />
           </MenuItem>
         )}
         
@@ -148,7 +147,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = ({ workspace, onClick, onEdi
             <ListItemIcon>
               <DeleteIcon fontSize="small" color="error" />
             </ListItemIcon>
-            <ListItemText>Delete Workspace</ListItemText>
+            <ListItemText primary="Delete Workspace" sx={{ color: 'error.main' }} />
           </MenuItem>
         )}
       </Menu>

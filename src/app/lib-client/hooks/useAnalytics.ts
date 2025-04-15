@@ -23,6 +23,12 @@ export function useAnalytics() {
   const MAX_RETRIES = 2;
   const DEBOUNCE_TIME = 10000; // 10 seconds
   
+  console.log('useAnalytics - current state:', { 
+    userId, 
+    workspaceId: selectedWorkspace?.id, 
+    workspaceName: selectedWorkspace?.name 
+  });
+  
   // Use the performance analytics hook
   const { 
     fetchAnalytics, 
@@ -32,34 +38,48 @@ export function useAnalytics() {
   } = usePerformanceAnalytics(userId || '', workspaceId, { 
     autoFetch: false,
     onError: (err) => {
+      console.error('useAnalytics - Error from usePerformanceAnalytics:', err.message);
       setErrorMessage(err.message);
       setIsAuthError(err.message.includes('Authentication required'));
     }
   });
   
+  // Convert analytics data to UserPerformanceAnalytics format if needed
+  const formattedAnalytics = analytics ? (analytics as unknown as UserPerformanceAnalytics) : null;
+  
   // Fetch analytics with debounce and retry logic
   const fetchAnalyticsData = async () => {
     if (!userId || !workspaceId || retryCount >= MAX_RETRIES) {
+      console.log('useAnalytics - Skipping fetch due to missing data or max retries:', {
+        hasUserId: !!userId,
+        hasWorkspaceId: !!workspaceId,
+        retryCount,
+        MAX_RETRIES
+      });
       return;
     }
     
     const now = Date.now();
     if (now - lastFetchTime < DEBOUNCE_TIME) {
+      console.log('useAnalytics - Skipping fetch due to debounce');
       return;
     }
     
     setLastFetchTime(now);
     
     try {
+      console.log('useAnalytics - Fetching analytics data for:', { userId, workspaceId });
       await fetchAnalytics(userId, workspaceId);
       setIsInitialLoad(false);
     } catch (err) {
+      console.error('useAnalytics - Error fetching data:', err);
       setRetryCount(prev => prev + 1);
     }
   };
   
   // Reset state when user or workspace changes
   useEffect(() => {
+    console.log('useAnalytics - User or workspace changed, resetting state');
     setRetryCount(0);
     setLastFetchTime(0);
     setIsInitialLoad(true);
@@ -68,6 +88,7 @@ export function useAnalytics() {
   // Fetch data when dependencies change
   useEffect(() => {
     if (userId && workspaceId) {
+      console.log('useAnalytics - Dependencies changed, fetching data');
       fetchAnalyticsData();
     }
   }, [userId, workspaceId, retryCount]);
@@ -75,6 +96,7 @@ export function useAnalytics() {
   // Handle errors
   useEffect(() => {
     if (error) {
+      console.log('useAnalytics - Error state updated:', error.message);
       setErrorMessage(error.message);
       setIsAuthError(error.message.includes('Authentication required'));
     } else {
@@ -85,6 +107,7 @@ export function useAnalytics() {
   
   // Function to retry authentication
   const handleRetryAuth = () => {
+    console.log('useAnalytics - Retrying authentication');
     setErrorMessage(null);
     setIsAuthError(false);
     window.location.href = `/login?returnUrl=${encodeURIComponent(window.location.pathname)}`;
@@ -92,13 +115,14 @@ export function useAnalytics() {
   
   // Function to manually refresh analytics
   const refreshAnalytics = () => {
+    console.log('useAnalytics - Manual refresh triggered');
     setRetryCount(0);
     setLastFetchTime(0);
     fetchAnalyticsData();
   };
   
   return {
-    analytics,
+    analytics: formattedAnalytics,
     isLoading,
     isInitialLoad,
     errorMessage,

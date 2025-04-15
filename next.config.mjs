@@ -6,28 +6,28 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig = {
     env: {
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
     },
     compiler: {
         emotion: {
           sourceMap: true,
-          autoLabel: "always",         // Always add labels in development
-          labelFormat: "[filename]-[local]", // Use the filename and the local variable name in the label
-        },
+          autoLabel: "always",
+          labelFormat: "[filename]-[local]"
+        }
     },
-    // Configure server-side features
+    // Updated server-side features with correct property names
     experimental: {
-      serverComponentsExternalPackages: [
-        'pdf-parse',
-        'mammoth',
-        'jszip',
-        'xml2js'
-      ],
-      serverExternalPackages: [],
       optimizeCss: false,
       scrollRestoration: false,
-      optimizePackageImports: [],
+      optimizePackageImports: []
     },
+    // New property for external packages (moved from experimental)
+    serverExternalPackages: [
+      'pdf-parse',
+      'mammoth',
+      'jszip',
+      'xml2js'
+    ],
     // Allow server components to properly load node modules
     webpack: (config, { isServer }) => {
       if (isServer) {
@@ -37,6 +37,21 @@ const nextConfig = {
           fs: false,
           net: false,
           tls: false,
+          crypto: false,
+          stream: false,
+          path: false,
+          process: false
+        };
+      } else {
+        // Client-side webpack config
+        config.resolve.fallback = {
+          ...config.resolve.fallback,
+          fs: false,
+          path: false,
+          os: false,
+          crypto: false,
+          stream: false,
+          process: false
         };
       }
       return config;
@@ -44,12 +59,12 @@ const nextConfig = {
     eslint: {
       // Warning: This allows production builds to successfully complete even if
       // your project has ESLint errors.
-      ignoreDuringBuilds: true,
+      ignoreDuringBuilds: true
     },
     typescript: {
       // Warning: This allows production builds to successfully complete even if
       // your project has TypeScript errors.
-      ignoreBuildErrors: true,
+      ignoreBuildErrors: true
     },
     // Add these new configurations
     output: 'standalone',
@@ -62,10 +77,10 @@ const nextConfig = {
         {
           source: '/dashboard/components/:path*',
           destination: '/dashboard',
-          permanent: false,
-        },
+          permanent: false
+        }
       ];
-    },
+    }
 };
  
 export default withNextIntl(nextConfig);

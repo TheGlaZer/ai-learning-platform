@@ -1,3 +1,10 @@
+/**
+ * FILE TYPE PROCESSORS - SERVER ONLY FUNCTIONALITY
+ * 
+ * IMPORTANT: This file contains server-side functionality that uses Node.js modules.
+ * Do not import this file directly in client components.
+ * Use API routes to access this functionality from the client.
+ */
 import { FileTypeProcessorMap, FileTypeProcessorOptions } from './types';
 import { processPdfFile } from './pdfProcessor';
 import { processDocxFile } from './docxProcessor';

@@ -1,16 +1,19 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, CircularProgress, Grid, Paper } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { Workspace } from '@/app/models/workspace';
 import { FileMetadata } from '@/app/models/file';
 import { Quiz } from '@/app/models/quiz';
 import { Subject } from '@/app/models/subject';
+import { PastExam } from '@/app/models/pastExam';
 import { useQuizGeneration } from '@/hooks/useQuizGeneration';
 import { useSubjectManagement } from '@/hooks/useSubjectManagement';
+import { usePastExams } from '@/hooks/usePastExams';
 import { deleteFileClient, updateFileMetadata } from "@/app/lib-client/fileClient";
 
+import { DashboardContainer, ContentPaper } from './components/DashboardStyledComponents';
 import WorkspaceList from './components/WorkspaceList';
 import FilesContainer from './components/FilesContainer';
 import WorkspaceDialog from './components/WorkspaceDialog';
@@ -19,6 +22,7 @@ import QuizGenerationDialog from './components/QuizGenerationDialog';
 import SubjectGenerationDialog from './components/SubjectGenerationDialog';
 import SubjectEditDialog from './components/SubjectEditDialog';
 import FileMetadataDialog from './components/FileMetadataDialog';
+import PastExamDialog from './components/PastExamDialog';
 
 const DashboardPage = () => {
   const { userId, accessToken } = useAuth();
@@ -50,6 +54,14 @@ const DashboardPage = () => {
     generateSubjects,
   } = useSubjectManagement(userId);
   
+  const {
+    workspacePastExams,
+    fetchPastExams,
+    uploadPastExam,
+    updatePastExam,
+    deletePastExam,
+  } = usePastExams(userId || '', accessToken);
+  
   // State for dialogs
   const [openWorkspaceDialog, setOpenWorkspaceDialog] = useState(false);
   const [openFileUploadDialog, setOpenFileUploadDialog] = useState(false);
@@ -64,12 +76,37 @@ const DashboardPage = () => {
   const [openFileMetadataDialog, setOpenFileMetadataDialog] = useState(false);
   const [editingFile, setEditingFile] = useState<FileMetadata | null>(null);
 
+  // State for past exam handling
+  const [openPastExamDialog, setOpenPastExamDialog] = useState(false);
+  const [editingPastExam, setEditingPastExam] = useState<PastExam | null>(null);
+
+  // Create a single loading state that captures all initial loading conditions
+  const isInitialLoading = workspacesLoading || !userId;
+
   useEffect(() => {
     if (selectedWorkspace) {
-      fetchWorkspaceQuizzes(selectedWorkspace.id);
-      fetchWorkspaceSubjects(selectedWorkspace.id);
+      // Fetch all data in parallel to speed up initial load
+      Promise.all([
+        fetchWorkspaceQuizzes(selectedWorkspace.id),
+        fetchWorkspaceSubjects(selectedWorkspace.id),
+        fetchPastExams(selectedWorkspace.id)
+      ]).catch(error => {
+        console.error('Error fetching workspace data:', error);
+      });
     }
   }, [selectedWorkspace]);
+  
+  // Use refs to track if functions have changed
+  const fetchQuizzesRef = React.useRef(fetchWorkspaceQuizzes);
+  const fetchSubjectsRef = React.useRef(fetchWorkspaceSubjects);
+  const fetchPastExamsRef = React.useRef(fetchPastExams);
+  
+  // Update refs when functions change
+  useEffect(() => {
+    fetchQuizzesRef.current = fetchWorkspaceQuizzes;
+    fetchSubjectsRef.current = fetchWorkspaceSubjects;
+    fetchPastExamsRef.current = fetchPastExams;
+  }, [fetchWorkspaceQuizzes, fetchWorkspaceSubjects, fetchPastExams]);
 
   const handleOpenWorkspaceDialog = () => {
     setOpenWorkspaceDialog(true);
@@ -135,7 +172,10 @@ const DashboardPage = () => {
 
   const handleQuizGenerated = (quiz: Quiz) => {
     console.log('Quiz generated:', quiz);
-    // The quiz is automatically added to workspaceQuizzes by the hook
+    // Refresh quizzes immediately after generating one
+    if (selectedWorkspace) {
+      fetchWorkspaceQuizzes(selectedWorkspace.id);
+    }
   };
   
   const handleSubjectsGenerated = (subjects: Subject[]) => {
@@ -256,42 +296,68 @@ const DashboardPage = () => {
     }
   };
 
-  if (workspacesLoading) {
+  const handleOpenPastExamDialog = () => {
+    setEditingPastExam(null);
+    setOpenPastExamDialog(true);
+  };
+
+  const handleClosePastExamDialog = () => {
+    setEditingPastExam(null);
+    setOpenPastExamDialog(false);
+  };
+
+  const handleEditPastExam = (pastExam: PastExam) => {
+    setEditingPastExam(pastExam);
+    setOpenPastExamDialog(true);
+  };
+
+  const handleDeletePastExam = (pastExam: PastExam) => {
+    if (pastExam.id && selectedWorkspace) {
+      deletePastExam(pastExam.id, selectedWorkspace.id);
+    }
+  };
+
+  const handleSavePastExam = async (pastExam: Partial<PastExam>, file?: File) => {
+    if (!selectedWorkspace || !userId) return;
+
+    try {
+      if (pastExam.id) {
+        // Update existing past exam
+        await updatePastExam(pastExam);
+      } else if (file) {
+        // Create new past exam with file
+        await uploadPastExam(pastExam, file, selectedWorkspace.id);
+      }
+    } catch (error) {
+      console.error('Error saving past exam:', error);
+    }
+  };
+
+  if (isInitialLoading) {
     return (
-      <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
+      <DashboardContainer sx={{ display: 'flex', justifyContent: 'center' }}>
         <CircularProgress />
-      </Box>
+      </DashboardContainer>
     );
   }
 
   if (workspacesError) {
     return (
-      <Box sx={{ p: 4 }}>
+      <DashboardContainer>
         <Typography color="error">{workspacesError}</Typography>
-      </Box>
+      </DashboardContainer>
     );
   }
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
-        Dashboard
-      </Typography>
-      
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 3,
-          minHeight: '400px',
-          maxHeight: 'calc(100vh - 200px)',
-          overflowY: 'auto'
-        }}
-      >
+    <DashboardContainer>
+      <ContentPaper>
         <FilesContainer
           selectedWorkspace={selectedWorkspace}
           files={selectedWorkspace ? workspaceFiles[selectedWorkspace.id] || [] : []}
           quizzes={selectedWorkspace ? workspaceQuizzes[selectedWorkspace.id] || [] : []}
           subjects={selectedWorkspace ? workspaceSubjects[selectedWorkspace.id] || [] : []}
+          pastExams={selectedWorkspace ? workspacePastExams[selectedWorkspace.id] || [] : []}
           userId={userId || ''}
           onDeleteFile={handleDeleteFile}
           onEditFile={handleEditFile}
@@ -303,8 +369,11 @@ const DashboardPage = () => {
           onOpenQuiz={handleOpenQuiz}
           onDeleteQuiz={handleDeleteQuiz}
           onAddSubject={handleAddSubject}
+          onUploadPastExam={handleOpenPastExamDialog}
+          onEditPastExam={handleEditPastExam}
+          onDeletePastExam={handleDeletePastExam}
         />
-      </Paper>
+      </ContentPaper>
       
       {/* Create Workspace Dialog */}
       <WorkspaceDialog
@@ -362,7 +431,18 @@ const DashboardPage = () => {
         file={editingFile}
         onSave={handleSaveFileMetadata}
       />
-    </Box>
+
+      {/* Past Exam Dialog */}
+      {selectedWorkspace && (
+        <PastExamDialog
+          open={openPastExamDialog}
+          onClose={handleClosePastExamDialog}
+          pastExam={editingPastExam}
+          workspaceId={selectedWorkspace.id}
+          onSave={handleSavePastExam}
+        />
+      )}
+    </DashboardContainer>
   );
 };
 

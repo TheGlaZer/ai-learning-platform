@@ -94,7 +94,6 @@ interface QuizResultsProps {
   onRetry: () => void;
   onClose: () => void;
   onReviewQuestions: () => void;
-  onSubmitResults?: () => void;
   submissionSuccess?: boolean;
   isSubmitting?: boolean;
 }
@@ -106,7 +105,6 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   onRetry,
   onClose,
   onReviewQuestions,
-  onSubmitResults,
   submissionSuccess = false,
   isSubmitting = false
 }) => {
@@ -236,18 +234,6 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           >
             Review Answers
           </Button>
-          
-          {/* Add Submit Results button if not yet submitted */}
-          {onSubmitResults && !submissionSuccess && !isSubmitting && (
-            <Button
-              variant="contained"
-              color="success"
-              onClick={onSubmitResults}
-              startIcon={<SaveIcon />}
-            >
-              Submit Results
-            </Button>
-          )}
           
           {/* Add Export Quiz button */}
           {quiz.id && (

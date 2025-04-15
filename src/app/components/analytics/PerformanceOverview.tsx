@@ -1,8 +1,11 @@
+// This component now uses colors from the theme and translations
 import React from 'react';
 import styled from '@emotion/styled';
 import { UserPerformanceAnalytics } from '@/app/models/quizAnswer';
 import { PercentageSlider } from './PercentageSlider';
 import { AnalyticsCard } from './AnalyticsCard';
+import { useTranslations } from 'next-intl';
+import * as colors from '../../../../colors';
 
 interface PerformanceOverviewProps {
   analytics: UserPerformanceAnalytics;
@@ -25,8 +28,8 @@ const LoadingPulse = styled.div`
 
 const LoadingBar = styled(LoadingPulse)<{ $height: string; $width?: string }>`
   height: ${props => props.$height};
-  background-color: #e5e7eb;
-  border-radius: 0.25rem;
+  background-color: ${colors.border.light};
+  border-radius: 0.5rem;
   width: ${props => props.$width || '100%'};
   margin-bottom: 1.5rem;
 `;
@@ -43,20 +46,22 @@ const GridContainer = styled.div`
 `;
 
 const SubjectKnowledgeCard = styled.div`
-  background-color: #f3e8ff;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  transition: box-shadow 0.3s ease;
+  background-color: rgba(151, 118, 255, 0.08); // accent.purple with alpha
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
   
   &:hover {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 10px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
   }
 `;
 
 const SubjectTitle = styled.h3`
   font-size: 1.125rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: ${colors.text.primary};
 `;
 
 const SubjectStats = styled.div`
@@ -66,41 +71,65 @@ const SubjectStats = styled.div`
 `;
 
 const SubjectCount = styled.div`
-  font-size: 2.25rem;
+  font-size: 2.5rem;
   font-weight: 700;
-  color: #9333ea;
+  color: ${colors.accent.purple.main};
+  line-height: 1;
 `;
 
 const SubjectLabel = styled.div`
   font-size: 0.875rem;
-  color: #4b5563;
+  color: ${colors.text.secondary};
   margin-bottom: 0.25rem;
 `;
 
 const SubjectDescription = styled.div`
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   font-size: 0.875rem;
-  color: #4b5563;
+  color: ${colors.text.secondary};
 `;
 
 const SectionTitle = styled.h3`
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  color: ${colors.text.primary};
+  position: relative;
+  padding-left: 1rem;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: ${colors.primary.main};
+    border-radius: 4px;
+  }
 `;
 
 const SectionContainer = styled.div`
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  
+  &:last-of-type {
+    margin-bottom: 0;
+  }
 `;
 
 const SliderStack = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 `;
 
 const EmptyMessage = styled.p`
-  color: #4b5563;
+  color: ${colors.text.secondary};
+  background-color: ${colors.background.lighter};
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  text-align: center;
 `;
 
 export const PerformanceOverview: React.FC<PerformanceOverviewProps> = ({
@@ -108,9 +137,11 @@ export const PerformanceOverview: React.FC<PerformanceOverviewProps> = ({
   isLoading = false,
   getSubjectName
 }) => {
+  const t = useTranslations('Analytics');
+  
   if (isLoading) {
     return (
-      <AnalyticsCard title="Performance Overview">
+      <AnalyticsCard title={t('overallScore')}>
         <LoadingPulse>
           <LoadingBar $height="1rem" $width="75%" />
           <LoadingBar $height="8rem" />
@@ -124,9 +155,9 @@ export const PerformanceOverview: React.FC<PerformanceOverviewProps> = ({
 
   if (!analytics) {
     return (
-      <AnalyticsCard title="Performance Overview">
+      <AnalyticsCard title={t('overallScore')}>
         <EmptyMessage>
-          Complete some quizzes to see your performance analytics.
+          {t('noDataText')}
         </EmptyMessage>
       </AnalyticsCard>
     );
@@ -141,35 +172,35 @@ export const PerformanceOverview: React.FC<PerformanceOverviewProps> = ({
   };
 
   return (
-    <AnalyticsCard title="Performance Overview">
+    <AnalyticsCard title={t('overallScore')}>
       <GridContainer>
         <PercentageSlider 
-          label="Overall Score" 
+          label={t('overallScore')} 
           percentage={analytics.overallScore}
           color={getScoreColor(analytics.overallScore)}
-          detail={`Based on ${analytics.totalQuizzes} quizzes`}
+          detail={t('basedOnQuizzes', { count: analytics.totalQuizzes })}
         />
         
         <SubjectKnowledgeCard>
-          <SubjectTitle>Subject Knowledge</SubjectTitle>
+          <SubjectTitle>{t('subjectKnowledge')}</SubjectTitle>
           <SubjectStats>
             <SubjectCount>
               {analytics.subjectPerformance.length}
             </SubjectCount>
             <SubjectLabel>
-              subjects tracked
+              {t('subjectsTracked')}
             </SubjectLabel>
           </SubjectStats>
           <SubjectDescription>
             {analytics.totalQuizzes > 0 
-              ? 'Keep taking quizzes to improve your tracking' 
-              : 'Take quizzes to start tracking subjects'}
+              ? t('keepTakingQuizzes')
+              : t('takeQuizzesToStart')}
           </SubjectDescription>
         </SubjectKnowledgeCard>
       </GridContainer>
       
       <SectionContainer>
-        <SectionTitle>Areas for Improvement</SectionTitle>
+        <SectionTitle>{t('areasForImprovement')}</SectionTitle>
         {analytics.weakSubjects.length > 0 ? (
           <SliderStack>
             {analytics.weakSubjects.map((subject) => (
@@ -178,18 +209,21 @@ export const PerformanceOverview: React.FC<PerformanceOverviewProps> = ({
                 label={getSubjectName(subject.subjectId)}
                 percentage={subject.score}
                 color={getScoreColor(subject.score)}
-                detail={`${subject.correctAnswers} correct of ${subject.totalQuestions} questions`}
+                detail={t('correctOf', { 
+                  correct: subject.correctAnswers, 
+                  total: subject.totalQuestions 
+                })}
                 tooltip={`Subject ID: ${subject.subjectId}`}
               />
             ))}
           </SliderStack>
         ) : (
-          <EmptyMessage>No weak areas identified yet. Keep taking quizzes!</EmptyMessage>
+          <EmptyMessage>{t('noWeakAreas')}</EmptyMessage>
         )}
       </SectionContainer>
       
       <SectionContainer>
-        <SectionTitle>Your Strengths</SectionTitle>
+        <SectionTitle>{t('yourStrengths')}</SectionTitle>
         {analytics.strongSubjects.length > 0 ? (
           <SliderStack>
             {analytics.strongSubjects.map((subject) => (
@@ -198,13 +232,16 @@ export const PerformanceOverview: React.FC<PerformanceOverviewProps> = ({
                 label={getSubjectName(subject.subjectId)}
                 percentage={subject.score}
                 color={getScoreColor(subject.score)}
-                detail={`${subject.correctAnswers} correct of ${subject.totalQuestions} questions`}
+                detail={t('correctOf', { 
+                  correct: subject.correctAnswers, 
+                  total: subject.totalQuestions 
+                })}
                 tooltip={`Subject ID: ${subject.subjectId}`}
               />
             ))}
           </SliderStack>
         ) : (
-          <EmptyMessage>No strengths identified yet. Keep taking quizzes!</EmptyMessage>
+          <EmptyMessage>{t('noStrengths')}</EmptyMessage>
         )}
       </SectionContainer>
     </AnalyticsCard>

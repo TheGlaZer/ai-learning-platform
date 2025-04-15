@@ -14,6 +14,8 @@ export interface AIServiceOptions {
   existingSubjects?: any[];
   organizationId?: string;
   includeFileReferences?: boolean; // Whether to include file references in explanations
+  includePastExam?: boolean; // Whether to include past exam reference
+  pastExamContent?: string; // Content from past exam file
 }
 
 export interface AIService {

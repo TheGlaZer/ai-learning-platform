@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Container, Box, Typography, Alert, CircularProgress } from '@mui/material';
+import { Button, Container, Alert, CircularProgress } from '@mui/material';
 import styled from '@emotion/styled';
+import { useTranslations, useLocale } from 'next-intl';
 import { supabase } from '../../app/lib-server/supabaseClient';
 import GoogleIcon from '@mui/icons-material/Google';
-import { getCurrentOrigin } from '@/app/utils/getCurrentOrigin';
 
 const StyledContainer = styled(Container)`
   display: flex;
@@ -15,6 +15,8 @@ const StyledContainer = styled(Container)`
 `;
 
 const GoogleLogin = () => {
+    const t = useTranslations('LoginPage');
+    const locale = useLocale();
     const router = useRouter();
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -24,8 +26,8 @@ const GoogleLogin = () => {
         setErrorMsg(null);
         
         try {
-            // Simply use window.location.origin which will be correct in both environments
-            const redirectUrl = `${window.location.origin}/he/oauth-callback`;
+            // Use current locale for the redirect URL
+            const redirectUrl = `${window.location.origin}/${locale}/oauth-callback`;
                 
             const reponse = await supabase.auth.signInWithOAuth({
                 provider: 'google',
@@ -34,8 +36,7 @@ const GoogleLogin = () => {
                 },
             });
             const { error } = reponse;
-            console.log("response => ", reponse);
-
+            
             if (error) {
                 setErrorMsg(error.message);
                 setIsLoading(false); // Reset loading state on error
@@ -56,11 +57,12 @@ const GoogleLogin = () => {
                 color="primary"
                 fullWidth
                 onClick={handleGoogleSignIn}
-                sx={{ mt: 2 }}
+                sx={{ mt: 0.5, mb: 1 }}
                 disabled={isLoading}
-                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <GoogleIcon />}
+                startIcon={isLoading ? <CircularProgress size={16} color="inherit" /> : <GoogleIcon />}
+                size="medium"
             >
-                {isLoading ? 'Connecting...' : 'Sign in with Google'}
+                {isLoading ? t('connecting') : t('googleLogin')}
             </Button>
         </StyledContainer>
     );

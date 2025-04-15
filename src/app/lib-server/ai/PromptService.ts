@@ -32,6 +32,11 @@ export class PromptService {
     // Construct base prompt
     let prompt = this.getBaseQuizPrompt(difficultyLevel, numberOfQuestions, topic, processedContent);
     
+    // Add past exam content if provided
+    if (options?.pastExamContent && options.includePastExam) {
+      prompt += this.getPastExamSection(options.pastExamContent);
+    }
+    
     // Add previously generated questions section to avoid repetition
     if (previousQuestions && previousQuestions.length > 0) {
       prompt += this.getPreviousQuestionsSection(previousQuestions);
@@ -232,6 +237,12 @@ ${userComments}
 FOCUS ON THESE SUBJECTS (GIVE THESE HIGH PRIORITY):
 ${selectedSubjectNames.join(', ')}
 
+IMPORTANT REQUIREMENT FOR QUESTIONS:
+- Each question MUST be related to ONE specific subject from the list above
+- Distribute questions evenly across all selected subjects when possible
+- Make sure each question clearly tests concepts that are unique to its related subject
+- If a question covers multiple subjects, assign it to the MOST relevant subject
+
 `;
   }
 
@@ -267,12 +278,19 @@ Format the quiz as a JSON object with the following structure:
         {"id": "d", "text": "Fourth option"}
       ],
       "correctAnswer": "a",
-      "explanation": "Explanation of why this is the correct answer AND why the other options are incorrect${includeFileReferences ? '. Reference: Line X' : ''}"
+      "explanation": "Explanation of why this is the correct answer AND why the other options are incorrect${includeFileReferences ? '. Reference: Line X' : ''}",
+      "relatedSubject": "Name of the specific subject this question is testing"
     }
   ]
 }
 
-IMPORTANT: Return ONLY the raw JSON object without any markdown formatting, code blocks, or explanations. Do not include any \`\`\` markers, the word "json", or any other text. The response must be pure, valid JSON that can be directly parsed.
+IMPORTANT: 
+- For each question, set the "relatedSubject" field to ONE specific subject name from the provided list of subjects
+- The "relatedSubject" field is REQUIRED for every question
+- Each question should test knowledge specific to its related subject
+- Return ONLY the raw JSON object without any markdown formatting, code blocks, or explanations
+- Do not include any \`\`\` markers, the word "json", or any other text
+- The response must be pure, valid JSON that can be directly parsed
 
 Make sure all questions are directly related to the content provided and all JSON is properly formatted with correct syntax.
 `;
@@ -376,6 +394,28 @@ DO NOT translate to English - generate native Hebrew subject names directly.
     
     return `
 Create the subjects in English language.
+`;
+  }
+
+  /**
+   * Gets the section for past exam content to be referenced
+   */
+  private getPastExamSection(pastExamContent: string): string {
+    return `
+**IMPORTANT - PAST EXAM REFERENCE:**
+The following content is from a past exam. You MUST analyze it carefully and create questions that follow a similar pattern, style, and difficulty level.
+
+**PAST EXAM CONTENT:**
+${pastExamContent}
+
+**CRITICAL INSTRUCTIONS FOR PAST EXAM ADAPTATION:**
+1. Study the question patterns, style, and formatting in the past exam
+2. Match the cognitive difficulty level of questions
+3. Create questions that test similar concepts but are not direct copies
+4. Follow the same question structure and complexity
+5. Use the material from the main content to create questions that would fit seamlessly into the past exam
+6. This is a HIGH PRIORITY instruction - the quiz MUST resemble the past exam in style and approach
+
 `;
   }
 }

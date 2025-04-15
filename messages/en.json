@@ -1,10 +1,142 @@
 {
   "HomePage": {
     "title": "Hello world! its ofek !!!",
-    "about": "Go to the about page"
+    "about": "Go to the about page",
+    "platformName": "AI Learning Platform",
+    "heroTitle": "Revolutionize Your Learning With",
+    "heroSubtitle": "AI-Powered Education",
+    "heroDescription": "Master new skills efficiently with personalized AI tutoring, adaptive learning paths, and interactive exercises.",
+    "getStartedButton": "Get Started Free",
+    "signInButton": "Sign In",
+    "joinStudentsText": "Join over {count} students already learning",
+    "featuresTitle": "Powerful AI Learning Features",
+    "featuresSubtitle": "Our platform combines cutting-edge AI technology with proven educational methodologies to deliver an unparalleled learning experience.",
+    "features": {
+      "aiTutoring": {
+        "title": "AI-Powered Tutoring",
+        "description": "Get personalized help from our advanced AI tutors that adapt to your learning style and pace."
+      },
+      "learningPaths": {
+        "title": "Customized Learning Paths",
+        "description": "Follow learning paths designed specifically for your goals, skills, and preferred learning methods."
+      },
+      "progressTracking": {
+        "title": "Progress Tracking",
+        "description": "Monitor your advancement with detailed analytics and progress reports to optimize your learning."
+      },
+      "collaborativeLearning": {
+        "title": "Collaborative Learning",
+        "description": "Connect with peers and participate in group exercises to enhance your understanding through collaboration."
+      }
+    },
+    "testimonialsTitle": "What Our Users Say",
+    "testimonialsSubtitle": "Thousands of learners have transformed their educational journey with our AI learning platform",
+    "testimonials": {
+      "testimonial1": {
+        "quote": "The AI tutoring has completely transformed how I approach difficult topics. It's like having a personal tutor available 24/7.",
+        "name": "Sarah Johnson",
+        "role": "Software Engineer"
+      },
+      "testimonial2": {
+        "quote": "As an educator, I've seen firsthand how this platform adapts to different learning styles. My students are more engaged than ever.",
+        "name": "Michael Chen",
+        "role": "University Professor"
+      },
+      "testimonial3": {
+        "quote": "The customized learning paths helped me acquire new skills at my own pace, and the progress tracking kept me motivated throughout.",
+        "name": "Aisha Patel",
+        "role": "Data Scientist"
+      }
+    },
+    "ctaTitle": "Start Your AI Learning Journey Today",
+    "ctaSubtitle": "Join thousands of students who are already experiencing the future of education. Your first week is completely free – no credit card required.",
+    "ctaButtonStart": "Get Started Free",
+    "ctaButtonLearn": "Learn More",
+    "ctaNoCredit": "No credit card required. Cancel anytime."
+  },
+  "SignupPage": {
+    "formTitle": "Join Our Learning Community",
+    "formSubtitle": "Create your account to start learning",
+    "fullNameLabel": "Full Name",
+    "fullNameRequired": "Full name is required",
+    "fullNameTooShort": "Name must be at least 2 characters",
+    "emailLabel": "Email Address",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email address",
+    "passwordLabel": "Password",
+    "passwordRequired": "Password is required",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "creatingAccount": "Creating Account...",
+    "createAccount": "Create Account",
+    "orDivider": "or",
+    "googleSignup": "Sign up with Google",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginLink": "Log In",
+    "welcomeTitle": "AI-Powered Learning",
+    "welcomeSubtitle": "Join thousands of learners enhancing their skills with our platform.",
+    "feature1Title": "Personalized Learning",
+    "feature1Desc": "AI-tailored content based on your learning style",
+    "feature2Title": "Interactive Experience",
+    "feature2Desc": "Engaging content that adapts to your progress",
+    "feature3Title": "Knowledge Library",
+    "feature3Desc": "Access quality educational materials",
+    "registrationSuccess": "Registration successful! Please check your email to confirm your account before logging in.",
+    "redirectingToDashboard": "Registration successful! Redirecting to dashboard..."
+  },
+  "LoginPage": {
+    "formTitle": "Welcome Back",
+    "formSubtitle": "Sign in to continue your learning journey",
+    "emailLabel": "Email Address",
+    "emailRequired": "Email is required",
+    "passwordLabel": "Password",
+    "passwordRequired": "Password is required",
+    "loggingIn": "Logging in...",
+    "login": "Log In",
+    "googleLogin": "Sign in with Google",
+    "connecting": "Connecting...",
+    "forgotPassword": "Forgot password?",
+    "newUser": "New to the platform?",
+    "signupLink": "Create an account",
+    "welcomeTitle": "Welcome Back to Learning",
+    "welcomeSubtitle": "Continue your personalized learning experience with AI assistance."
+  },
+  "Analytics": {
+    "pageTitle": "Learning Analytics",
+    "pageDescription": "Track your progress and identify areas for improvement",
+    "workspaceInfo": "Workspace: {name}",
+    "refreshButton": "Refresh",
+    "refreshingButton": "Refreshing...",
+    "errorTitle": "Error",
+    "authErrorTitle": "Authentication Error",
+    "authRequired": "Please sign in to view analytics",
+    "signInButton": "Sign in again",
+    "noWorkspace": "No Workspace Selected",
+    "selectWorkspacePrompt": "Please select a workspace from the sidebar to view your analytics.",
+    "noWorkspacesYet": "You don't have any workspaces yet. Create one to get started.",
+    "dashboardButton": "Go to Dashboard",
+    "noDataTitle": "No Analytics Data",
+    "noDataText": "No analytics data is available for this workspace yet. Complete some quizzes to see your performance analytics.",
+    "noDataHint": "Try taking quizzes on different subjects to track your progress and see detailed analytics here.",
+    "subjectPerformanceTitle": "Subject Performance",
+    "subjectDistributionTitle": "Subject Distribution",
+    "questionsDistributionFooter": "Distribution of {total} questions across {count} subjects",
+    "overallScore": "Overall Score",
+    "basedOnQuizzes": "Based on {count} quizzes",
+    "subjectKnowledge": "Subject Knowledge",
+    "subjectsTracked": "subjects tracked",
+    "keepTakingQuizzes": "Keep taking quizzes to improve your tracking",
+    "takeQuizzesToStart": "Take quizzes to start tracking subjects",
+    "areasForImprovement": "Areas for Improvement",
+    "noWeakAreas": "No weak areas identified yet. Keep taking quizzes!",
+    "yourStrengths": "Your Strengths",
+    "noStrengths": "No strengths identified yet. Keep taking quizzes!",
+    "correctOf": "{correct} correct of {total} questions",
+    "notEnoughData": "Not enough data to display performance charts. Complete more quizzes to see detailed analytics."
   },
   "FileUploadForm": {
-
     "uploadFileTitle": "Upload File for Summarization",
     "fileLabel": "File",
     "fileRequired": "File is required",
@@ -21,6 +153,67 @@
     "preferredFormatRequired": "Select a preferred format",
     "highlightTermsLabel": "Highlight Important Terms?",
     "summarizeButton": "Summarize"
-   }
+  },
+  "Workspace": {
+    "deleteDialog": {
+      "title": "Delete Workspace",
+      "message": "You are about to delete this workspace. This action cannot be undone.",
+      "warning": "This will permanently delete the workspace and ALL related data including subjects, quizzes, files, and other content.",
+      "confirmationQuestion": "Are you sure you want to delete \"{name}\"?",
+      "thisWorkspace": "this workspace",
+      "deleting": "Deleting...",
+      "confirmDelete": "Delete Workspace"
+    }
+  },
+  "QuizGeneration": {
+    "dialogTitle": "Generate Quiz with AI",
+    "selectFile": "Select a file to generate questions from",
+    "file": "File",
+    "fileRequired": "Please select a file",
+    "enterTopic": "Enter a topic for the quiz",
+    "topic": "Topic",
+    "topicRequired": "Please enter a topic",
+    "topicPlaceholder": "e.g., Data Structures, World War II, Cognitive Psychology",
+    "configureOptions": "Configure quiz options",
+    "questionCount": "Number of Questions",
+    "questionCountError": "Number of questions must be between 1 and 20",
+    "difficulty": "Difficulty",
+    "difficultyEasy": "Easy",
+    "difficultyMedium": "Medium",
+    "difficultyHard": "Hard",
+    "difficultyExpert": "Expert",
+    "additionalInstructions": "Additional instructions",
+    "additionalInstructionsTooltip": "Your instructions will be given high priority in the quiz generation process",
+    "instructionsLabel": "Add your own comments/instructions (high priority)",
+    "instructionsPlaceholder": "e.g., 'Focus on theoretical concepts', 'Include at least 2 coding questions', 'Make questions about specific sections...'",
+    "pastExamReference": "Past Exam Reference",
+    "pastExamTooltip": "Include a past exam to guide the AI in creating questions with similar patterns",
+    "includePastExam": "Include a past exam as reference",
+    "selectPastExam": "Select Past Exam",
+    "selectExamPrompt": "Select a past exam",
+    "pastExamRequired": "Please select a past exam",
+    "noPastExams": "No past exams available. Please upload past exams in the Files section first.",
+    "pastExamDescription": "Select a past exam to help the AI generate questions that follow a similar pattern and style.",
+    "selectSubjects": "Select subjects",
+    "subjectsTooltip": "Click on a subject to toggle high priority. High priority subjects (blue) will be focused on in the quiz. Remove a subject with the X button.",
+    "refreshSubjects": "Refresh subjects list",
+    "noSubjects": "No subjects available. Create subjects in your workspace first.",
+    "subjectsClickInstructions": "Click on a subject to mark it as high priority (blue). High priority subjects will be focused on in the quiz.",
+    "generatingProgress": "Generating your quiz... {progress}%",
+    "cancel": "Cancel",
+    "generateQuiz": "Generate Quiz",
+    "quizGeneratedSuccess": "Quiz Generated Successfully!",
+    "quizGeneratedMessage": "Your quiz \"{title}\" with {count} questions has been created.",
+    "untitled": "Untitled"
+  },
+  "Navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "profile": "Profile Settings"
+  },
+  "Common": {
+    "cancel": "Cancel"
   }
+}
   

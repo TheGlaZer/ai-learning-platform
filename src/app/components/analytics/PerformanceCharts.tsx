@@ -1,9 +1,12 @@
+// This component now uses colors from the theme and translations
 import React from 'react';
 import styled from '@emotion/styled';
 import { UserPerformanceAnalytics, SubjectPerformance } from '@/app/models/quizAnswer';
 import { AnalyticsCard } from './AnalyticsCard';
 import { PercentageSlider } from './PercentageSlider';
 import { SubjectDistributionChart } from './SubjectDistributionChart';
+import { useTranslations } from 'next-intl';
+import * as colors from '../../../../colors';
 
 interface PerformanceChartsProps {
   analytics: UserPerformanceAnalytics;
@@ -11,20 +14,63 @@ interface PerformanceChartsProps {
 }
 
 const ChartsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 2rem;
-`;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 
-const EmptyMessage = styled.p`
-  color: #4b5563;
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+  }
 `;
 
 const SliderStack = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
+  gap: 1rem;
+  margin-top: 0.5rem;
+`;
+
+const EmptyMessage = styled.p`
+  color: ${colors.text.secondary};
+  background-color: ${colors.background.lighter};
+  padding: 2rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+`;
+
+const SubjectBarSection = styled.div`
+  overflow-y: auto;
+  max-height: 450px;
+  padding-right: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: ${colors.primary.light} ${colors.background.lighter};
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: ${colors.background.lighter};
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: ${colors.primary.light};
+    border-radius: 10px;
+  }
+`;
+
+const ScrollHint = styled.div`
+  font-size: 0.75rem;
+  color: ${colors.text.secondary};
+  text-align: center;
+  margin-top: 0.5rem;
+  font-style: italic;
 `;
 
 const TableContainer = styled.div`
@@ -131,12 +177,13 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
   analytics,
   getSubjectName
 }) => {
+  const t = useTranslations('Analytics');
+  
   if (!analytics || !analytics.subjectPerformance.length) {
     return (
-      <AnalyticsCard title="Performance Charts">
+      <AnalyticsCard title={t('subjectPerformanceTitle')}>
         <EmptyMessage>
-          Not enough data to display performance charts.
-          Complete more quizzes to see detailed analytics.
+          {t('notEnoughData')}
         </EmptyMessage>
       </AnalyticsCard>
     );
@@ -153,24 +200,33 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
     return 'red';
   };
   
+  const showScrollHint = sortedSubjects.length > 5;
+  
   return (
     <ChartsContainer>
-      <AnalyticsCard title="Performance by Subject">
-        <SliderStack>
-          {sortedSubjects.map(subject => (
-            <PercentageSlider 
-              key={subject.subjectId}
-              label={getSubjectName(subject.subjectId)}
-              percentage={subject.score}
-              color={getScoreColor(subject.score)}
-              detail={`${subject.correctAnswers} correct of ${subject.totalQuestions} questions`}
-              tooltip={`Subject ID: ${subject.subjectId}`}
-            />
-          ))}
-        </SliderStack>
+      <AnalyticsCard title={t('subjectPerformanceTitle')}>
+        <SubjectBarSection>
+          <SliderStack>
+            {sortedSubjects.map(subject => (
+              <PercentageSlider 
+                key={subject.subjectId}
+                label={getSubjectName(subject.subjectId)}
+                percentage={subject.score}
+                color={getScoreColor(subject.score)}
+                detail={t('correctOf', { 
+                  correct: subject.correctAnswers, 
+                  total: subject.totalQuestions 
+                })}
+                tooltip={`Subject ID: ${subject.subjectId}`}
+              />
+            ))}
+          </SliderStack>
+        </SubjectBarSection>
+        {showScrollHint && (
+          <ScrollHint>Scroll to see more subjects</ScrollHint>
+        )}
       </AnalyticsCard>
       
-      {/* Add the new subject distribution chart */}
       <SubjectDistributionChart 
         subjects={sortedSubjects} 
         getSubjectName={getSubjectName}

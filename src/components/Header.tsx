@@ -21,24 +21,33 @@ import {
 import { styled } from "@mui/material/styles";
 import Logo from "./Logo";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LoginIcon from "@mui/icons-material/Login";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import HomeIcon from "@mui/icons-material/Home";
+import { primary, secondary, accent, surface, text, gradients, background } from "../../colors";
+import { useTranslations } from "next-intl";
 
-const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
-  color: theme.palette.text.primary,
+const StyledAppBar = styled(AppBar)(() => ({
+  backgroundColor: surface.paper,
+  color: text.primary,
   boxShadow: "none",
-  borderBottom: `1px solid ${theme.palette.divider}`,
+  borderBottom: `1px solid ${surface.border}`,
 }));
 
-const NavButton = styled(Button)(({ theme }) => ({
-  margin: theme.spacing(0, 1),
+const NavButton = styled(Button)<{ $isSelected?: boolean }>(({ $isSelected }) => ({
+  margin: "0 8px",
   textTransform: 'none',
   fontWeight: 500,
+  color: $isSelected ? primary.main : text.primary,
+  backgroundColor: $isSelected ? background.hover : 'transparent',
+  '&:hover': {
+    backgroundColor: background.hover,
+    color: primary.main,
+  }
 }));
 
 const Header: React.FC = () => {
@@ -46,7 +55,9 @@ const Header: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { isAuthenticated, userId, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [workspaceId, setWorkspaceId] = useState<string>('');
+  const t = useTranslations('Navigation');
   
   // Get current workspace ID from localStorage
   useEffect(() => {
@@ -78,6 +89,11 @@ const Header: React.FC = () => {
     handleMenuClose();
   };
   
+  const navigateToHome = () => {
+    router.push('/');
+    handleMenuClose();
+  };
+  
   const navigateToDashboard = () => {
     router.push('/dashboard');
     handleMenuClose();
@@ -86,6 +102,19 @@ const Header: React.FC = () => {
   const navigateToAnalytics = () => {
     router.push('/analytics');
     handleMenuClose();
+  };
+
+  // Check if current path is on a specific page
+  const isCurrentPage = (page: string): boolean => {
+    if (!pathname) return false;
+    
+    if (page === '') {
+      // For home page, only match exact root path or locale root paths like "/en" or "/he"
+      return pathname === '/' || pathname.match(/^\/[a-z]{2}$/) !== null;
+    }
+    
+    // For other pages, check if pathname ends with the page name
+    return pathname.endsWith(`/${page}`) || pathname.includes(`/${page}/`);
   };
 
   return (
@@ -103,7 +132,11 @@ const Header: React.FC = () => {
             sx={{ 
               ml: 1, 
               fontWeight: 'bold',
-              display: { xs: 'none', sm: 'block' }
+              display: { xs: 'none', sm: 'block' },
+              background: gradients.textGradient,
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              color: 'transparent',
             }}
           >
             AI Learning Platform
@@ -117,18 +150,25 @@ const Header: React.FC = () => {
         {isAuthenticated && !isMobile && (
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
             <NavButton
-              color="inherit"
-              startIcon={<DashboardIcon />}
-              onClick={navigateToDashboard}
+              startIcon={<HomeIcon />}
+              onClick={navigateToHome}
+              $isSelected={isCurrentPage('')}
             >
-              Dashboard
+              {t('home')}
             </NavButton>
             <NavButton
-              color="inherit"
+              startIcon={<DashboardIcon />}
+              onClick={navigateToDashboard}
+              $isSelected={isCurrentPage('dashboard')}
+            >
+              {t('dashboard')}
+            </NavButton>
+            <NavButton
               startIcon={<BarChartIcon />}
               onClick={navigateToAnalytics}
+              $isSelected={isCurrentPage('analytics')}
             >
-              Analytics
+              {t('analytics')}
             </NavButton>
           </Box>
         )}
@@ -150,7 +190,8 @@ const Header: React.FC = () => {
                 sx={{ 
                   width: 32, 
                   height: 32,
-                  bgcolor: isAuthenticated ? 'primary.main' : 'grey.400'
+                  bgcolor: isAuthenticated ? primary.main : text.disabled,
+                  color: text.light
                 }}
               >
                 {!isAuthenticated && <AccountCircleIcon />}
@@ -175,7 +216,10 @@ const Header: React.FC = () => {
               minWidth: 200,
               '& .MuiMenuItem-root': {
                 px: 2,
-                py: 1
+                py: 1,
+                '&:hover': {
+                  backgroundColor: background.hover
+                }
               },
               '&:before': {
                 content: '""',
@@ -185,7 +229,7 @@ const Header: React.FC = () => {
                 right: 14,
                 width: 10,
                 height: 10,
-                bgcolor: 'background.paper',
+                bgcolor: surface.paper,
                 transform: 'translateY(-50%) rotate(45deg)',
                 zIndex: 0,
               },
@@ -196,37 +240,47 @@ const Header: React.FC = () => {
         >
           {isAuthenticated ? (
             <>
-              <Box sx={{ px: 2, py: 1.5 }}>
-                <Typography variant="subtitle1" fontWeight="medium">
+              <Box sx={{ 
+                px: 2, 
+                py: 1.5,
+                background: `linear-gradient(135deg, ${primary.light}11, ${accent.purple.light}22)`,
+              }}>
+                <Typography variant="subtitle1" fontWeight="medium" sx={{ color: text.primary }}>
                   User Profile
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: text.secondary }}>
                   {userId?.substring(0, 8)}...
                 </Typography>
               </Box>
               <Divider />
+              <MenuItem onClick={navigateToHome}>
+                <ListItemIcon>
+                  <HomeIcon fontSize="small" sx={{ color: primary.light }} />
+                </ListItemIcon>
+                {t('home')}
+              </MenuItem>
               <MenuItem onClick={navigateToDashboard}>
                 <ListItemIcon>
-                  <DashboardIcon fontSize="small" />
+                  <DashboardIcon fontSize="small" sx={{ color: primary.main }} />
                 </ListItemIcon>
-                Dashboard
+                {t('dashboard')}
               </MenuItem>
               <MenuItem onClick={navigateToAnalytics}>
                 <ListItemIcon>
-                  <BarChartIcon fontSize="small" />
+                  <BarChartIcon fontSize="small" sx={{ color: accent.purple.main }} />
                 </ListItemIcon>
-                Analytics
+                {t('analytics')}
               </MenuItem>
               <MenuItem onClick={() => router.push('/profile')}>
                 <ListItemIcon>
-                  <AccountCircleIcon fontSize="small" />
+                  <AccountCircleIcon fontSize="small" sx={{ color: accent.green.main }} />
                 </ListItemIcon>
-                Profile Settings
+                {t('profile')}
               </MenuItem>
               <Divider />
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
-                  <LogoutIcon fontSize="small" />
+                  <LogoutIcon fontSize="small" sx={{ color: secondary.main }} />
                 </ListItemIcon>
                 Logout
               </MenuItem>
@@ -234,7 +288,7 @@ const Header: React.FC = () => {
           ) : (
             <MenuItem onClick={handleLogin}>
               <ListItemIcon>
-                <LoginIcon fontSize="small" />
+                <LoginIcon fontSize="small" sx={{ color: primary.main }} />
               </ListItemIcon>
               Login
             </MenuItem>
