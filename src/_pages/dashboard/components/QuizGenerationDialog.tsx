@@ -23,19 +23,148 @@ import {
   Chip,
   Tooltip,
   OutlinedInput,
-  SelectChangeEvent
+  SelectChangeEvent,
+  FormControlLabel,
+  Checkbox,
+  Collapse
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import QuizIcon from '@mui/icons-material/Quiz';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import DescriptionIcon from '@mui/icons-material/Description';
 import InfoIcon from '@mui/icons-material/Info';
+import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
+import TagIcon from '@mui/icons-material/Tag';
+import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import styled from '@emotion/styled';
 import { FileMetadata } from '@/app/models/file';
 import { Quiz, QuizGenerationParams } from '@/app/models/quiz';
 import { Subject } from '@/app/models/subject';
+import { PastExam } from '@/app/models/pastExam';
 import { useQuizGeneration } from '@/hooks/useQuizGeneration';
 import { useUserLocale } from '@/hooks/useLocale';
-import { useSubjectManagement } from '@/hooks/useSubjectManagement';
+import { useSubjects } from '@/app/lib-client/hooks/useSubjects';
+import { usePastExams } from '@/hooks/usePastExams';
+import { useTranslations } from 'next-intl';
+import * as colors from '../../../../colors';
+
+
+
+// Styled components with improved theming
+const SubjectContainer = styled(Paper)`
+  padding: 1.5rem;
+  border-radius: 12px;
+  background-color: ${colors.background.lighter};
+  border: 1px solid ${colors.border.light};
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 80px;
+  box-shadow: none;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: auto;
+  max-height: 320px;
+  
+  &:hover {
+    border-color: ${colors.primary.main};
+    background-color: ${colors.background.lightest};
+  }
+`;
+
+// Define the prop type for the styled component
+interface SubjectChipProps {
+  $priority: 'normal' | 'high';
+}
+
+const SubjectChip = styled(Chip)<SubjectChipProps>`
+  border-radius: 16px;
+  padding: 0 4px;
+  height: 36px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  background-color: ${props => props.$priority === 'high' ? colors.primary.main : colors.background.white};
+  color: ${props => props.$priority === 'high' ? colors.text.white : colors.text.primary};
+  border: 1px solid ${props => props.$priority === 'high' ? colors.primary.dark : colors.border.medium};
+  box-shadow: ${props => props.$priority === 'high' ? `0 2px 8px ${colors.primary.transparent}` : 'none'};
+  
+  &:hover {
+    background-color: ${props => props.$priority === 'high' ? colors.primary.light : colors.background.hover};
+  }
+  
+  & .MuiChip-icon {
+    color: ${props => props.$priority === 'high' ? colors.text.white : colors.primary.main};
+    margin-left: 8px;
+  }
+  
+  & .MuiChip-deleteIcon {
+    color: ${props => props.$priority === 'high' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.3)'};
+    margin-right: 5px;
+    
+    &:hover {
+      color: ${props => props.$priority === 'high' ? colors.text.white : colors.text.secondary};
+    }
+  }
+`;
+
+const EmptySubjectsMessage = styled(Typography)`
+  width: 100%;
+  text-align: center;
+  color: ${colors.text.secondary};
+  margin-top: 2rem;
+`;
+
+const SubjectHeader = styled(Box)`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+`;
+
+const SubjectHeaderTitle = styled(Box)`
+  display: flex;
+  align-items: center;
+`;
+
+// Styled component for the file upload area
+const FileUploadBox = styled(Box)`
+  padding: 1.5rem;
+  border: 1px dashed ${colors.border.medium};
+  border-radius: 8px;
+  text-align: center;
+  background-color: ${colors.background.lighter};
+  margin-top: 1rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: ${colors.primary.main};
+    background-color: ${colors.background.lightest};
+  }
+`;
+
+const SectionTitle = styled(Typography)`
+  font-weight: 600;
+  color: ${colors.text.primary};
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+`;
+
+const SectionNumber = styled(Box)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: ${colors.primary.main};
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+`;
 
 interface QuizGenerationDialogProps {
   open: boolean;
@@ -56,16 +185,16 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
   onQuizGenerated,
   subjects = []
 }) => {
-  // Get user locale from URL
+  // Get user locale from URL and translation function
   const userLocale = useUserLocale();
+  const t = useTranslations('QuizGeneration');
   
-  // Add debug logging for the locale
-  useEffect(() => {
-    console.log('QuizGenerationDialog - Current user locale:', userLocale);
-  }, [userLocale]);
+  // Use the subjects hook to get subjects from context
+  const { subjects: workspaceSubjects, isLoading: subjectsLoading } = useSubjects(workspaceId);
   
-  const [tabValue, setTabValue] = useState<number>(0);
-  const [loading, setLoading] = useState(false);
+  // Use the past exams hook to get past exams
+  const { workspacePastExams, loading: pastExamsLoading, fetchPastExams } = usePastExams(userId);
+  
   // Form state
   const [selectedFileId, setSelectedFileId] = useState<string>('');
   const [topic, setTopic] = useState<string>('');
@@ -73,53 +202,18 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
   const [difficultyLevel, setDifficultyLevel] = useState<'easy' | 'medium' | 'hard' | 'expert'>('medium');
   const [userComments, setUserComments] = useState<string>('');
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
-  const [focusSubjectIds, setFocusSubjectIds] = useState<string[]>([]);
-  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
-  const [subjectSelectionMode, setSubjectSelectionMode] = useState<'all' | 'specific'>('all');
-  const { fetchWorkspaceSubjects } = useSubjectManagement(userId);
+  const [highPrioritySubjectIds, setHighPrioritySubjectIds] = useState<string[]>([]);
   
-  // Use a ref to prevent infinite loops
-  const initializedRef = useRef(false);
-  
-  // Load subjects when the dialog opens
-  useEffect(() => {
-    if (open && workspaceId) {
-      setLoading(true);
-      const loadSubjects = async () => {
-        try {
-          const workspaceSubjects = await fetchWorkspaceSubjects(workspaceId);
-          const fetchedSubjects = workspaceSubjects.length > 0 ? workspaceSubjects : subjects;
-          setAvailableSubjects(fetchedSubjects);
-          setLoading(false);
-        } catch (error) {
-          console.error('Failed to load subjects:', error);
-          setAvailableSubjects(subjects);
-          setLoading(false);
-        }
-      };
-      
-      loadSubjects();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, workspaceId, subjects]); // only re-run when dialog opens, workspace changes, or prop subjects change
-  
-  // Handle initial selection of all subjects when subjects are loaded
-  useEffect(() => {
-    if (subjectSelectionMode === 'all' && availableSubjects.length > 0 && !initializedRef.current) {
-      initializedRef.current = true;
-      const allSubjectIds = availableSubjects
-        .map(s => s.id)
-        .filter((id): id is string => id !== undefined);
-      setSelectedSubjectIds(allSubjectIds);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availableSubjects.length, subjectSelectionMode]);
+  // Past exam related state
+  const [includePastExam, setIncludePastExam] = useState<boolean>(false);
+  const [selectedPastExamId, setSelectedPastExamId] = useState<string>('');
   
   // Form validation
   const [formErrors, setFormErrors] = useState<{
     fileId?: string;
     topic?: string;
     numberOfQuestions?: string;
+    pastExam?: string;
   }>({});
 
   // Quiz generation hook
@@ -132,6 +226,27 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
     resetState 
   } = useQuizGeneration(userId);
 
+  // Store all available subjects
+  const [allSubjectIds, setAllSubjectIds] = useState<string[]>([]);
+
+  // Update selected subjects when workspace subjects change
+  useEffect(() => {
+    if (workspaceSubjects.length > 0) {
+      const ids = workspaceSubjects
+        .map(s => s.id)
+        .filter((id): id is string => id !== undefined);
+      setAllSubjectIds(ids);
+      setSelectedSubjectIds(ids);
+    }
+  }, [workspaceSubjects]);
+  
+  // Fetch past exams when dialog opens
+  useEffect(() => {
+    if (open && workspaceId) {
+      fetchPastExams(workspaceId);
+    }
+  }, [open, workspaceId, fetchPastExams]);
+
   const handleClose = () => {
     if (!isGenerating) {
       resetState();
@@ -141,70 +256,54 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
       setDifficultyLevel('medium');
       setUserComments('');
       setSelectedSubjectIds([]);
-      setFocusSubjectIds([]);
+      setHighPrioritySubjectIds([]);
       setFormErrors({});
-      setSubjectSelectionMode('all');
-      initializedRef.current = false;
+      setIncludePastExam(false);
+      setSelectedPastExamId('');
       onClose();
     }
   };
 
-  const handleSubjectSelectionModeChange = (event: SelectChangeEvent<string>) => {
-    const mode = event.target.value as 'all' | 'specific';
-    setSubjectSelectionMode(mode);
-    
-    // If switching to 'all', select all subjects - do this only in the handler, not in a useEffect
-    if (mode === 'all' && availableSubjects.length > 0) {
-      const allSubjectIds = availableSubjects
-        .map(s => s.id)
-        .filter((id): id is string => id !== undefined);
-      setSelectedSubjectIds(allSubjectIds);
-    } else if (mode === 'specific') {
-      // If switching to 'specific', clear the selection
-      setSelectedSubjectIds([]);
-      setFocusSubjectIds([]);
+  const handleSubjectClick = (subjectId: string) => {
+    // Toggle high priority status
+    if (highPrioritySubjectIds.includes(subjectId)) {
+      setHighPrioritySubjectIds(prev => prev.filter(id => id !== subjectId));
+    } else {
+      setHighPrioritySubjectIds(prev => [...prev, subjectId]);
     }
-  };
-
-  const handleSelectedSubjectsChange = (event: SelectChangeEvent<string[]>) => {
-    const value = event.target.value;
-    setSelectedSubjectIds(typeof value === 'string' ? value.split(',') : value);
-
-    // Reset focus subjects if they're no longer in the selected subjects
-    setFocusSubjectIds(prev => 
-      prev.filter(id => 
-        (typeof value === 'string' ? value.split(',') : value).includes(id)
-      )
-    );
   };
 
   const handleRemoveSubject = (subjectId: string) => {
     setSelectedSubjectIds(prev => prev.filter(id => id !== subjectId));
-    setFocusSubjectIds(prev => prev.filter(id => id !== subjectId));
-  };
-  
-  const handleRemoveFocusSubject = (subjectId: string) => {
-    setFocusSubjectIds(prev => prev.filter(id => id !== subjectId));
+    setHighPrioritySubjectIds(prev => prev.filter(id => id !== subjectId));
   };
 
-  const handleFocusSubjectsChange = (event: SelectChangeEvent<string[]>) => {
-    const value = event.target.value;
-    setFocusSubjectIds(typeof value === 'string' ? value.split(',') : value);
+  const handlePastExamChange = (e: SelectChangeEvent<string>) => {
+    setSelectedPastExamId(e.target.value);
+  };
+
+  const handleRefreshSubjects = () => {
+    setSelectedSubjectIds([...allSubjectIds]);
+    setHighPrioritySubjectIds([]);
   };
 
   const validateForm = (): boolean => {
     const errors: typeof formErrors = {};
     
     if (!selectedFileId) {
-      errors.fileId = 'Please select a file';
+      errors.fileId = t('fileRequired');
     }
     
     if (!topic.trim()) {
-      errors.topic = 'Please enter a topic';
+      errors.topic = t('topicRequired');
     }
     
     if (numberOfQuestions < 1 || numberOfQuestions > 20) {
-      errors.numberOfQuestions = 'Number of questions must be between 1 and 20';
+      errors.numberOfQuestions = t('questionCountError');
+    }
+    
+    if (includePastExam && !selectedPastExamId) {
+      errors.pastExam = t('pastExamRequired');
     }
     
     setFormErrors(errors);
@@ -224,7 +323,9 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
       workspaceId,
       locale: userLocale,
       userComments,
-      selectedSubjects: focusSubjectIds.length > 0 ? focusSubjectIds : selectedSubjectIds
+      selectedSubjects: highPrioritySubjectIds.length > 0 ? highPrioritySubjectIds : selectedSubjectIds,
+      includePastExam: includePastExam && !!selectedPastExamId,
+      pastExamId: includePastExam ? selectedPastExamId : undefined
     };
     
     console.log('Quiz generation params:', params);
@@ -240,7 +341,11 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
     }
   };
 
-  const selectedFile = files.find(file => file.id === selectedFileId);
+  // Get available subjects from context or props 
+  const availableSubjects = workspaceSubjects.length > 0 ? workspaceSubjects : subjects;
+  
+  // Get past exams for the current workspace
+  const pastExams = workspacePastExams[workspaceId] || [];
 
   return (
     <Dialog 
@@ -251,14 +356,14 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
       PaperProps={{
         sx: {
           borderRadius: 2,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+          boxShadow: '0 8px 32px rgba(0,0,0,0.16)'
         }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <QuizIcon sx={{ mr: 1, color: 'primary.main' }} />
-          <Typography variant="h6">Generate Quiz with AI</Typography>
+          <QuizIcon sx={{ mr: 1.5, color: colors.primary.main, fontSize: 28 }} />
+          <Typography variant="h5" fontWeight="600">{t('dialogTitle')}</Typography>
         </Box>
         <IconButton onClick={handleClose} disabled={isGenerating}>
           <CloseIcon />
@@ -275,36 +380,37 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
         )}
         
         {generatedQuiz ? (
-          <Box sx={{ textAlign: 'center', py: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-              <AutoAwesomeIcon color="success" sx={{ fontSize: 48 }} />
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+              <AutoAwesomeIcon color="success" sx={{ fontSize: 64 }} />
             </Box>
-            <Typography variant="h5" color="success.main" gutterBottom>
-              Quiz Generated Successfully!
+            <Typography variant="h5" color="success.main" fontWeight="600" gutterBottom>
+              {t('quizGeneratedSuccess')}
             </Typography>
             <Typography variant="body1" color="text.secondary" gutterBottom>
-              Your quiz "{generatedQuiz?.title || 'Untitled'}" with {generatedQuiz?.questions?.length || 0} questions has been created.
+              {t('quizGeneratedMessage', { title: generatedQuiz?.title || t('untitled'), count: generatedQuiz?.questions?.length || 0 })}
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={3}>
+          <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                1. Select a file to generate questions from
-              </Typography>
-              <FormControl fullWidth error={!!formErrors.fileId} sx={{ mb: 3 }}>
-                <InputLabel id="file-select-label">File</InputLabel>
+              <SectionTitle>
+                <SectionNumber>1</SectionNumber>
+                {t('selectFile')}
+              </SectionTitle>
+              <FormControl fullWidth error={!!formErrors.fileId} sx={{ mb: 4 }}>
+                <InputLabel id="file-select-label">{t('file')}</InputLabel>
                 <Select
                   labelId="file-select-label"
                   value={selectedFileId}
                   onChange={(e) => setSelectedFileId(e.target.value)}
                   disabled={isGenerating}
-                  label="File"
+                  label={t('file')}
                 >
                   {files.map((file) => (
                     <MenuItem key={file.id} value={file.id}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <DescriptionIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                        <DescriptionIcon sx={{ mr: 1, color: colors.text.secondary }} />
                         {file.name}
                       </Box>
                     </MenuItem>
@@ -313,28 +419,30 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
                 {formErrors.fileId && <FormHelperText>{formErrors.fileId}</FormHelperText>}
               </FormControl>
               
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                2. Enter a topic for the quiz
-              </Typography>
+              <SectionTitle>
+                <SectionNumber>2</SectionNumber>
+                {t('enterTopic')}
+              </SectionTitle>
               <TextField
-                label="Topic"
+                label={t('topic')}
                 fullWidth
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 disabled={isGenerating}
                 error={!!formErrors.topic}
                 helperText={formErrors.topic}
-                placeholder="e.g., Data Structures, World War II, Cognitive Psychology"
-                sx={{ mb: 3 }}
+                placeholder={t('topicPlaceholder')}
+                sx={{ mb: 4 }}
               />
               
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                3. Configure quiz options
-              </Typography>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
+              <SectionTitle>
+                <SectionNumber>3</SectionNumber>
+                {t('configureOptions')}
+              </SectionTitle>
+              <Grid container spacing={2} sx={{ mb: 4 }}>
                 <Grid item xs={6}>
                   <TextField
-                    label="Number of Questions"
+                    label={t('questionCount')}
                     type="number"
                     fullWidth
                     value={numberOfQuestions}
@@ -347,214 +455,181 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
                 </Grid>
                 <Grid item xs={6}>
                   <FormControl fullWidth>
-                    <InputLabel id="difficulty-select-label">Difficulty</InputLabel>
+                    <InputLabel id="difficulty-select-label">{t('difficulty')}</InputLabel>
                     <Select
                       labelId="difficulty-select-label"
                       value={difficultyLevel}
                       onChange={(e) => setDifficultyLevel(e.target.value as any)}
                       disabled={isGenerating}
-                      label="Difficulty"
+                      label={t('difficulty')}
                     >
-                      <MenuItem value="easy">Easy</MenuItem>
-                      <MenuItem value="medium">Medium</MenuItem>
-                      <MenuItem value="hard">Hard</MenuItem>
-                      <MenuItem value="expert">Expert</MenuItem>
+                      <MenuItem value="easy">{t('difficultyEasy')}</MenuItem>
+                      <MenuItem value="medium">{t('difficultyMedium')}</MenuItem>
+                      <MenuItem value="hard">{t('difficultyHard')}</MenuItem>
+                      <MenuItem value="expert">{t('difficultyExpert')}</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
               </Grid>
               
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                4. Additional instructions 
-                <Tooltip title="Your instructions will be given high priority in the quiz generation process">
+              <SectionTitle sx={{ display: 'flex', alignItems: 'center' }}>
+                <SectionNumber>4</SectionNumber>
+                {t('additionalInstructions')} 
+                <Tooltip title={t('additionalInstructionsTooltip')}>
                   <IconButton size="small">
                     <InfoIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
-              </Typography>
+              </SectionTitle>
               <TextField
-                label="Add your own comments/instructions (high priority)"
+                label={t('instructionsLabel')}
                 fullWidth
                 multiline
                 rows={4}
                 value={userComments}
                 onChange={(e) => setUserComments(e.target.value)}
                 disabled={isGenerating}
-                placeholder="e.g., 'Focus on theoretical concepts', 'Include at least 2 coding questions', 'Make questions about specific sections...'"
-                sx={{ mb: 3 }}
+                placeholder={t('instructionsPlaceholder')}
+                sx={{ mb: 4 }}
               />
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                5. Select subjects
-                <Tooltip title="Select which subjects to include and focus on in the quiz">
+              
+              <SectionTitle sx={{ display: 'flex', alignItems: 'center' }}>
+                <SectionNumber>5</SectionNumber>
+                {t('pastExamReference')}
+                <Tooltip title={t('pastExamTooltip')}>
                   <IconButton size="small">
                     <InfoIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
-              </Typography>
+              </SectionTitle>
               
-              {/* Subject selection mode */}
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel id="subject-mode-select-label">Subject Selection Mode</InputLabel>
-                <Select
-                  labelId="subject-mode-select-label"
-                  value={subjectSelectionMode}
-                  onChange={handleSubjectSelectionModeChange}
-                  disabled={isGenerating || availableSubjects.length === 0}
-                  label="Subject Selection Mode"
-                >
-                  <MenuItem value="all">All Subjects</MenuItem>
-                  <MenuItem value="specific">Specific Subjects</MenuItem>
-                </Select>
-                <FormHelperText>
-                  Choose whether to include all subjects or select specific ones
-                </FormHelperText>
-              </FormControl>
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={includePastExam}
+                    onChange={(e) => setIncludePastExam(e.target.checked)}
+                    disabled={isGenerating}
+                  />
+                }
+                label={t('includePastExam')}
+              />
               
-              {/* Subjects to include - only shown in specific mode */}
-              {subjectSelectionMode === 'specific' && (
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                  <InputLabel id="subjects-select-label">Subjects to Include</InputLabel>
-                  <Select
-                    labelId="subjects-select-label"
-                    multiple
-                    value={selectedSubjectIds}
-                    onChange={handleSelectedSubjectsChange}
-                    input={<OutlinedInput label="Subjects to Include" />}
-                    disabled={isGenerating || availableSubjects.length === 0 || loading}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((id) => {
-                          const subject = availableSubjects.find(s => s.id === id);
-                          return subject ? (
-                            <Chip 
-                              key={id} 
-                              label={subject.name} 
-                              size="small"
-                              onDelete={() => handleRemoveSubject(id)}
-                              onMouseDown={(event) => event.stopPropagation()}
-                            />
-                          ) : null;
-                        })}
-                      </Box>
-                    )}
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: 300
-                        }
-                      }
-                    }}
-                  >
-                    {availableSubjects.map((subject) => (
-                      <MenuItem key={subject.id} value={subject.id}>
-                        {subject.name}
+              <Collapse in={includePastExam}>
+                <FileUploadBox>
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel id="past-exam-label">{t('selectPastExam')}</InputLabel>
+                    <Select
+                      labelId="past-exam-label"
+                      id="past-exam-select"
+                      value={selectedPastExamId}
+                      onChange={handlePastExamChange}
+                      label={t('selectPastExam')}
+                      disabled={isGenerating || pastExamsLoading}
+                      startAdornment={selectedPastExamId ? <HistoryEduIcon sx={{ ml: 1, mr: 0.5, color: colors.text.secondary }} /> : null}
+                    >
+                      <MenuItem value="">
+                        <em>{t('selectExamPrompt')}</em>
                       </MenuItem>
-                    ))}
-                  </Select>
-                  <FormHelperText>
-                    Select subjects to include in the quiz
-                  </FormHelperText>
-                </FormControl>
-              )}
-              
-              {/* Display selected subjects in 'all' mode */}
-              {subjectSelectionMode === 'all' && (
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    All subjects will be included in the quiz
-                  </Typography>
-                  <Paper variant="outlined" sx={{ p: 2, maxHeight: '150px', overflowY: 'auto' }}>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {availableSubjects.map((subject) => (
-                        <Chip 
-                          key={subject.id} 
-                          label={subject.name} 
-                          size="small"
-                        />
-                      ))}
-                    </Box>
-                  </Paper>
-                </Box>
-              )}
-              
-              {/* Subjects to focus on */}
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel id="focus-subjects-select-label">Subjects to Focus On (High Priority)</InputLabel>
-                <Select
-                  labelId="focus-subjects-select-label"
-                  multiple
-                  value={focusSubjectIds}
-                  onChange={handleFocusSubjectsChange}
-                  input={<OutlinedInput label="Subjects to Focus On (High Priority)" />}
-                  disabled={isGenerating || selectedSubjectIds.length === 0 || loading}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((id) => {
-                        const subject = availableSubjects.find(s => s.id === id);
-                        return subject ? (
-                          <Chip 
-                            key={id} 
-                            label={subject.name} 
-                            size="small" 
-                            color="primary"
-                            onDelete={() => handleRemoveFocusSubject(id)}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          />
-                        ) : null;
-                      })}
-                    </Box>
-                  )}
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300
-                      }
-                    }
-                  }}
-                >
-                  {subjectSelectionMode === 'all' 
-                    ? availableSubjects.map((subject) => (
-                        <MenuItem key={subject.id} value={subject.id}>
-                          {subject.name}
+                      {pastExams.map((exam) => (
+                        <MenuItem key={exam.id} value={exam.id}>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <HistoryEduIcon sx={{ mr: 1, color: colors.text.secondary }} />
+                            {exam.name} {exam.year ? `(${exam.year}` : ''}{exam.semester ? ` ${exam.semester})` : exam.year ? ')' : ''}
+                          </Box>
                         </MenuItem>
-                      ))
-                    : selectedSubjectIds.map((id) => {
-                        const subject = availableSubjects.find(s => s.id === id);
-                        return subject ? (
-                          <MenuItem key={subject.id} value={subject.id}>
-                            {subject.name}
-                          </MenuItem>
-                        ) : null;
-                      })
-                  }
-                </Select>
-                <FormHelperText>
-                  Select subjects to prioritize in the quiz
-                </FormHelperText>
-              </FormControl>
-
-              {availableSubjects.length === 0 && (
-                <Paper 
-                  variant="outlined" 
-                  sx={{ p: 2, bgcolor: '#f5f5f5', textAlign: 'center' }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    No subjects available. Create subjects in your workspace first.
+                      ))}
+                    </Select>
+                  </FormControl>
+                  
+                  {pastExamsLoading && (
+                    <LinearProgress sx={{ mt: 2 }} />
+                  )}
+                  
+                  {!pastExamsLoading && pastExams.length === 0 && (
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                      {t('noPastExams')}
+                    </Alert>
+                  )}
+                  
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                    {t('pastExamDescription')}
                   </Typography>
-                </Paper>
+                </FileUploadBox>
+                {formErrors.pastExam && (
+                  <FormHelperText error>{formErrors.pastExam}</FormHelperText>
+                )}
+              </Collapse>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <SubjectHeader>
+                <SubjectHeaderTitle>
+                  <SectionNumber>6</SectionNumber>
+                  <Typography variant="subtitle1" fontWeight="600">
+                    {t('selectSubjects')}
+                  </Typography>
+                  <Tooltip title={t('subjectsTooltip')}>
+                    <IconButton size="small">
+                      <InfoIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </SubjectHeaderTitle>
+                <Tooltip title={t('refreshSubjects')}>
+                  <IconButton 
+                    onClick={handleRefreshSubjects} 
+                    disabled={isGenerating}
+                    color="primary"
+                    size="small"
+                  >
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+              </SubjectHeader>
+              
+              {subjectsLoading ? (
+                <LinearProgress />
+              ) : (
+                <SubjectContainer>
+                  {availableSubjects.length > 0 ? (
+                    selectedSubjectIds.map((subjectId) => {
+                      const subject = availableSubjects.find(s => s.id === subjectId);
+                      const isPriority = highPrioritySubjectIds.includes(subjectId);
+                      
+                      return subject ? (
+                        <SubjectChip
+                          key={subjectId}
+                          $priority={isPriority ? 'high' : 'normal'}
+                          label={subject.name}
+                          onClick={() => handleSubjectClick(subjectId)}
+                          onDelete={() => handleRemoveSubject(subjectId)}
+                          icon={<TagIcon />}
+                          disabled={isGenerating}
+                        />
+                      ) : null;
+                    })
+                  ) : (
+                    <EmptySubjectsMessage>
+                      {t('noSubjects')}
+                    </EmptySubjectsMessage>
+                  )}
+                </SubjectContainer>
               )}
+              
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  <InfoIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
+                  {t('subjectsClickInstructions')}
+                </Typography>
+              </Box>
             </Grid>
           </Grid>
         )}
         
         {isGenerating && (
-          <Box sx={{ mt: 3 }}>
+          <Box sx={{ mt: 4 }}>
             <LinearProgress variant="determinate" value={generationProgress} />
             <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
-              Generating your quiz... {Math.round(generationProgress)}%
+              {t('generatingProgress', { progress: Math.round(generationProgress) })}
             </Typography>
           </Box>
         )}
@@ -562,7 +637,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
       
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={handleClose} color="inherit" disabled={isGenerating}>
-          Cancel
+          {t('cancel')}
         </Button>
         {!generatedQuiz && (
           <Button 
@@ -572,7 +647,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
             disabled={isGenerating}
             startIcon={<AutoAwesomeIcon />}
           >
-            Generate Quiz
+            {t('generateQuiz')}
           </Button>
         )}
       </DialogActions>

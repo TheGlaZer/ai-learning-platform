@@ -1,8 +1,8 @@
 import { FileTypeProcessorOptions } from './types';
 import { normalizeText } from './textProcessing';
-// Using pdf-parse library instead of pdf.js directly
 import pdfParse from 'pdf-parse';
 
+// This file is used in a server context only
 export async function processPdfFile(
   fileBuffer: ArrayBuffer,
   options: FileTypeProcessorOptions = {}

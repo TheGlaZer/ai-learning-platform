@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Workspace } from '@/app/models/workspace';
 import { FileMetadata } from '@/app/models/file';
 import { useAuth } from './AuthContext';
-import { getUserWorkspacesClient, createWorkspaceClient } from '@/app/lib-client/workspaceClient';
+import { getUserWorkspacesClient, createWorkspaceClient, deleteWorkspaceClient } from '@/app/lib-client/workspaceClient';
 import { getWorkspaceFilesClient } from '@/app/lib-client/fileClient';
 
 interface WorkspaceContextType {
@@ -15,6 +15,7 @@ interface WorkspaceContextType {
   error: string | null;
   fetchWorkspaces: () => Promise<void>;
   createWorkspace: (name: string, description?: string) => Promise<Workspace | null>;
+  deleteWorkspace: (workspaceId: string) => Promise<boolean>;
   selectWorkspace: (workspace: Workspace) => void;
   addFileToWorkspace: (workspaceId: string, file: FileMetadata) => void;
   removeFileFromWorkspace: (workspaceId: string, fileId: string) => void;
@@ -170,6 +171,45 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({ children }
     }
   };
 
+  // Delete a workspace
+  const deleteWorkspace = async (workspaceId: string): Promise<boolean> => {
+    if (!accessToken) return false;
+    
+    try {
+      setLoading(true);
+      await deleteWorkspaceClient(workspaceId, accessToken);
+      
+      // Update the workspaces list by removing the deleted workspace
+      setWorkspaces(prevWorkspaces => prevWorkspaces.filter(w => w.id !== workspaceId));
+      
+      // Remove the workspace files from state
+      setWorkspaceFiles(prev => {
+        const { [workspaceId]: _, ...rest } = prev;
+        return rest;
+      });
+      
+      // If the deleted workspace was selected, select another workspace if available
+      if (selectedWorkspace?.id === workspaceId) {
+        const remainingWorkspaces = workspaces.filter(w => w.id !== workspaceId);
+        if (remainingWorkspaces.length > 0) {
+          setSelectedWorkspace(remainingWorkspaces[0]);
+          localStorage.setItem('selectedWorkspaceId', remainingWorkspaces[0].id);
+        } else {
+          setSelectedWorkspace(null);
+          localStorage.removeItem('selectedWorkspaceId');
+        }
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Error deleting workspace:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete workspace. Please try again later.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     workspaces,
     workspaceFiles,
@@ -178,6 +218,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({ children }
     error,
     fetchWorkspaces,
     createWorkspace,
+    deleteWorkspace,
     selectWorkspace,
     addFileToWorkspace,
     removeFileFromWorkspace

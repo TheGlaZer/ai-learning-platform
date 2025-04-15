@@ -1,0 +1,138 @@
+{
+  "HomePage": {
+    "title": "Hallo Welt! Es ist Ofek!",
+    "about": "Zur Über-Uns-Seite",
+    "platformName": "KI-Lernplattform",
+    "heroTitle": "Revolutioniere dein Lernen mit",
+    "heroSubtitle": "KI-unterstützter Bildung",
+    "heroDescription": "Beherrsche neue Fähigkeiten effizient mit personalisiertem KI-Tutoring, adaptiven Lernpfaden und interaktiven Übungen.",
+    "getStartedButton": "Kostenlos starten",
+    "signInButton": "Anmelden",
+    "joinStudentsText": "Schließe dich mehr als {count} Studenten an, die bereits lernen",
+    "featuresTitle": "Leistungsstarke KI-Lernfunktionen",
+    "featuresSubtitle": "Unsere Plattform kombiniert modernste KI-Technologie mit bewährten pädagogischen Methoden, um ein unvergleichliches Lernerlebnis zu bieten.",
+    "features": {
+      "aiTutoring": {
+        "title": "KI-gestütztes Tutoring",
+        "description": "Erhalte personalisierte Hilfe von unseren fortschrittlichen KI-Tutoren, die sich an deinen Lernstil und dein Tempo anpassen."
+      },
+      "learningPaths": {
+        "title": "Angepasste Lernpfade",
+        "description": "Folge Lernpfaden, die speziell für deine Ziele, Fähigkeiten und bevorzugten Lernmethoden entwickelt wurden."
+      },
+      "progressTracking": {
+        "title": "Fortschrittsverfolgung",
+        "description": "Überwache deinen Fortschritt mit detaillierten Analysen und Fortschrittsberichten, um dein Lernen zu optimieren."
+      },
+      "collaborativeLearning": {
+        "title": "Kollaboratives Lernen",
+        "description": "Verbinde dich mit Gleichgesinnten und nimm an Gruppenübungen teil, um dein Verständnis durch Zusammenarbeit zu verbessern."
+      }
+    },
+    "testimonialsTitle": "Was unsere Nutzer sagen",
+    "testimonialsSubtitle": "Tausende von Lernenden haben ihre Bildungsreise mit unserer KI-Lernplattform transformiert",
+    "testimonials": {
+      "testimonial1": {
+        "quote": "Das KI-Tutoring hat meine Herangehensweise an schwierige Themen komplett verändert. Es ist, als hätte ich einen persönlichen Tutor, der rund um die Uhr verfügbar ist.",
+        "name": "Sarah Johnson",
+        "role": "Softwareentwicklerin"
+      },
+      "testimonial2": {
+        "quote": "Als Pädagoge habe ich aus erster Hand gesehen, wie sich diese Plattform an verschiedene Lernstile anpasst. Meine Studenten sind engagierter als je zuvor.",
+        "name": "Michael Chen",
+        "role": "Universitätsprofessor"
+      },
+      "testimonial3": {
+        "quote": "Die maßgeschneiderten Lernpfade haben mir geholfen, neue Fähigkeiten in meinem eigenen Tempo zu erwerben, und die Fortschrittsverfolgung hat mich während des gesamten Prozesses motiviert.",
+        "name": "Aisha Patel",
+        "role": "Datenwissenschaftlerin"
+      }
+    },
+    "ctaTitle": "Starte deine KI-Lernreise noch heute",
+    "ctaSubtitle": "Schließe dich Tausenden von Studenten an, die bereits die Zukunft der Bildung erleben. Deine erste Woche ist völlig kostenlos - keine Kreditkarte erforderlich.",
+    "ctaButtonStart": "Kostenlos starten",
+    "ctaButtonLearn": "Mehr erfahren",
+    "ctaNoCredit": "Keine Kreditkarte erforderlich. Jederzeit kündbar."
+  },
+  "SignupPage": {
+    "formTitle": "Tritt unserer Lerngemeinschaft bei",
+    "formSubtitle": "Erstelle ein Konto, um mit dem Lernen zu beginnen",
+    "fullNameLabel": "Vollständiger Name",
+    "fullNameRequired": "Vollständiger Name ist erforderlich",
+    "fullNameTooShort": "Name muss mindestens 2 Zeichen lang sein",
+    "emailLabel": "E-Mail-Adresse",
+    "emailRequired": "E-Mail ist erforderlich",
+    "emailInvalid": "Ungültige E-Mail-Adresse",
+    "passwordLabel": "Passwort",
+    "passwordRequired": "Passwort ist erforderlich",
+    "passwordTooShort": "Passwort muss mindestens 6 Zeichen lang sein",
+    "confirmPasswordLabel": "Passwort bestätigen",
+    "confirmPasswordRequired": "Bitte bestätige dein Passwort",
+    "passwordsDoNotMatch": "Passwörter stimmen nicht überein",
+    "creatingAccount": "Konto wird erstellt...",
+    "createAccount": "Konto erstellen",
+    "orDivider": "oder",
+    "googleSignup": "Mit Google anmelden",
+    "alreadyHaveAccount": "Hast du bereits ein Konto?",
+    "loginLink": "Anmelden",
+    "welcomeTitle": "KI-unterstütztes Lernen",
+    "welcomeSubtitle": "Schließe dich Tausenden von Lernenden an, die ihre Fähigkeiten mit unserer Plattform verbessern.",
+    "feature1Title": "Personalisiertes Lernen",
+    "feature1Desc": "KI-maßgeschneiderte Inhalte basierend auf deinem Lernstil",
+    "feature2Title": "Interaktives Erlebnis",
+    "feature2Desc": "Fesselnde Inhalte, die sich an deinen Fortschritt anpassen",
+    "feature3Title": "Wissensbibliothek",
+    "feature3Desc": "Zugang zu hochwertigen Bildungsmaterialien",
+    "registrationSuccess": "Registrierung erfolgreich! Bitte überprüfe deine E-Mail, um dein Konto zu bestätigen, bevor du dich anmeldest.",
+    "redirectingToDashboard": "Registrierung erfolgreich! Weiterleitung zum Dashboard..."
+  },
+  "LoginPage": {
+    "formTitle": "Willkommen zurück",
+    "formSubtitle": "Melde dich an, um deine Lernreise fortzusetzen",
+    "emailLabel": "E-Mail-Adresse",
+    "emailRequired": "E-Mail ist erforderlich",
+    "passwordLabel": "Passwort",
+    "passwordRequired": "Passwort ist erforderlich",
+    "loggingIn": "Anmeldung läuft...",
+    "login": "Anmelden",
+    "googleLogin": "Mit Google anmelden",
+    "connecting": "Verbindung wird hergestellt...",
+    "forgotPassword": "Passwort vergessen?",
+    "newUser": "Neu auf der Plattform?",
+    "signupLink": "Konto erstellen",
+    "welcomeTitle": "Willkommen zurück zum Lernen",
+    "welcomeSubtitle": "Setze dein personalisiertes Lernerlebnis mit KI-Unterstützung fort."
+  },
+  "FileUploadForm": {
+    "uploadFileTitle": "Datei zur Zusammenfassung hochladen",
+    "fileLabel": "Datei",
+    "fileRequired": "Datei ist erforderlich",
+    "keyTopicsLabel": "Wichtige Themen, auf die konzentriert werden soll",
+    "keyTopicsRequired": "Bitte gib wichtige Themen an",
+    "summaryLengthLabel": "Zusammenfassungslänge",
+    "summaryLengthShort": "Kurz",
+    "summaryLengthMedium": "Mittel",
+    "summaryLengthLong": "Lang",
+    "summaryLengthRequired": "Wähle eine Zusammenfassungslänge",
+    "preferredFormatLabel": "Bevorzugtes Format",
+    "preferredFormatBulletPoints": "Aufzählungspunkte",
+    "preferredFormatParagraphs": "Absätze",
+    "preferredFormatRequired": "Wähle ein bevorzugtes Format",
+    "highlightTermsLabel": "Wichtige Begriffe hervorheben?",
+    "summarizeButton": "Zusammenfassen"
+  },
+  "Workspace": {
+    "deleteDialog": {
+      "title": "Arbeitsbereich löschen",
+      "message": "Du bist dabei, diesen Arbeitsbereich zu löschen. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "warning": "Dadurch werden der Arbeitsbereich und ALLE zugehörigen Daten, einschließlich Themen, Quiz, Dateien und andere Inhalte, dauerhaft gelöscht.",
+      "confirmationQuestion": "Bist du sicher, dass du \"{name}\" löschen möchtest?",
+      "thisWorkspace": "dieser Arbeitsbereich",
+      "deleting": "Wird gelöscht...",
+      "confirmDelete": "Arbeitsbereich löschen"
+    }
+  },
+  "Common": {
+    "cancel": "Abbrechen"
+  }
+} 

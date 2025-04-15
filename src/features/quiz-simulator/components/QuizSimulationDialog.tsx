@@ -73,7 +73,8 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
     allQuestionsAnswered,
     submitQuizAnswers,
     handleReviewQuestions: startReviewQuestions,
-    setReviewMode: setSimulationReviewMode
+    setReviewMode: setSimulationReviewMode,
+    finishAndSubmitQuiz
   } = useQuizSimulation(quiz, resetMode ? null : previousSubmission);
 
   // Reset quiz state when resetMode changes
@@ -129,69 +130,18 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
     }
   };
   
-  // NEW: Handle manual submission with better validation
-  const handleSubmitResults = async () => {
-    console.log('handleSubmitResults called with:', {
-      quizId: quiz?.id,
-      userId,
-      isAuthenticated,
-      hasToken: !!accessToken,
-      workspaceId: quiz?.workspaceId,
-      hasUserAnswers: Object.keys(userAnswers).length > 0
-    });
-
-    if (!quiz) {
-      setSnackbarMessage('Cannot submit results: Quiz data is missing');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-    
-    if (!isAuthenticated || !userId || !accessToken) {
-      setSnackbarMessage('Cannot submit results: Authentication required');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      
-      // Offer to refresh the session
-      setTimeout(() => {
-        if (window.confirm('Your session may have expired. Would you like to refresh it?')) {
-          handleRefreshSession();
-        }
-      }, 500);
-      
-      return;
-    }
-    
-    if (submissionSuccess || isSubmitting) {
-      return; // Already submitted or in progress
-    }
-    
-    try {
-      console.log('Submitting quiz results with userId:', userId);
-      await submitQuizAnswers(userId);
+  // When the user clicks "Finish Quiz", we now use finishAndSubmitQuiz
+  const handleFinishQuiz = async () => {
+    const success = await finishAndSubmitQuiz();
+    if (success) {
       setSnackbarMessage('Quiz results saved successfully!');
       setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-    } catch (error: any) {
-      const errorMessage = error.message || 'Unknown error';
-      
-      // Check if it's an auth error
-      const isAuthError = errorMessage.toLowerCase().includes('auth') || 
-                          errorMessage.toLowerCase().includes('log in');
-      
-      setSnackbarMessage(`Failed to save results: ${errorMessage}`);
+    } else if (isAuthenticated && userId && accessToken) {
+      // Only show error if user is authenticated but submission failed
+      setSnackbarMessage('Note: Failed to save quiz results.');
       setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      
-      // For auth errors, offer to refresh the session
-      if (isAuthError) {
-        setTimeout(() => {
-          if (window.confirm('Authentication error detected. Would you like to refresh your session?')) {
-            handleRefreshSession();
-          }
-        }, 500);
-      }
     }
+    setSnackbarOpen(true);
   };
   
   // Show error message if submission fails
@@ -276,9 +226,8 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
               onRetry={handleRetry}
               onClose={onClose}
               onReviewQuestions={handleReviewQuestions}
-              onSubmitResults={handleSubmitResults}
               submissionSuccess={submissionSuccess}
-              isSubmitting={isSubmitting}
+              isSubmitting={isSubmitting || loadingSubmission}
             />
           ) : (
             <>
@@ -301,7 +250,7 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
                   totalQuestions={quiz.questions.length}
                   onPrevious={goToPreviousQuestion}
                   onNext={goToNextQuestion}
-                  onFinish={finishQuiz}
+                  onFinish={handleFinishQuiz}
                   canFinish={allQuestionsAnswered}
                 />
               ) : (

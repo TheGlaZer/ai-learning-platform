@@ -1,14 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import { 
-  Box, 
-  Card, 
+  CardActionArea, 
   CardContent, 
-  Typography, 
-  Chip, 
-  IconButton,
-  CardActionArea,
-  Tooltip,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -20,14 +14,25 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Quiz } from '@/app/models/quiz';
 import QuizSimulator from '@/features/quiz-simulator';
-import ExportQuizButton from '@/components/quiz/ExportQuizButton';
 import { exportQuizClient } from '@/app/lib-client/quizClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveAs } from 'file-saver';
 import { useQuizSubmission } from '@/app/lib-client/hooks/useQuizSubmissions';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { 
+  BaseCard,
+  CardHeader,
+  CardTitleContainer,
+  CardIconAvatar,
+  CardTitle,
+  CardMenuButton,
+  CardFooter,
+  CardDate,
+  CardChip
+} from './DashboardStyledComponents';
+import { primary, accent } from '../../../../colors';
 
 interface QuizCardProps {
   quiz: Quiz;
@@ -152,61 +157,41 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
 
   return (
     <>
-      <Card 
-        sx={{ 
-          mb: 2, 
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          '&:hover': {
-            transform: 'translateY(-3px)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-          },
-          maxWidth: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
-        <CardActionArea 
-          onClick={handleClick}
-          sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
-        >
-          <CardContent sx={{ p: 2, pb: 1.5, flexGrow: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 0.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', maxWidth: 'calc(100% - 50px)' }}>
-                <QuizIcon color="primary" sx={{ mr: 1, fontSize: '1.2rem' }} />
-                <Typography variant="subtitle1" noWrap sx={{ fontWeight: 500 }}>
+      <BaseCard>
+        <CardActionArea onClick={handleClick}>
+          <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
+            <CardHeader>
+              <CardTitleContainer>
+                <CardIconAvatar sx={{ bgcolor: accent.purple.light, width: 28, height: 28 }}>
+                  <QuizIcon fontSize="small" />
+                </CardIconAvatar>
+                <CardTitle variant="subtitle1">
                   {quiz.title}
-                </Typography>
-              </Box>
-              <IconButton 
-                size="small" 
+                </CardTitle>
+              </CardTitleContainer>
+              <CardMenuButton
+                size="small"
                 onClick={handleMenuOpen}
-                sx={{ 
-                  ml: 'auto', 
-                  p: 0.5,
-                  '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' } 
-                }}
+                aria-label="quiz options"
               >
                 <MoreVertIcon fontSize="small" />
-              </IconButton>
-            </Box>
+              </CardMenuButton>
+            </CardHeader>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-              <Typography variant="caption" color="text.secondary">
+            <CardFooter>
+              <CardDate variant="caption">
                 {formattedDate}
-              </Typography>
-              <Chip 
+              </CardDate>
+              <CardChip 
                 label={`${quiz.questions.length} Q`} 
                 size="small" 
                 color="primary" 
                 variant="outlined"
-                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.65rem' } }}
               />
-            </Box>
+            </CardFooter>
           </CardContent>
         </CardActionArea>
-      </Card>
+      </BaseCard>
       
       <Menu
         anchorEl={anchorEl}
@@ -215,20 +200,28 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
         onClick={handleMenuClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          elevation: 2,
+          sx: { 
+            minWidth: 180,
+            borderRadius: '8px',
+            mt: 0.5
+          }
+        }}
       >
         {hasPreviousSubmission ? (
           <MenuItem onClick={handleContinueQuiz}>
             <ListItemIcon>
               <PlayArrowIcon fontSize="small" color="primary" />
             </ListItemIcon>
-            <ListItemText>Continue Quiz</ListItemText>
+            <ListItemText primary="Continue Quiz" />
           </MenuItem>
         ) : (
           <MenuItem onClick={handleStartQuiz}>
             <ListItemIcon>
               <VisibilityIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Start Quiz</ListItemText>
+            <ListItemText primary="Start Quiz" />
           </MenuItem>
         )}
         
@@ -236,7 +229,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
           <ListItemIcon>
             <RefreshIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Reset Quiz</ListItemText>
+          <ListItemText primary="Reset Quiz" />
         </MenuItem>
         
         {quiz.id && (
@@ -244,26 +237,28 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
             <ListItemIcon>
               <FileDownloadIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Export to Word</ListItemText>
+            <ListItemText primary="Export to Word" />
           </MenuItem>
         )}
         
-        {onDelete && (
+        {onDelete && quiz.id && (
           <MenuItem onClick={handleDelete}>
             <ListItemIcon>
               <DeleteIcon fontSize="small" color="error" />
             </ListItemIcon>
-            <ListItemText>Delete Quiz</ListItemText>
+            <ListItemText primary="Delete Quiz" />
           </MenuItem>
         )}
       </Menu>
       
-      <QuizSimulator
-        quiz={quiz}
-        open={showQuizSimulator}
-        onClose={handleCloseQuizSimulator}
-        resetMode={resetQuiz}
-      />
+      {showQuizSimulator && (
+        <QuizSimulator
+          open={showQuizSimulator}
+          onClose={handleCloseQuizSimulator}
+          quiz={quiz}
+          resetMode={resetQuiz}
+        />
+      )}
     </>
   );
 };

@@ -50,8 +50,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    // Get authorization header
+    const authHeader = req.headers.get('authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    
     // Get request data
-    const { name, description, token } = await req.json();
+    const { name, description } = await req.json();
     
     if (!token) {
       return NextResponse.json({ error: "Unauthorized: No token provided" }, { status: 401 });

@@ -1,7 +1,140 @@
 {
   "HomePage": {
     "title": "Hello world! its ofek !!!",
-    "about": "Go to the about page"
+    "about": "Go to the about page",
+    "platformName": "פלטפורמת למידה בעזרת בינה מלאכותית",
+    "heroTitle": "מהפכה בלמידה שלך עם",
+    "heroSubtitle": "חינוך מונע בינה מלאכותית",
+    "heroDescription": "שליטה במיומנויות חדשות ביעילות עם הדרכה אישית מותאמת AI, מסלולי למידה מותאמים אישית, ותרגילים אינטראקטיביים.",
+    "getStartedButton": "התחל בחינם",
+    "signInButton": "התחברות",
+    "joinStudentsText": "הצטרף ליותר מ-{count} תלמידים שכבר לומדים",
+    "featuresTitle": "תכונות למידה חזקות מבוססות בינה מלאכותית",
+    "featuresSubtitle": "הפלטפורמה שלנו משלבת טכנולוגיית AI מתקדמת עם מתודולוגיות חינוכיות מוכחות כדי לספק חוויית למידה יוצאת דופן.",
+    "features": {
+      "aiTutoring": {
+        "title": "הדרכה מבוססת בינה מלאכותית",
+        "description": "קבל עזרה אישית ממדריכי הבינה המלאכותית המתקדמים שלנו המסתגלים לסגנון הלמידה והקצב שלך."
+      },
+      "learningPaths": {
+        "title": "מסלולי למידה מותאמים אישית",
+        "description": "עקוב אחר מסלולי למידה שתוכננו במיוחד למטרות, כישורים ושיטות הלמידה המועדפות עליך."
+      },
+      "progressTracking": {
+        "title": "מעקב התקדמות",
+        "description": "עקוב אחר ההתקדמות שלך עם ניתוחים מפורטים ודוחות התקדמות כדי למטב את הלמידה שלך."
+      },
+      "collaborativeLearning": {
+        "title": "למידה שיתופית",
+        "description": "התחבר לעמיתים והשתתף בתרגילים קבוצתיים כדי לשפר את ההבנה שלך באמצעות שיתוף פעולה."
+      }
+    },
+    "testimonialsTitle": "מה אומרים המשתמשים שלנו",
+    "testimonialsSubtitle": "אלפי לומדים שינו את מסע החינוך שלהם עם פלטפורמת הלמידה AI שלנו",
+    "testimonials": {
+      "testimonial1": {
+        "quote": "ההדרכה של הבינה המלאכותית שינתה לחלוטין את הגישה שלי לנושאים קשים. זה כמו שיש לי מורה פרטי זמין 24/7.",
+        "name": "שרה ג'ונסון",
+        "role": "מהנדסת תוכנה"
+      },
+      "testimonial2": {
+        "quote": "כמחנך, ראיתי ממקור ראשון כיצד פלטפורמה זו מסתגלת לסגנונות למידה שונים. התלמידים שלי מעורבים יותר מאי פעם.",
+        "name": "מייקל צ'ן",
+        "role": "פרופסור באוניברסיטה"
+      },
+      "testimonial3": {
+        "quote": "מסלולי הלמידה המותאמים אישית עזרו לי לרכוש מיומנויות חדשות בקצב שלי, ומעקב ההתקדמות שמר על המוטיבציה שלי לאורך כל הדרך.",
+        "name": "עאישה פטל",
+        "role": "מדענית נתונים"
+      }
+    },
+    "ctaTitle": "התחל את מסע הלמידה האינטליגנטי שלך היום",
+    "ctaSubtitle": "הצטרף לאלפי סטודנטים שכבר חווים את עתיד החינוך. השבוע הראשון שלך הוא לחלוטין בחינם - ללא צורך בכרטיס אשראי.",
+    "ctaButtonStart": "התחל בחינם",
+    "ctaButtonLearn": "למד עוד",
+    "ctaNoCredit": "אין צורך בכרטיס אשראי. ניתן לבטל בכל עת."
+  },
+  "Analytics": {
+    "pageTitle": "ניתוח למידה",
+    "pageDescription": "עקוב אחר התקדמותך וזהה תחומים לשיפור",
+    "workspaceInfo": "סביבת עבודה: {name}",
+    "refreshButton": "רענן",
+    "refreshingButton": "מרענן...",
+    "errorTitle": "שגיאה",
+    "authErrorTitle": "שגיאת אימות",
+    "authRequired": "אנא התחבר כדי לצפות בניתוח",
+    "signInButton": "התחבר שוב",
+    "noWorkspace": "לא נבחרה סביבת עבודה",
+    "selectWorkspacePrompt": "אנא בחר סביבת עבודה מהסרגל הצדי כדי לצפות בניתוח שלך.",
+    "noWorkspacesYet": "אין לך עדיין סביבות עבודה. צור אחת כדי להתחיל.",
+    "dashboardButton": "עבור ללוח הבקרה",
+    "noDataTitle": "אין נתוני ניתוח",
+    "noDataText": "אין נתוני ניתוח זמינים עבור סביבת עבודה זו עדיין. השלם כמה שאלונים כדי לראות את ניתוח הביצועים שלך.",
+    "noDataHint": "נסה לענות על שאלונים בנושאים שונים כדי לעקוב אחר התקדמותך ולראות ניתוח מפורט כאן.",
+    "subjectPerformanceTitle": "ביצועים לפי נושא",
+    "subjectDistributionTitle": "התפלגות נושאים",
+    "questionsDistributionFooter": "התפלגות של {total} שאלות על פני {count} נושאים",
+    "overallScore": "ציון כולל",
+    "basedOnQuizzes": "מבוסס על {count} שאלונים",
+    "subjectKnowledge": "ידע בנושאים",
+    "subjectsTracked": "נושאים מנוטרים",
+    "keepTakingQuizzes": "המשך לענות על שאלונים כדי לשפר את הניטור שלך",
+    "takeQuizzesToStart": "ענה על שאלונים כדי להתחיל לנטר נושאים",
+    "areasForImprovement": "תחומים לשיפור",
+    "noWeakAreas": "טרם זוהו תחומים חלשים. המשך לענות על שאלונים!",
+    "yourStrengths": "החוזקות שלך",
+    "noStrengths": "טרם זוהו חוזקות. המשך לענות על שאלונים!",
+    "correctOf": "{correct} נכונות מתוך {total} שאלות",
+    "notEnoughData": "אין מספיק נתונים להצגת תרשימי ביצועים. השלם יותר שאלונים כדי לראות ניתוח מפורט."
+  },
+  "SignupPage": {
+    "formTitle": "הצטרף לקהילת הלמידה שלנו",
+    "formSubtitle": "צור חשבון כדי להתחיל ללמוד",
+    "fullNameLabel": "שם מלא",
+    "fullNameRequired": "יש להזין שם מלא",
+    "fullNameTooShort": "השם חייב להכיל לפחות 2 תווים",
+    "emailLabel": "כתובת אימייל",
+    "emailRequired": "יש להזין כתובת אימייל",
+    "emailInvalid": "כתובת אימייל לא תקינה",
+    "passwordLabel": "סיסמה",
+    "passwordRequired": "יש להזין סיסמה",
+    "passwordTooShort": "הסיסמה חייבת להכיל לפחות 6 תווים",
+    "confirmPasswordLabel": "אימות סיסמה",
+    "confirmPasswordRequired": "יש לאמת את הסיסמה",
+    "passwordsDoNotMatch": "הסיסמאות אינן תואמות",
+    "creatingAccount": "יוצר חשבון...",
+    "createAccount": "צור חשבון",
+    "orDivider": "או",
+    "googleSignup": "הירשם עם גוגל",
+    "alreadyHaveAccount": "כבר יש לך חשבון?",
+    "loginLink": "התחבר",
+    "welcomeTitle": "למידה מונעת בינה מלאכותית",
+    "welcomeSubtitle": "הצטרף לאלפי לומדים המשפרים את כישוריהם עם הפלטפורמה שלנו.",
+    "feature1Title": "למידה מותאמת אישית",
+    "feature1Desc": "תוכן מותאם AI לסגנון הלמידה שלך",
+    "feature2Title": "חוויה אינטראקטיבית",
+    "feature2Desc": "תוכן מעניין שמתאים את עצמו להתקדמות שלך",
+    "feature3Title": "ספריית ידע",
+    "feature3Desc": "גישה לחומרי לימוד איכותיים",
+    "registrationSuccess": "ההרשמה הושלמה בהצלחה! אנא בדוק את האימייל שלך לאישור החשבון לפני ההתחברות.",
+    "redirectingToDashboard": "ההרשמה הושלמה בהצלחה! מעביר אותך ללוח הבקרה..."
+  },
+  "LoginPage": {
+    "formTitle": "ברוך שובך",
+    "formSubtitle": "התחבר כדי להמשיך את מסע הלמידה שלך",
+    "emailLabel": "כתובת אימייל",
+    "emailRequired": "יש להזין כתובת אימייל",
+    "passwordLabel": "סיסמה",
+    "passwordRequired": "יש להזין סיסמה",
+    "loggingIn": "מתחבר...",
+    "login": "התחבר",
+    "googleLogin": "התחבר עם גוגל",
+    "connecting": "מתחבר...",
+    "forgotPassword": "שכחת סיסמה?",
+    "newUser": "חדש בפלטפורמה?",
+    "signupLink": "צור חשבון",
+    "welcomeTitle": "ברוך שובך ללמידה",
+    "welcomeSubtitle": "המשך את חווית הלמידה המותאמת אישית בעזרת בינה מלאכותית."
   },
   "FileUploadForm": {
     "uploadFileTitle": "העלה קובץ לסיכום",
@@ -20,6 +153,67 @@
     "preferredFormatRequired": "בחר פורמט",
     "highlightTermsLabel": "הדגש מונחים חשובים?",
     "summarizeButton": "סכם"
+  },
+  "Workspace": {
+    "deleteDialog": {
+      "title": "מחיקת סביבת עבודה",
+      "message": "אתה עומד למחוק את סביבת העבודה הזו. פעולה זו אינה ניתנת לביטול.",
+      "warning": "פעולה זו תמחק לצמיתות את סביבת העבודה וכל הנתונים הקשורים אליה, כולל נושאים, שאלונים, קבצים ותוכן אחר.",
+      "confirmationQuestion": "האם אתה בטוח שברצונך למחוק את \"{name}\"?",
+      "thisWorkspace": "סביבת העבודה הזו",
+      "deleting": "מוחק...",
+      "confirmDelete": "מחק סביבת עבודה"
+    }
+  },
+  "QuizGeneration": {
+    "dialogTitle": "צור שאלון עם בינה מלאכותית",
+    "selectFile": "בחר קובץ ליצירת שאלות",
+    "file": "קובץ",
+    "fileRequired": "נא לבחור קובץ",
+    "enterTopic": "הזן נושא לשאלון",
+    "topic": "נושא",
+    "topicRequired": "נא להזין נושא",
+    "topicPlaceholder": "לדוגמה: מבני נתונים, מלחמת העולם השנייה, פסיכולוגיה קוגניטיבית",
+    "configureOptions": "הגדר אפשרויות שאלון",
+    "questionCount": "מספר שאלות",
+    "questionCountError": "מספר השאלות חייב להיות בין 1 ל-20",
+    "difficulty": "רמת קושי",
+    "difficultyEasy": "קל",
+    "difficultyMedium": "בינוני",
+    "difficultyHard": "קשה",
+    "difficultyExpert": "מומחה",
+    "additionalInstructions": "הוראות נוספות",
+    "additionalInstructionsTooltip": "ההוראות שלך יקבלו עדיפות גבוהה בתהליך יצירת השאלון",
+    "instructionsLabel": "הוסף הערות/הוראות משלך (עדיפות גבוהה)",
+    "instructionsPlaceholder": "לדוגמה: 'התמקד במושגים תיאורטיים', 'כלול לפחות 2 שאלות קידוד', 'צור שאלות על סעיפים ספציפיים...'",
+    "pastExamReference": "התייחסות למבחן קודם",
+    "pastExamTooltip": "כלול מבחן קודם כדי להנחות את הבינה המלאכותית ביצירת שאלות עם דפוסים דומים",
+    "includePastExam": "כלול מבחן קודם כהתייחסות",
+    "selectPastExam": "בחר מבחן קודם",
+    "selectExamPrompt": "בחר מבחן קודם",
+    "pastExamRequired": "נא לבחור מבחן קודם",
+    "noPastExams": "אין מבחנים קודמים זמינים. נא להעלות מבחנים קודמים בסעיף הקבצים תחילה.",
+    "pastExamDescription": "בחר מבחן קודם כדי לעזור לבינה המלאכותית ליצור שאלות הדומות בדפוס ובסגנון.",
+    "selectSubjects": "בחר נושאים",
+    "subjectsTooltip": "לחץ על נושא כדי להחליף סטטוס עדיפות גבוהה. נושאים בעדיפות גבוהה (בכחול) יקבלו התמקדות בשאלון. הסר נושא באמצעות כפתור X.",
+    "refreshSubjects": "רענן רשימת נושאים",
+    "noSubjects": "אין נושאים זמינים. צור נושאים בסביבת העבודה שלך תחילה.",
+    "subjectsClickInstructions": "לחץ על נושא כדי לסמן אותו כעדיפות גבוהה (כחול). נושאים בעדיפות גבוהה יקבלו התמקדות בשאלון.",
+    "generatingProgress": "מייצר את השאלון שלך... {progress}%",
+    "cancel": "ביטול",
+    "generateQuiz": "צור שאלון",
+    "quizGeneratedSuccess": "השאלון נוצר בהצלחה!",
+    "quizGeneratedMessage": "השאלון שלך \"{title}\" עם {count} שאלות נוצר.",
+    "untitled": "ללא כותרת"
+  },
+  "Navigation": {
+    "home": "דף הבית",
+    "dashboard": "לוח בקרה",
+    "analytics": "ניתוח נתונים",
+    "profile": "הגדרות פרופיל"
+  },
+  "Common": {
+    "cancel": "ביטול"
   }
 }
   

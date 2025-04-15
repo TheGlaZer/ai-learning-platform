@@ -118,22 +118,77 @@ const updateSubjectPerformance = async (
       return; // No subjects to track
     }
     
-    // If the quiz has subjects but questions don't have explicit mappings,
-    // assume all questions relate to all subjects in the quiz
-    const subjectIds = quiz.selectedSubjects;
+    // Fetch subject information to map between names and IDs
+    const { data: subjects, error: subjectsError } = await client
+      .from('subjects')
+      .select('id, name')
+      .in('id', quiz.selectedSubjects)
+      .eq('workspace_id', workspaceId);
     
-    // For each subject, update performance metrics
-    for (const subjectId of subjectIds) {
-      // Get questions for this subject (all questions if not specifically mapped)
-      const questionsForSubject = answers.filter(answer => 
-        !answer.subjectIds || answer.subjectIds.includes(subjectId)
-      );
+    if (subjectsError) {
+      console.error('Error fetching subjects:', subjectsError);
+      // Continue with limited functionality
+    }
+    
+    // Create mappings for easy lookup
+    const subjectNameToId = new Map<string, string>();
+    if (subjects) {
+      subjects.forEach(subject => {
+        subjectNameToId.set(subject.name, subject.id);
+      });
+    }
+    
+    // Get the full questions from the quiz to access relatedSubject field
+    const subjectPerformanceMap = new Map<string, { correct: number, total: number }>();
+    
+    // Process each answer
+    for (const answer of answers) {
+      // Find the corresponding question in the quiz
+      const question = quiz.questions.find(q => q.id === answer.questionId);
+      if (!question) continue;
       
-      if (questionsForSubject.length === 0) continue;
+      // Determine which subject this question belongs to
+      let subjectId: string | undefined;
       
-      // Count correct answers for this subject
-      const correctAnswers = questionsForSubject.filter(answer => answer.isCorrect).length;
-      const totalQuestions = questionsForSubject.length;
+      // First try to use the relatedSubject field if available
+      if (question.relatedSubject) {
+        // Try to map the subject name to ID
+        subjectId = subjectNameToId.get(question.relatedSubject);
+        
+        // If name lookup failed, try direct ID match (in case relatedSubject contains an ID)
+        if (!subjectId && quiz.selectedSubjects.includes(question.relatedSubject)) {
+          subjectId = question.relatedSubject;
+        }
+      }
+      
+      // If no relatedSubject or matching ID found, fall back to using subjectIds from the answer if available
+      if (!subjectId && answer.subjectIds && answer.subjectIds.length > 0) {
+        subjectId = answer.subjectIds[0]; // Use the first subject ID
+      }
+      
+      // If still no subject found, use all selected subjects (fallback to original behavior)
+      if (!subjectId) {
+        // Update metrics for all subjects in the quiz
+        for (const id of quiz.selectedSubjects) {
+          const current = subjectPerformanceMap.get(id) || { correct: 0, total: 0 };
+          current.total += 1;
+          if (answer.isCorrect) current.correct += 1;
+          subjectPerformanceMap.set(id, current);
+        }
+      } else {
+        // Update metrics just for the specific subject
+        const current = subjectPerformanceMap.get(subjectId) || { correct: 0, total: 0 };
+        current.total += 1;
+        if (answer.isCorrect) current.correct += 1;
+        subjectPerformanceMap.set(subjectId, current);
+      }
+    }
+    
+    // Now update the database for each subject
+    for (const [subjectId, performance] of Array.from(subjectPerformanceMap.entries())) {
+      const { correct: correctAnswers, total: totalQuestions } = performance;
+      if (totalQuestions === 0) continue;
+      
       const score = correctAnswers / totalQuestions;
       
       // First, check if a performance record exists for this subject

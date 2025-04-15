@@ -30,7 +30,6 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
   onSave
 }) => {
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -38,7 +37,6 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
   useEffect(() => {
     if (file) {
       setName(file.name || '');
-      setDescription(file.metadata?.description || '');
     }
   }, [file]);
 
@@ -49,13 +47,10 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
     setError(null);
     
     try {
-      // Create updated metadata
       const updatedMetadata = {
-        ...file.metadata,
-        description
+        ...file.metadata
       };
       
-      // Create updates object
       const updates: Partial<FileMetadata> = {
         name,
         metadata: updatedMetadata
@@ -81,14 +76,21 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        bgcolor: 'background.paper',
+        borderBottom: '1px solid',
+        borderColor: 'divider'
+      }}>
         <Typography variant="h6">Edit File Information</Typography>
         <IconButton edge="end" color="inherit" onClick={onClose} aria-label="close">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       
-      <DialogContent>
+      <DialogContent sx={{ pt: 3, pb: 2 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -109,23 +111,17 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
             fullWidth
             disabled={loading}
             required
-          />
-          
-          <TextField
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            multiline
-            rows={4}
-            disabled={loading}
-            placeholder="Add a description for this file..."
+            autoFocus
           />
         </Box>
       </DialogContent>
       
-      <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+      <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Button 
+          onClick={onClose} 
+          disabled={loading}
+          sx={{ color: 'text.secondary' }}
+        >
           Cancel
         </Button>
         <Button

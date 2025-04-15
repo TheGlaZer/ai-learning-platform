@@ -1,9 +1,10 @@
 "use client";
 import React from 'react';
-import { Box, Typography, Card, CardContent } from '@mui/material';
+import { Typography } from '@mui/material';
 import { Workspace } from '@/app/models/workspace';
 import { FileMetadata } from '@/app/models/file';
 import WorkspaceCard from './WorkspaceCard';
+import { EmptyStateContainer, EmptyStateText } from './DashboardStyledComponents';
 
 interface WorkspaceListProps {
   workspaces: Workspace[];
@@ -21,20 +22,16 @@ const WorkspaceList: React.FC<WorkspaceListProps> = ({
   return (
     <>
       {workspaces?.length == 0 ? (
-        <Card sx={{ mb: 2 }}>
-          <CardContent>
-            <Typography variant="body1" color="text.secondary">
-              You don't have any workspaces yet. Create your first workspace to get started.
-            </Typography>
-          </CardContent>
-        </Card>
+        <EmptyStateContainer>
+          <EmptyStateText>
+            You don't have any workspaces yet. Create your first workspace to get started.
+          </EmptyStateText>
+        </EmptyStateContainer>
       ) : (
         workspaces?.map((workspace) => (
           <WorkspaceCard 
             key={workspace.id}
             workspace={workspace} 
-            files={workspaceFiles[workspace.id] || []} 
-            isSelected={selectedWorkspace?.id === workspace.id}
             onClick={onWorkspaceSelect}
           />
         ))

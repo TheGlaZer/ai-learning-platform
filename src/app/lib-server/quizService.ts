@@ -223,11 +223,82 @@ function getMimeTypeFromExtension(extension?: string): string {
  */
 export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> => {
   try {
-    console.log(`Starting quiz generation with params: ${JSON.stringify({
-      ...params,
-      userId: params.userId ? '[REDACTED]' : undefined,
-      token: params.token ? '[REDACTED]' : undefined
-    }, null, 2)}`);
+    // Validate required parameters
+    if (!params.fileId || !params.topic || !params.userId || !params.workspaceId) {
+      throw new Error('Missing required parameters for quiz generation');
+    }
+    
+    // Get authenticated client if token is provided
+    const client = params.token ? await getAuthenticatedClient(params.token) : supabase;
+
+    // Get file content to generate from
+    const { content: fileContent } = await getFileContent(params.fileId, params.token);
+    
+    // If no content, throw error
+    if (!fileContent) {
+      throw new Error(`No content found for file with ID: ${params.fileId}`);
+    }
+    
+    // If includePastExam is true and pastExamId is provided but pastExamContent is not,
+    // fetch and extract the past exam content
+    if (params.includePastExam && params.pastExamId && !params.pastExamContent) {
+      try {
+        console.log(`Fetching past exam content for ID: ${params.pastExamId}`);
+        
+        // Get the past exam record
+        const { data: pastExam, error: examError } = await client
+          .from('past_exams')
+          .select('*')
+          .eq('id', params.pastExamId)
+          .eq('user_id', params.userId)
+          .single();
+        
+        if (examError || !pastExam) {
+          console.error('Error fetching past exam:', examError);
+          throw new Error(`Could not find past exam with ID: ${params.pastExamId}`);
+        }
+        
+        // Extract file path from the URL
+        const filePath = extractFilePathFromUrl(pastExam.url);
+        if (!filePath) {
+          throw new Error(`Invalid URL for past exam: ${pastExam.url}`);
+        }
+        
+        // Download the file
+        console.log(`Downloading past exam file from path: ${filePath}`);
+        const { data: fileData, error: fileError } = await client.storage
+          .from('files')
+          .download(filePath);
+        
+        if (fileError || !fileData) {
+          console.error('Error downloading past exam file:', fileError);
+          throw new Error('Failed to download past exam file');
+        }
+        
+        // Get file extension and MIME type
+        const fileExtension = filePath.split('.').pop()?.toLowerCase();
+        const mimeType = getMimeTypeFromExtension(fileExtension);
+        
+        // Extract text from the file
+        const arrayBuffer = await fileData.arrayBuffer();
+        const extractedText = await extractTextFromFile(
+          arrayBuffer,
+          mimeType,
+          filePath.split('/').pop() || 'past_exam',
+          { language: 'auto' }
+        );
+        
+        // Set the extracted text as pastExamContent
+        params.pastExamContent = extractedText;
+        console.log(`Successfully extracted past exam content (${extractedText.length} chars)`);
+      } catch (pastExamError) {
+        console.error('Error processing past exam:', pastExamError);
+        // Continue without past exam content if there's an error
+        console.log('Continuing quiz generation without past exam reference');
+        params.includePastExam = false;
+        params.pastExamContent = undefined;
+      }
+    }
     
     // Fetch previous quizzes if not already provided
     let previousQuestionTexts: string[] = [];
@@ -386,11 +457,17 @@ export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> 
       maxTokens: 2000,
       language: languageForGeneration,
       model: 'gpt-4o-mini', // Changed from gpt-4o to gpt-4o-mini for higher token limits
-      includeFileReferences: params.includeFileReferences !== false // Default to true if not specified
+      includeFileReferences: params.includeFileReferences !== false, // Default to true if not specified
+      includePastExam: params.includePastExam,
+      pastExamContent: params.pastExamContent
     };
     
     console.log(`Using model gpt-4o-mini for quiz generation on content length: ${content.length} chars in language: ${languageForGeneration}`);
     console.log(`File references in explanations: ${params.includeFileReferences !== false ? 'enabled' : 'disabled'}`);
+    console.log(`Including past exam as reference: ${params.includePastExam ? 'yes' : 'no'}`);
+    if (params.includePastExam && params.pastExamContent) {
+      console.log(`Past exam content length: ${params.pastExamContent.length} chars`);
+    }
     
     // Log a sample of the content to verify language detection was correct
     const contentSample = content.substring(0, 200).replace(/\n/g, ' ');
@@ -724,3 +801,24 @@ export const deleteQuiz = async (quizId: string, token?: string): Promise<boolea
     throw error;
   }
 };
+
+/**
+ * Extracts a file path from a Supabase Storage URL
+ */
+function extractFilePathFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    // The path usually follows the pattern /storage/v1/object/public/files/private/user_id/workspace_id/filename
+    // We need to extract the part after "files/"
+    const pathParts = urlObj.pathname.split('/');
+    const filesIndex = pathParts.findIndex(part => part === 'files');
+    
+    if (filesIndex !== -1 && filesIndex < pathParts.length - 1) {
+      return pathParts.slice(filesIndex + 1).join('/');
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting file path from URL:', error);
+    return null;
+  }
+}

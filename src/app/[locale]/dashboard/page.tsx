@@ -1,13 +1,10 @@
-import DashboardPage from "@/_pages/dashboard/DashboardPage";
 import DashboardLayout from "@/components/DashboardLayout";
-import AuthGuard from "@/components/AuthGuard";
+import DashboardClientWrapper from "@/components/DashboardClientWrapper";
 
 export default function Page() {
     return (
         <DashboardLayout>
-            <AuthGuard>
-                <DashboardPage />
-            </AuthGuard>
+            <DashboardClientWrapper />
         </DashboardLayout>
     );
 }

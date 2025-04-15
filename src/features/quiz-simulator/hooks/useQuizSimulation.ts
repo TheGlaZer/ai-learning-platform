@@ -224,7 +224,6 @@ export const useQuizSimulation = (quiz: Quiz | null, initialState?: QuizSubmissi
       // Submit to the API
       await submitAnswers(
         quiz.id,
-        userId,
         quiz.workspaceId,
         formattedAnswers
       );
@@ -243,6 +242,25 @@ export const useQuizSimulation = (quiz: Quiz | null, initialState?: QuizSubmissi
     setReviewMode(true);
     setCurrentQuestionIndex(0);
   }, []);
+
+  // New function to handle both finishing the quiz and submitting results
+  const finishAndSubmitQuiz = useCallback(async () => {
+    // First mark the quiz as finished
+    setIsFinished(true);
+    
+    // Then submit the answers if user is authenticated
+    if (quiz && userId) {
+      try {
+        // Call submitQuizAnswers with userId as that's what it expects
+        await submitQuizAnswers(userId);
+        return true;
+      } catch (error) {
+        console.error('Error submitting quiz:', error);
+        return false;
+      }
+    }
+    return false;
+  }, [quiz, userId, submitQuizAnswers, setIsFinished]);
 
   return {
     currentQuestionIndex,
@@ -264,6 +282,7 @@ export const useQuizSimulation = (quiz: Quiz | null, initialState?: QuizSubmissi
     allQuestionsAnswered,
     submitQuizAnswers,
     handleReviewQuestions,
-    setReviewMode
+    setReviewMode,
+    finishAndSubmitQuiz
   };
 }; 

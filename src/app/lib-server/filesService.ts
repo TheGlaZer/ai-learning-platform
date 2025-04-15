@@ -1,3 +1,5 @@
+// This file contains server-only functionality for file operations
+// IMPORTANT: Do not import this in client components, use API routes instead
 import { supabase, getAuthenticatedClient } from "./supabaseClient";
 import { FileMetadata } from "@/app/models/file";
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -198,12 +200,87 @@ export const updateFileMetadata = async (fileId: string, updates: any, token?: s
 };
 
 /**
- * Deletes a file from the database
+ * Extracts a file path from a Supabase Storage URL
+ */
+function extractFilePathFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    // The path usually follows the pattern /storage/v1/object/public/files/private/user_id/workspace_id/filename
+    // We need to extract the part after "files/"
+    const pathParts = urlObj.pathname.split('/');
+    const filesIndex = pathParts.findIndex(part => part === 'files');
+    
+    if (filesIndex !== -1 && filesIndex < pathParts.length - 1) {
+      return pathParts.slice(filesIndex + 1).join('/');
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting file path from URL:', error);
+    return null;
+  }
+}
+
+/**
+ * Deletes a file from Supabase Storage
+ */
+export const deleteFileFromStorage = async (filePathOrUrl: string, token?: string): Promise<boolean> => {
+  try {
+    const client = token ? await getAuthenticatedClient(token) : supabase;
+    let filePath = filePathOrUrl;
+    
+    // Check if this is a URL rather than a storage path
+    if (filePathOrUrl.startsWith('http')) {
+      const extractedPath = extractFilePathFromUrl(filePathOrUrl);
+      if (!extractedPath) {
+        console.error('Could not extract file path from URL:', filePathOrUrl);
+        return false;
+      }
+      filePath = extractedPath;
+    }
+    
+    console.log(`Deleting file from storage: ${filePath}`);
+    
+    const { error } = await client.storage
+      .from('files')
+      .remove([filePath]);
+    
+    if (error) {
+      console.error('Error deleting file from storage:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting file from storage:', error);
+    return false;
+  }
+};
+
+/**
+ * Deletes a file from the database and storage
  */
 export const deleteFile = async (fileId: string, token?: string): Promise<boolean> => {
   try {
     const client = token ? await getAuthenticatedClient(token) : supabase;
     
+    // First, get the file data to get the URL for storage deletion
+    const { data: file, error: getError } = await client
+      .from('files')
+      .select('*')
+      .eq('id', fileId)
+      .single();
+    
+    if (getError) {
+      console.error('Error getting file data for deletion:', getError);
+      return false;
+    }
+    
+    // Delete from storage if URL exists
+    if (file?.url) {
+      await deleteFileFromStorage(file.url, token);
+    }
+    
+    // Delete the file record from the database
     const { error } = await client
       .from('files')
       .delete()

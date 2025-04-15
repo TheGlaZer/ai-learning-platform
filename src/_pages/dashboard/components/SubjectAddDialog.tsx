@@ -31,7 +31,6 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
   onAdd
 }) => {
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +46,6 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
         workspaceId,
         userId,
         name: name.trim(),
-        description: description.trim() || undefined,
         source: 'manual'
       };
       
@@ -63,21 +61,27 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
 
   const handleClose = () => {
     setName('');
-    setDescription('');
     setError(null);
     onClose();
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        bgcolor: 'background.paper',
+        borderBottom: '1px solid',
+        borderColor: 'divider'
+      }}>
         <Typography variant="h6">Add New Subject</Typography>
         <IconButton edge="end" onClick={handleClose} aria-label="close">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent>
+      <DialogContent sx={{ pt: 3, pb: 2 }}>
         <Box sx={{ my: 1 }}>
           <TextField
             label="Subject Name"
@@ -91,16 +95,6 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
             autoFocus
           />
 
-          <TextField
-            label="Description (Optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            margin="normal"
-            multiline
-            rows={3}
-          />
-
           {error && name.trim() && (
             <Typography color="error" variant="body2" sx={{ mt: 1 }}>
               {error}
@@ -109,8 +103,12 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
         </Box>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={handleClose} color="inherit">
+      <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Button 
+          onClick={handleClose} 
+          color="inherit"
+          sx={{ color: 'text.secondary' }}
+        >
           Cancel
         </Button>
         <Button

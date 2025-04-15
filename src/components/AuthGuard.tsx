@@ -1,21 +1,68 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Box, Typography, Button, Paper, Container, Stack } from '@mui/material';
+import { Box, Typography, Button, Paper, Container, Stack, CircularProgress } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import LockIcon from '@mui/icons-material/Lock';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, refreshSession } = useAuth();
   const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  
+  useEffect(() => {
+    // Only run the auth check once when the component mounts
+    let mounted = true;
+    
+    const checkAuth = async () => {
+      try {
+        // Delay checking auth status to ensure the refreshSession has time to complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Attempt to refresh session
+        await refreshSession();
+        
+        // Add an artificial delay to prevent UI flashing
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        if (mounted) {
+          setAuthChecked(true);
+          // Only show login form after a delay if not authenticated
+          if (!isAuthenticated) {
+            setTimeout(() => {
+              if (mounted && !isAuthenticated) {
+                setShowLoginForm(true);
+              }
+            }, 500);
+          }
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        if (mounted) {
+          setAuthChecked(true);
+          setTimeout(() => {
+            if (mounted) {
+              setShowLoginForm(true);
+            }
+          }, 500);
+        }
+      }
+    };
+    
+    checkAuth();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [refreshSession, isAuthenticated]);
 
   const handleLogin = () => {
     router.push('/login');
@@ -25,7 +72,22 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     router.push('/signup');
   };
 
-  if (!isAuthenticated) {
+  // Always show loading until auth is checked
+  if (!authChecked || (!isAuthenticated && !showLoginForm)) {
+    return (
+      <Container sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '80vh' 
+      }}>
+        <CircularProgress size={60} />
+      </Container>
+    );
+  }
+
+  // Only show access denied after auth check is complete AND the delay for showing login form has passed
+  if (!isAuthenticated && showLoginForm) {
     return (
       <Container maxWidth="md" sx={{ py: 8 }}>
         <Paper 
@@ -96,6 +158,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
+  // Auth check is complete and user is authenticated, render children
   return <>{children}</>;
 };
 

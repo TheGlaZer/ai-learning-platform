@@ -1,14 +1,8 @@
 "use client";
 import React, { useState } from 'react';
-import styled from '@emotion/styled';
 import {
-  Card,
   CardContent,
   CardActionArea,
-  Typography,
-  Box,
-  Chip,
-  IconButton,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -19,27 +13,18 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Subject } from '@/app/models/subject';
-
-const StyledCard = styled(Card)`
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-`;
-
-const StyledActionArea = styled(CardActionArea)`
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-`;
+import { accent } from '../../../../colors';
+import {
+  BaseCard,
+  CardHeader,
+  CardTitleContainer,
+  CardIconAvatar,
+  CardTitle,
+  CardMenuButton,
+  CardFooter,
+  CardDate,
+  CardChip
+} from './DashboardStyledComponents';
 
 interface SubjectCardProps {
   subject?: Subject;
@@ -102,46 +87,43 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
 
   return (
     <>
-      <StyledCard>
-        <StyledActionArea onClick={handleClick}>
-          <CardContent sx={{ p: 2, pb: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 0.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', maxWidth: 'calc(100% - 50px)' }}>
-                <SubjectIcon color="primary" sx={{ mr: 1, fontSize: '1.2rem' }} />
-                <Typography variant="subtitle1" noWrap sx={{ fontWeight: 500 }}>
+      <BaseCard>
+        <CardActionArea onClick={handleClick}>
+          <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
+            <CardHeader>
+              <CardTitleContainer>
+                <CardIconAvatar sx={{ bgcolor: accent.green.light, width: 28, height: 28 }}>
+                  <SubjectIcon fontSize="small" />
+                </CardIconAvatar>
+                <CardTitle variant="subtitle1">
                   {subject.name || 'Unnamed Subject'}
-                </Typography>
-              </Box>
-              <IconButton 
-                size="small" 
+                </CardTitle>
+              </CardTitleContainer>
+              <CardMenuButton
+                size="small"
                 onClick={handleMenuOpen}
-                sx={{ 
-                  ml: 'auto', 
-                  p: 0.5,
-                  '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' } 
-                }}
+                aria-label="subject options"
               >
                 <MoreVertIcon fontSize="small" />
-              </IconButton>
-            </Box>
+              </CardMenuButton>
+            </CardHeader>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-              <Typography variant="caption" color="text.secondary">
+            <CardFooter>
+              <CardDate variant="caption">
                 {formattedDate}
-              </Typography>
+              </CardDate>
               {subject.source === 'auto' && (
-                <Chip 
+                <CardChip 
                   label="AI Generated" 
                   size="small" 
-                  color="secondary" 
-                  variant="outlined" 
-                  sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.65rem' } }}
+                  color="secondary"
+                  variant="outlined"
                 />
               )}
-            </Box>
+            </CardFooter>
           </CardContent>
-        </StyledActionArea>
-      </StyledCard>
+        </CardActionArea>
+      </BaseCard>
 
       <Menu
         anchorEl={anchorEl}
@@ -150,24 +132,28 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
         onClick={handleMenuClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          elevation: 2,
+          sx: { 
+            minWidth: 180,
+            borderRadius: '8px',
+            mt: 0.5
+          }
+        }}
       >
-        {onEdit && (
-          <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Edit Subject</ListItemText>
-          </MenuItem>
-        )}
+        <MenuItem onClick={handleEdit}>
+          <ListItemIcon>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Edit Subject" />
+        </MenuItem>
         
-        {onDelete && (
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Delete Subject</ListItemText>
-          </MenuItem>
-        )}
+        <MenuItem onClick={handleDelete}>
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText primary="Delete Subject" sx={{ color: 'error.main' }} />
+        </MenuItem>
       </Menu>
     </>
   );
