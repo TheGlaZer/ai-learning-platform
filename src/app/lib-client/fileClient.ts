@@ -10,6 +10,7 @@ import { AxiosError } from 'axios';
  * @param userId      - The ID of the user uploading the file.
  * @param workspaceId - The ID of the workspace to associate with the file.
  * @param file        - The File object to upload.
+ * @param token       - Authentication token.
  * @returns The server response, typically the file metadata.
  */
 export async function uploadFileClient(
@@ -119,3 +120,49 @@ export const updateFileMetadata = async (
     return false;
   }
 };
+
+/**
+ * Get a signed download URL for a file
+ * 
+ * @param fileUrl - The public URL of the file in Supabase storage
+ * @param token - The authentication token
+ * @param fileName - The original file name to use in Content-Disposition (optional)
+ * @returns A promise that resolves to the signed URL for downloading
+ */
+export async function getFileDownloadUrlClient(
+  fileUrl: string,
+  token: string,
+  fileName?: string
+): Promise<string> {
+  try {
+    console.log(`[getFileDownloadUrlClient] Requesting download URL for file: ${fileUrl}`);
+    console.log(`[getFileDownloadUrlClient] With fileName: ${fileName || 'not provided'}`);
+    
+    // Prepare the params, including fileName if provided
+    const params: Record<string, string> = { fileUrl };
+    if (fileName) {
+      params.fileName = fileName;
+      console.log(`[getFileDownloadUrlClient] Included fileName in request params: ${fileName}`);
+    }
+
+    console.log(`[getFileDownloadUrlClient] Making API request to /api/files/download`);
+    const response = await axiosInstance.get(`/api/files/download`, {
+      params,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    console.log(`[getFileDownloadUrlClient] Received response with status: ${response.status}`);
+    if (response.data && response.data.signedUrl) {
+      console.log(`[getFileDownloadUrlClient] Got signed URL. Preview: ${response.data.signedUrl.substring(0, 100)}...`);
+    } else {
+      console.error(`[getFileDownloadUrlClient] Response missing signedUrl:`, response.data);
+    }
+    
+    return response.data.signedUrl;
+  } catch (error) {
+    console.error('[getFileDownloadUrlClient] Error getting file download URL:', error);
+    throw error;
+  }
+}

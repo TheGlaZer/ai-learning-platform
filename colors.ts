@@ -1,39 +1,39 @@
-// Modern learning-themed color palette
+// Modern learning-themed color palette with black and gray tones
 
 // Main colors
 export const primary = {
-  main: '#4F6CFF', // Bright blue - represents knowledge
-  light: '#7B8FFF',
-  dark: '#2A49D1',
+  main: '#333333', // Dark gray - primary color
+  light: '#555555',
+  dark: '#111111',
   contrastText: '#FFFFFF',
-  transparent: 'rgba(79, 108, 255, 0.2)' // Semi-transparent version for shadows/overlays
+  transparent: 'rgba(51, 51, 51, 0.2)' // Semi-transparent version for shadows/overlays
 };
 
 export const secondary = {
-  main: '#FF7A5A', // Coral orange - represents creativity
-  light: '#FF9C85',
-  dark: '#E55C3B',
+  main: '#666666', // Medium gray - secondary color
+  light: '#888888',
+  dark: '#444444',
   contrastText: '#FFFFFF'
 };
 
 // Accent colors
 export const accent = {
   purple: {
-    main: '#9776FF', // Purple - represents imagination
-    light: '#B59DFF',
-    dark: '#7450E8',
+    main: '#444444', // Dark gray - accent
+    light: '#666666',
+    dark: '#222222',
     contrastText: '#FFFFFF'
   },
   green: {
-    main: '#36D6B7', // Teal - represents growth
-    light: '#5DE9CE',
-    dark: '#27B79A',
+    main: '#777777', // Medium gray - accent
+    light: '#999999',
+    dark: '#555555',
     contrastText: '#FFFFFF'
   },
   yellow: {
-    main: '#FFD166', // Yellow - represents inspiration
-    light: '#FFDE8A',
-    dark: '#FFBA33',
+    main: '#AAAAAA', // Light gray - accent
+    light: '#CCCCCC',
+    dark: '#888888',
     contrastText: '#333333'
   }
 };
@@ -52,34 +52,34 @@ export const gradients = {
 
 // Text colors
 export const text = {
-  primary: '#333333',
-  secondary: '#666666',
+  primary: '#111111',
+  secondary: '#333333',
   light: '#FFFFFF',
-  disabled: '#999999',
+  disabled: '#777777',
   white: '#FFFFFF' // Added for direct reference
 };
 
 // Surface colors
 export const surface = {
   paper: '#FFFFFF',
-  background: '#F8F9FE',
+  background: '#F5F5F5',
   card: '#FFFFFF',
-  border: '#EEEEEE'
+  border: '#DDDDDD'
 }; 
 
 // Additional colors for backgrounds
 export const background = {
-  default: '#F8F9FE',
+  default: '#F5F5F5',
   paper: '#FFFFFF',
-  lighter: '#F4F6FC',
-  lightest: '#FAFBFF',
-  hover: '#F0F2FA',
+  lighter: '#F9F9F9',
+  lightest: '#FCFCFC',
+  hover: '#EEEEEE',
   white: '#FFFFFF'
 };
 
 // Border colors
 export const border = {
-  light: '#EEEEEE',
-  medium: '#E0E0E0',
-  dark: '#CCCCCC'
+  light: '#DDDDDD',
+  medium: '#CCCCCC',
+  dark: '#AAAAAA'
 }; 

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
@@ -21,10 +21,13 @@ import {
   FormLabel,
 } from "@mui/material";
 import { uploadFileClient } from "@/app/lib-client/fileClient";
-import { useAuth } from "@/contexts/AuthContext"; // Import the useAuth hook
+import { useAuth } from "@/contexts/AuthContext";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { useRTL } from "@/contexts/RTLContext";
 
 interface SummarizationFormInputs {
   file: FileList;
+  fileName: string;
   keyTopics: string;
   summaryLength: "Short" | "Medium" | "Long";
   preferredFormat: "Bullet Points" | "Paragraphs";
@@ -41,12 +44,29 @@ const StyledContainer = styled(Container)`
 const FileUploadForm: React.FC = () => {
   // Use translations from the "FileUploadForm" namespace
   const t = useTranslations("FileUploadForm");
-  const { accessToken, userId } = useAuth(); // Get the accessToken and userId from AuthContext
+  const { accessToken, userId } = useAuth(); // Get userId from AuthContext
+  const { selectedWorkspace } = useWorkspace(); // Get current workspace from context
+  const { isRTL } = useRTL(); // Get RTL status
+  const [selectedFileName, setSelectedFileName] = useState<string>("");
+  const [workspaceName, setWorkspaceName] = useState<string>("Default");
+
+  // Debug workspace info
+  useEffect(() => {
+    if (selectedWorkspace) {
+      console.log("Workspace details:", selectedWorkspace);
+      console.log("Workspace ID:", selectedWorkspace.id);
+      console.log("Workspace name:", selectedWorkspace.name);
+      setWorkspaceName(selectedWorkspace.name || "Default");
+    } else {
+      console.log("No workspace selected");
+    }
+  }, [selectedWorkspace]);
 
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm<SummarizationFormInputs>({
     defaultValues: {
@@ -55,6 +75,21 @@ const FileUploadForm: React.FC = () => {
       highlightTerms: false,
     },
   });
+
+  // Handle file selection and automatically set the fileName field
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Get the original file name without extension
+      const fullName = files[0].name;
+      const lastDotIndex = fullName.lastIndexOf('.');
+      const nameWithoutExtension = lastDotIndex !== -1 ? fullName.substring(0, lastDotIndex) : fullName;
+      
+      // Set the fileName field with the original file name
+      setValue("fileName", nameWithoutExtension);
+      setSelectedFileName(fullName);
+    }
+  };
 
   const onSubmit: SubmitHandler<SummarizationFormInputs> = async (data) => {
     console.log("Form Data Submitted:", data);
@@ -67,17 +102,41 @@ const FileUploadForm: React.FC = () => {
     }
     const file = fileList[0];
 
-    // Use authenticated userId from AuthContext and a workspaceId
-    // Note: You may want to get the workspaceId from a different source
-    const workspaceId = "bb3c2f83-ab8b-47d4-8087-c8a6e7e17d96";
+    // Check if we have a valid workspace
+    if (!selectedWorkspace) {
+      console.error("No workspace selected");
+      return;
+    }
 
     if (!userId || !accessToken) {
       console.error("User not authenticated");
       return;
     }
 
+    // Create a new File object with a sanitized name (remove spaces, special chars)
+    const fileExtension = file.name.split('.').pop() || '';
+    const sanitizedFileName = data.fileName
+      .replace(/[^\u0590-\u05FF\w\s_.-]/g, '') // Keep Hebrew chars + alphanumeric + underscore, dot, hyphen
+      .replace(/\s+/g, '_');    // Replace spaces with underscores
+    
+    const renamedFile = new File(
+      [file], 
+      `${sanitizedFileName}.${fileExtension}`,
+      { type: file.type }
+    );
+
+    // Use workspace ID for consistency with database
+    console.log('Using workspace ID for upload:', selectedWorkspace.id);
+    console.log('Workspace name (for display only):', workspaceName);
+
     try {
-      const uploadResult = await uploadFileClient(userId, workspaceId, file, accessToken);
+      // Pass userId and workspace ID to upload function
+      const uploadResult = await uploadFileClient(
+        userId,
+        selectedWorkspace.id, // Use ID instead of name
+        renamedFile,
+        accessToken
+      );
       console.log("File upload result:", uploadResult);
       // Here, you might trigger your summarization API call with additional data.
     } catch (error) {
@@ -104,15 +163,27 @@ const FileUploadForm: React.FC = () => {
           borderRadius: "8px",
           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           backgroundColor: "#fff",
+          textAlign: isRTL ? 'right' : 'left',
+          direction: isRTL ? 'rtl' : 'ltr',
         }}
       >
-        <Typography variant="h5" align="center" gutterBottom>
+        <Typography variant="h5" align={isRTL ? "right" : "left"} gutterBottom>
           {t("uploadFileTitle")}
         </Typography>
 
+        {/* Current Workspace Information */}
+        {selectedWorkspace && (
+          <Typography variant="subtitle1" align={isRTL ? "right" : "left"}>
+            Workspace: {workspaceName} (ID: {selectedWorkspace.id})
+          </Typography>
+        )}
+
         {/* File Upload Field */}
-        <FormControl fullWidth>
-          <InputLabel shrink htmlFor="file-upload">
+        <FormControl fullWidth sx={{ textAlign: isRTL ? 'right' : 'left' }}>
+          <InputLabel shrink htmlFor="file-upload" sx={{ 
+            left: isRTL ? 'auto' : '0', 
+            right: isRTL ? '0' : 'auto' 
+          }}>
             {t("fileLabel")}
           </InputLabel>
           <input
@@ -120,11 +191,28 @@ const FileUploadForm: React.FC = () => {
             accept=".pdf,.doc,.docx,.ppt,.pptx"
             id="file-upload"
             {...register("file", { required: t("fileRequired") })}
+            onChange={handleFileChange}
+            style={{ textAlign: isRTL ? 'right' : 'left' }}
           />
           {errors.file && (
             <Typography color="error">{errors.file.message}</Typography>
           )}
+          {selectedFileName && (
+            <Typography variant="caption" sx={{ mt: 1 }}>
+              Selected: {selectedFileName}
+            </Typography>
+          )}
         </FormControl>
+
+        {/* File Name Field */}
+        <TextField
+          label="File Name"
+          variant="outlined"
+          fullWidth
+          {...register("fileName", { required: "File name is required" })}
+          error={!!errors.fileName}
+          helperText={errors.fileName ? errors.fileName.message : "Enter a name for your file"}
+        />
 
         {/* Key Topics Field */}
         <TextField

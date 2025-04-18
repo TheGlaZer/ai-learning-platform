@@ -16,6 +16,35 @@ export const ALLOWED_FILE_TYPES = [
 // File type extensions for display and validation
 export const ALLOWED_FILE_EXTENSIONS = ['.pdf', '.doc', '.docx', '.ppt', '.pptx'];
 
+// Define file size limits per file type (in bytes)
+export const FILE_SIZE_LIMITS = {
+  // Word documents (approximately 150 pages max)
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 15 * 1024 * 1024, // 15MB for DOCX
+  'application/msword': 15 * 1024 * 1024, // 15MB for DOC
+  
+  // PowerPoint presentations
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 30 * 1024 * 1024, // 30MB for PPTX
+  'application/vnd.ms-powerpoint': 30 * 1024 * 1024, // 30MB for PPT
+  
+  // PDF documents
+  'application/pdf': 20 * 1024 * 1024, // 20MB for PDF
+  
+  // Default limit for any other accepted file type
+  'default': 20 * 1024 * 1024 // 20MB default
+};
+
+// Format file size for display
+export const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' bytes';
+  else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  else return (bytes / 1048576).toFixed(1) + ' MB';
+};
+
+// Helper to get the file size limit for a specific file type
+export const getFileSizeLimit = (fileType: string): number => {
+  return FILE_SIZE_LIMITS[fileType as keyof typeof FILE_SIZE_LIMITS] || FILE_SIZE_LIMITS['default'];
+};
+
 interface UseFileUploadReturn {
   isUploading: boolean;
   error: string | null;
@@ -24,6 +53,7 @@ interface UseFileUploadReturn {
   uploadFile: (workspaceId: string, file: File) => Promise<FileMetadata | null>;
   resetUploadState: () => void;
   validateFileType: (file: File) => boolean;
+  validateFileSize: (file: File) => { valid: boolean; message?: string };
 }
 
 export const useFileUpload = (): UseFileUploadReturn => {
@@ -36,6 +66,21 @@ export const useFileUpload = (): UseFileUploadReturn => {
 
   const validateFileType = (file: File): boolean => {
     return ALLOWED_FILE_TYPES.includes(file.type);
+  };
+
+  const validateFileSize = (file: File): { valid: boolean; message?: string } => {
+    const sizeLimit = getFileSizeLimit(file.type);
+    
+    if (file.size > sizeLimit) {
+      const readableLimit = formatFileSize(sizeLimit);
+      const readableSize = formatFileSize(file.size);
+      return { 
+        valid: false, 
+        message: `File size (${readableSize}) exceeds the maximum allowed size (${readableLimit}) for this file type.`
+      };
+    }
+    
+    return { valid: true };
   };
 
   const resetUploadState = () => {
@@ -53,6 +98,12 @@ export const useFileUpload = (): UseFileUploadReturn => {
 
     if (!validateFileType(file)) {
       setError(`Invalid file type. Allowed types: ${ALLOWED_FILE_EXTENSIONS.join(', ')}`);
+      return null;
+    }
+    
+    const sizeValidation = validateFileSize(file);
+    if (!sizeValidation.valid) {
+      setError(sizeValidation.message || 'File size exceeds the maximum allowed limit.');
       return null;
     }
 
@@ -91,6 +142,7 @@ export const useFileUpload = (): UseFileUploadReturn => {
     uploadProgress,
     uploadFile,
     resetUploadState,
-    validateFileType
+    validateFileType,
+    validateFileSize
   };
 };

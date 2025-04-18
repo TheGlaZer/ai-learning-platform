@@ -1,3 +1,5 @@
+"use client";
+
 import styled from '@emotion/styled';
 import { Box } from '@mui/material';
 
@@ -5,6 +7,8 @@ const PageContainer = styled(Box)(({ theme }) => ({
   margin: '0 auto',
   padding: theme.spacing(2),
   width: '100%',
+  // Support RTL by respecting theme.direction
+  direction: theme.direction,
   // For mobile screens (sm and below) use full width,
   // for medium screens use a max-width of 1024px,
   // and for large screens use a max-width of 1440px.

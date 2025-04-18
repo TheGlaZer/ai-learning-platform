@@ -10,6 +10,9 @@ import { AIServiceOptions } from './ai/AIService';
 import { extractTextFromFile } from '@/app/utils/fileProcessing/index';
 import { AIConfig } from './ai/AIConfig';
 import api from '../lib/axios';
+import { getFileSizeFromId } from './filesService';
+import { FILE_SIZE_LIMITS, formatFileSize } from '@/hooks/useFileUpload';
+import { validateUserInstructions } from '@/app/lib-server/securityService';
 
 /**
  * Creates a quiz in the database and returns the result
@@ -223,9 +226,52 @@ function getMimeTypeFromExtension(extension?: string): string {
  */
 export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> => {
   try {
+    console.log('Generating quiz with the following parameters:', {
+      fileId: params.fileId,
+      topic: params.topic,
+      numberOfQuestions: params.numberOfQuestions,
+      difficultyLevel: params.difficultyLevel
+    });
+
+    // Perform security validation for user comments/instructions
+    if (params.userComments) {
+      const instructionsValidation = validateUserInstructions(params.userComments);
+      if (!instructionsValidation.valid) {
+        console.error(`Security validation failed for user instructions: ${instructionsValidation.message}`);
+        throw new Error(instructionsValidation.message || 'Invalid instructions detected');
+      }
+    }
+
     // Validate required parameters
     if (!params.fileId || !params.topic || !params.userId || !params.workspaceId) {
       throw new Error('Missing required parameters for quiz generation');
+    }
+    
+    // Validate file size
+    try {
+      const fileInfo = await getFileSizeFromId(params.fileId, params.token);
+      
+      if (fileInfo) {
+        const { size, type } = fileInfo;
+        const sizeLimit = FILE_SIZE_LIMITS[type as keyof typeof FILE_SIZE_LIMITS] || FILE_SIZE_LIMITS['default'];
+        
+        if (size > sizeLimit) {
+          const readableSize = formatFileSize(size);
+          const readableLimit = formatFileSize(sizeLimit);
+          
+          console.log(`File size validation failed: ${readableSize} exceeds limit of ${readableLimit}`);
+          
+          throw new Error(`File size (${readableSize}) exceeds the maximum allowed size (${readableLimit}) for quiz generation.`);
+        }
+      }
+    } catch (error: any) {
+      // Only rethrow if this is already our validation error
+      if (error.message && error.message.includes('File size')) {
+        throw error;
+      }
+      
+      // Otherwise log and continue
+      console.warn('Error validating file size:', error);
     }
     
     // Get authenticated client if token is provided

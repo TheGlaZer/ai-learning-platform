@@ -8,6 +8,7 @@ type AuthContextType = {
   accessToken: string | null;
   refreshToken: string | null;
   userId: string | null;
+  userFullName: string | null;
   isAuthenticated: boolean;
   updateAuthState: (accessToken: string | null, refreshToken: string | null, userId: string | null) => void;
   logout: () => Promise<void>;
@@ -34,6 +35,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userFullName, setUserFullName] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
 
@@ -64,6 +66,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setAccessToken(data.session.access_token);
       setRefreshToken(data.session.refresh_token);
       setUserId(data.session.user.id);
+      setUserFullName(data.session.user.user_metadata?.full_name || null);
       setIsAuthenticated(true);
       setLastRefreshTime(now);
       
@@ -83,6 +86,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setAccessToken(session.access_token);
         setRefreshToken(session.refresh_token);
         setUserId(session.user.id);
+        setUserFullName(session.user.user_metadata?.full_name || null);
         setIsAuthenticated(true);
         setLastRefreshTime(Date.now());
       }
@@ -97,12 +101,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setAccessToken(session.access_token);
           setRefreshToken(session.refresh_token);
           setUserId(session.user.id);
+          setUserFullName(session.user.user_metadata?.full_name || null);
           setIsAuthenticated(true);
           setLastRefreshTime(Date.now());
         } else {
           setAccessToken(null);
           setRefreshToken(null);
           setUserId(null);
+          setUserFullName(null);
           setIsAuthenticated(false);
         }
       }
@@ -134,6 +140,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setAccessToken(null);
     setRefreshToken(null);
     setUserId(null);
+    setUserFullName(null);
     setIsAuthenticated(false);
   };
 
@@ -141,6 +148,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     accessToken,
     refreshToken,
     userId,
+    userFullName,
     isAuthenticated,
     updateAuthState,
     logout,

@@ -150,10 +150,10 @@ const DashboardPage = () => {
     setOpenSubjectEditDialog(false);
   };
 
-  const handleCreateWorkspace = async (name: string, description?: string): Promise<boolean> => {
+  const handleCreateWorkspace = async (name: string): Promise<boolean> => {
     if (userId) {
       try {
-        const workspace = await createWorkspace(name, description);
+        const workspace = await createWorkspace(name);
         handleCloseWorkspaceDialog();
         return !!workspace;
       } catch (error) {

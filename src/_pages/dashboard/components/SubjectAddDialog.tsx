@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Subject } from '@/app/models/subject';
+import { useTranslations } from 'next-intl';
 
 interface SubjectAddDialogProps {
   open: boolean;
@@ -33,10 +34,12 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations('SubjectDialog');
+  const commonT = useTranslations('Common');
 
   const handleAdd = async () => {
     if (!name.trim()) {
-      setError('Subject name is required');
+      setError(t('nameRequired'));
       return;
     }
 
@@ -53,7 +56,7 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
       handleClose();
     } catch (err) {
       console.error('Error adding subject:', err);
-      setError('Failed to add subject. Please try again.');
+      setError(t('addError'));
     } finally {
       setSaving(false);
     }
@@ -75,7 +78,7 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
         borderBottom: '1px solid',
         borderColor: 'divider'
       }}>
-        <Typography variant="h6">Add New Subject</Typography>
+        <Typography variant="h6">{t('addTitle')}</Typography>
         <IconButton edge="end" onClick={handleClose} aria-label="close">
           <CloseIcon />
         </IconButton>
@@ -84,14 +87,14 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
       <DialogContent sx={{ pt: 3, pb: 2 }}>
         <Box sx={{ my: 1 }}>
           <TextField
-            label="Subject Name"
+            label={t('nameLabel')}
             value={name}
             onChange={(e) => setName(e.target.value)}
             fullWidth
             margin="normal"
             required
             error={!!error && !name.trim()}
-            helperText={!!error && !name.trim() ? 'Subject name is required' : ''}
+            helperText={!!error && !name.trim() ? t('nameRequired') : ''}
             autoFocus
           />
 
@@ -109,7 +112,7 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
           color="inherit"
           sx={{ color: 'text.secondary' }}
         >
-          Cancel
+          {commonT('cancel')}
         </Button>
         <Button
           onClick={handleAdd}
@@ -118,7 +121,7 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
           disabled={saving || !name.trim()}
           startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          {saving ? 'Adding...' : 'Add Subject'}
+          {saving ? t('adding') : t('addSubject')}
         </Button>
       </DialogActions>
     </Dialog>

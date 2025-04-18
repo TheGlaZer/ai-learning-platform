@@ -10,6 +10,8 @@ reuse compoent and hooks that already exists
 follow theme colors in colors.ts file when generating the ui 
 dont write inline stylings.. write styled components with meaningfull names
 add client side validations for forms 
+every api call need to be implment in the matching client service!!!
+IMPORTANT !!!! when implment custom hook never access supabase or any backend logic.. you will always implmet a route or use existsing one and there abstrct BL logic to matching service.. dont write backend code in client side at all !!!!! 
 
 backend rules:
 write in typescript and clean senioer level code 
@@ -17,6 +19,9 @@ use functions and utils for existing functioality
 seprate long logics into functions and import them if some service or funciton has too much code inside it 
 IMPORTANT! please before coding logic related to system entities check the current models and fileds and relations in the models folder!!!
 add servier side validations for buisness logic 
+insure in backend api route you send auth token if needed useing verifyAuth function from authService.ts
+when need to create an action or check error about an main entity in the system check the matching api route and services 
+if exists.. do you changes or addons there..
 
 ai features:
 see th ai folder unedr lib-server. and follow this modular interfaces and services and intergrate the feature in there for the backend side

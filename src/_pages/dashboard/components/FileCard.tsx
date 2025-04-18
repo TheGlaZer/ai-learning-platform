@@ -14,16 +14,19 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import GetAppIcon from '@mui/icons-material/GetApp';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import GetAppOutlinedIcon from '@mui/icons-material/GetAppOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import DescriptionIcon from '@mui/icons-material/Description';
-import ArticleIcon from '@mui/icons-material/Article';
-import ImageIcon from '@mui/icons-material/Image';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
 import { FileMetadata } from '@/app/models/file';
+import useFileDownload from '@/hooks/useFileDownload';
+import { useRTL } from '@/contexts/RTLContext';
 
 // Type to map file extensions to display types
 interface FileTypeMap {
@@ -38,37 +41,37 @@ interface FileTypeMap {
 const FILE_TYPES: FileTypeMap = {
   pdf: { 
     label: 'PDF', 
-    icon: <PictureAsPdfIcon sx={{ fontSize: 24 }} />, 
+    icon: <PictureAsPdfOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
     color: 'error'
   },
   doc: { 
     label: 'DOC', 
-    icon: <DescriptionIcon sx={{ fontSize: 24 }} />, 
+    icon: <DescriptionOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
     color: 'primary'
   },
   docx: { 
     label: 'DOCX', 
-    icon: <DescriptionIcon sx={{ fontSize: 24 }} />, 
+    icon: <DescriptionOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
     color: 'primary'
   },
   txt: { 
     label: 'TXT', 
-    icon: <ArticleIcon sx={{ fontSize: 24 }} />, 
+    icon: <ArticleOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
     color: 'secondary'
   },
   jpg: { 
     label: 'JPG', 
-    icon: <ImageIcon sx={{ fontSize: 24 }} />, 
+    icon: <ImageOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
     color: 'success'
   },
   jpeg: { 
     label: 'JPEG', 
-    icon: <ImageIcon sx={{ fontSize: 24 }} />, 
+    icon: <ImageOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
     color: 'success'
   },
   png: { 
     label: 'PNG', 
-    icon: <ImageIcon sx={{ fontSize: 24 }} />, 
+    icon: <ImageOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
     color: 'success'
   }
 };
@@ -76,7 +79,7 @@ const FILE_TYPES: FileTypeMap = {
 // Default for any unrecognized file type
 const DEFAULT_FILE_TYPE = { 
   label: 'FILE', 
-  icon: <InsertDriveFileIcon sx={{ fontSize: 24 }} />, 
+  icon: <InsertDriveFileOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
   color: 'default' as const
 };
 
@@ -90,6 +93,8 @@ interface FileCardProps {
 const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const { downloadFile, isDownloading, error } = useFileDownload();
+  const { isRTL } = useRTL();
 
   // Early return if file is undefined
   if (!file) {
@@ -122,14 +127,8 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) 
     }
     handleMenuClose();
     
-    if (typeof window !== 'undefined' && file.url) {
-      // Create an anchor element and set the href to the file URL
-      const link = document.createElement('a');
-      link.href = file.url;
-      link.download = file.name || 'download';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    if (file.url) {
+      downloadFile(file.url, file.name || 'download');
     }
   };
 
@@ -193,21 +192,34 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) 
           onClick={handleClick}
           sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
         >
-          <CardContent sx={{ p: 2, pb: 1.5, flexGrow: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 0.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', maxWidth: 'calc(100% - 50px)' }}>
+          <CardContent sx={{ p: 1.5, pb: 1, flexGrow: 1 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'flex-start', 
+              justifyContent: 'space-between', 
+              mb: 0.5,
+              flexDirection: isRTL ? 'row-reverse' : 'row'
+            }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                maxWidth: 'calc(100% - 50px)',
+                flexDirection: isRTL ? 'row-reverse' : 'row'
+              }}>
                 <Avatar 
                   sx={{ 
-                    mr: 1, 
-                    width: 32, 
-                    height: 32, 
-                    bgcolor: `${fileTypeInfo.color}.light`,
-                    color: `${fileTypeInfo.color}.main`
+                    mr: isRTL ? 0 : 1,
+                    ml: isRTL ? 1 : 0,
+                    width: 28, 
+                    height: 28, 
+                    bgcolor: 'white',
+                    border: '1px solid #d0d0d0',
+                    color: 'black'
                   }}
                 >
                   {fileTypeInfo.icon}
                 </Avatar>
-                <Typography variant="subtitle1" noWrap sx={{ fontWeight: 500 }}>
+                <Typography variant="subtitle2" noWrap sx={{ fontWeight: 500 }}>
                   {file.name || 'Unnamed File'}
                 </Typography>
               </Box>
@@ -215,7 +227,8 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) 
                 size="small" 
                 onClick={handleMenuOpen}
                 sx={{ 
-                  ml: 'auto', 
+                  ml: isRTL ? 'unset' : 'auto',
+                  mr: isRTL ? 'auto' : 'unset',
                   p: 0.5,
                   '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' } 
                 }}
@@ -224,7 +237,13 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) 
               </IconButton>
             </Box>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              mt: 0.5,
+              flexDirection: isRTL ? 'row-reverse' : 'row'
+            }}>
               <Typography variant="caption" color="text.secondary">
                 {formattedDate}
               </Typography>
@@ -233,7 +252,7 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) 
                 size="small" 
                 color={fileTypeInfo.color}
                 variant="outlined"
-                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.65rem' } }}
+                sx={{ height: 18, '& .MuiChip-label': { px: 1, fontSize: '0.6rem' } }}
               />
             </Box>
           </CardContent>
@@ -245,20 +264,26 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) 
         open={open}
         onClose={handleMenuCloseGeneric}
         onClick={handleMenuClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: isRTL ? 'left' : 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: isRTL ? 'left' : 'right', vertical: 'bottom' }}
+        PaperProps={{
+          sx: { 
+            direction: isRTL ? 'rtl' : 'ltr',
+            minWidth: 180
+          }
+        }}
       >
-        <MenuItem onClick={handleDownload}>
-          <ListItemIcon>
-            <GetAppIcon fontSize="small" />
+        <MenuItem onClick={handleDownload} disabled={isDownloading}>
+          <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+            <OpenInNewOutlinedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Download</ListItemText>
+          <ListItemText>{isDownloading ? 'Opening...' : 'Open File'}</ListItemText>
         </MenuItem>
         
         {onEdit && (
           <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" />
+            <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+              <EditOutlinedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText>Edit Details</ListItemText>
           </MenuItem>
@@ -266,8 +291,8 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) 
         
         {onDelete && (
           <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
+            <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+              <DeleteOutlinedIcon fontSize="small" color="error" />
             </ListItemIcon>
             <ListItemText>Delete File</ListItemText>
           </MenuItem>

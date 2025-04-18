@@ -4,7 +4,6 @@ import styled from '@emotion/styled';
 import { css } from '@emotion/react';
 import { Tooltip } from '@mui/material';
 import * as colors from '../../../../colors';
-
 interface PercentageSliderProps {
   label: string;
   subTitle?: string;
@@ -24,15 +23,16 @@ const SliderContainer = styled.div<ColorProps>`
   padding: 1.25rem;
   border-radius: 0.75rem;
   transition: all 0.3s ease;
+  border: 1px solid;
   
   ${({ $color }) => {
     switch ($color) {
-      case 'green': return css`background-color: rgba(54, 214, 183, 0.08);`; // accent.green
-      case 'blue': return css`background-color: rgba(79, 108, 255, 0.08);`; // primary
-      case 'yellow': return css`background-color: rgba(255, 209, 102, 0.08);`; // accent.yellow
-      case 'red': return css`background-color: rgba(255, 122, 90, 0.08);`; // secondary
-      case 'purple': return css`background-color: rgba(151, 118, 255, 0.08);`; // accent.purple
-      default: return css`background-color: rgba(79, 108, 255, 0.08);`; // primary default
+      case 'green': return css`border-color: ${colors.accent.green.main};`;
+      case 'blue': return css`border-color: ${colors.primary.main};`;
+      case 'yellow': return css`border-color: ${colors.accent.yellow.main};`;
+      case 'red': return css`border-color: ${colors.secondary.main};`;
+      case 'purple': return css`border-color: ${colors.accent.purple.main};`;
+      default: return css`border-color: ${colors.primary.main};`;
     }
   }}
   
@@ -135,7 +135,8 @@ export const PercentageSlider: React.FC<PercentageSliderProps> = ({
   
   const sliderContent = (
     <SliderContainer $color={color}>
-      <HeaderContainer>
+      <HeaderContainer
+      >
         <LabelContainer>
           <Label>{label}</Label>
           {subTitle && <SubTitle>{subTitle}</SubTitle>}

@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -18,8 +18,10 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ReplayIcon from '@mui/icons-material/Replay';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
+import FlashcardIcon from '@mui/icons-material/Style';
 import { UserAnswer } from '../hooks/useQuizSimulation';
 import ExportQuizButton from '@/components/quiz/ExportQuizButton';
+import CreateFlashcardsDialog from '@/components/flashcards/CreateFlashcardsDialog';
 
 interface ScoreDisplayProps {
   score: number;
@@ -96,6 +98,7 @@ interface QuizResultsProps {
   onReviewQuestions: () => void;
   submissionSuccess?: boolean;
   isSubmitting?: boolean;
+  workspaceId?: string;
 }
 
 const QuizResults: React.FC<QuizResultsProps> = ({
@@ -106,8 +109,19 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   onClose,
   onReviewQuestions,
   submissionSuccess = false,
-  isSubmitting = false
+  isSubmitting = false,
+  workspaceId
 }) => {
+  const [openFlashcardsDialog, setOpenFlashcardsDialog] = useState(false);
+
+  const handleOpenFlashcardsDialog = () => {
+    setOpenFlashcardsDialog(true);
+  };
+
+  const handleCloseFlashcardsDialog = () => {
+    setOpenFlashcardsDialog(false);
+  };
+
   // Generate feedback based on score
   const getFeedback = () => {
     if (results.percentage >= 90) return "Excellent! You've mastered this topic!";
@@ -247,6 +261,15 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           
           <Button
             variant="outlined"
+            color="primary"
+            onClick={handleOpenFlashcardsDialog}
+            startIcon={<FlashcardIcon />}
+          >
+            Create Flashcards
+          </Button>
+          
+          <Button
+            variant="outlined"
             color="inherit"
             onClick={onClose}
             startIcon={<CloseIcon />}
@@ -255,6 +278,12 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           </Button>
         </Box>
       </Paper>
+      <CreateFlashcardsDialog
+        open={openFlashcardsDialog}
+        onClose={handleCloseFlashcardsDialog}
+        quiz={quiz}
+        workspaceId={workspaceId || ""}
+      />
     </Box>
   );
 };

@@ -55,7 +55,7 @@ export const useSignup = () => {
       } else {
         // If email confirmation is required
         if (authData?.user?.identities?.length === 0) {
-          setSuccessMsg(t('registrationSuccess'));
+          setSuccessMsg(t('registrationSuccess') + ' ' + t('emailConfirmationSent', { email: data.email }));
           // Wait 3 seconds before redirecting to login
           setTimeout(() => {
             router.push('/login');

@@ -74,8 +74,6 @@ export async function POST(req: Request) {
       uploadedFile,
       token
     );
-    console.log("@@@@@ start 3 @@@@@@")
-    
     
     return NextResponse.json(fileMetadata);
   } catch (error: any) {
