@@ -11,7 +11,8 @@ import {
   IconButton,
   Box,
   CircularProgress,
-  Alert
+  Alert,
+  InputAdornment
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { FileMetadata } from '@/app/models/file';
@@ -29,14 +30,23 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
   file,
   onSave
 }) => {
-  const [name, setName] = useState('');
+  const [nameWithoutExtension, setNameWithoutExtension] = useState('');
+  const [extension, setExtension] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (file) {
-      setName(file.name || '');
+    if (file && file.name) {
+      // Extract file name and extension
+      const lastDotIndex = file.name.lastIndexOf('.');
+      if (lastDotIndex !== -1) {
+        setNameWithoutExtension(file.name.substring(0, lastDotIndex));
+        setExtension(file.name.substring(lastDotIndex));
+      } else {
+        setNameWithoutExtension(file.name);
+        setExtension('');
+      }
     }
   }, [file]);
 
@@ -51,8 +61,11 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
         ...file.metadata
       };
       
+      // Combine name and extension for save
+      const fullName = nameWithoutExtension + extension;
+      
       const updates: Partial<FileMetadata> = {
-        name,
+        name: fullName,
         metadata: updatedMetadata
       };
       
@@ -106,12 +119,25 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <TextField
             label="File Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={nameWithoutExtension}
+            onChange={(e) => setNameWithoutExtension(e.target.value)}
             fullWidth
             disabled={loading}
             required
             autoFocus
+            InputProps={{
+              endAdornment: extension ? (
+                <InputAdornment position="end">
+                  <Typography 
+                    variant="body1" 
+                    color="text.secondary" 
+                    sx={{ opacity: 0.7 }}
+                  >
+                    {extension}
+                  </Typography>
+                </InputAdornment>
+              ) : null
+            }}
           />
         </Box>
       </DialogContent>
@@ -128,7 +154,7 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
           onClick={handleSave}
           variant="contained"
           color="primary"
-          disabled={loading || !name.trim() || success}
+          disabled={loading || !nameWithoutExtension.trim() || success}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
           Save Changes

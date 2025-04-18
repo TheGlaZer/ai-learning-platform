@@ -22,14 +22,15 @@ import { styled } from "@mui/material/styles";
 import Logo from "./Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import LogoutIcon from "@mui/icons-material/Logout";
-import LoginIcon from "@mui/icons-material/Login";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import HomeIcon from "@mui/icons-material/Home";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
+import LoginOutlinedIcon from "@mui/icons-material/LoginOutlined";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import { primary, secondary, accent, surface, text, gradients, background } from "../../colors";
 import { useTranslations } from "next-intl";
+import { useRTL } from "@/contexts/RTLContext";
 
 const StyledAppBar = styled(AppBar)(() => ({
   backgroundColor: surface.paper,
@@ -53,11 +54,12 @@ const NavButton = styled(Button)<{ $isSelected?: boolean }>(({ $isSelected }) =>
 const Header: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { isAuthenticated, userId, logout } = useAuth();
+  const { isAuthenticated, userId, userFullName, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [workspaceId, setWorkspaceId] = useState<string>('');
   const t = useTranslations('Navigation');
+  const { isRTL } = useRTL();
   
   // Get current workspace ID from localStorage
   useEffect(() => {
@@ -122,7 +124,7 @@ const Header: React.FC = () => {
       <Toolbar>
         {/* Left: Logo */}
         <Box sx={{ display: "flex", alignItems: "center", cursor: 'pointer' }} onClick={() => router.push('/')}>
-          <Box mr={1}>
+          <Box mr={isRTL ? 0 : 1} ml={isRTL ? 1 : 0}>
             <Logo width={isMobile ? 36 : 42} height={isMobile ? 36 : 42} variant="auto" />
           </Box>
           <Typography 
@@ -130,7 +132,8 @@ const Header: React.FC = () => {
             noWrap 
             component="div" 
             sx={{ 
-              ml: 1, 
+              ml: isRTL ? 0 : 1,
+              mr: isRTL ? 1 : 0,
               fontWeight: 'bold',
               display: { xs: 'none', sm: 'block' },
               background: gradients.textGradient,
@@ -148,23 +151,23 @@ const Header: React.FC = () => {
         
         {/* Navigation Links - only show if authenticated and not on mobile */}
         {isAuthenticated && !isMobile && (
-          <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mr: isRTL ? 0 : 2, ml: isRTL ? 2 : 0 }}>
             <NavButton
-              startIcon={<HomeIcon />}
+              startIcon={<HomeOutlinedIcon />}
               onClick={navigateToHome}
               $isSelected={isCurrentPage('')}
             >
               {t('home')}
             </NavButton>
             <NavButton
-              startIcon={<DashboardIcon />}
+              startIcon={<DashboardOutlinedIcon />}
               onClick={navigateToDashboard}
               $isSelected={isCurrentPage('dashboard')}
             >
               {t('dashboard')}
             </NavButton>
             <NavButton
-              startIcon={<BarChartIcon />}
+              startIcon={<BarChartOutlinedIcon />}
               onClick={navigateToAnalytics}
               $isSelected={isCurrentPage('analytics')}
             >
@@ -179,7 +182,7 @@ const Header: React.FC = () => {
             <IconButton
               onClick={handleMenuOpen}
               size="small"
-              sx={{ ml: 2 }}
+              sx={{ ml: isRTL ? 0 : 2, mr: isRTL ? 2 : 0 }}
               aria-controls={open ? 'account-menu' : undefined}
               aria-haspopup="true"
               aria-expanded={open ? 'true' : undefined}
@@ -194,7 +197,9 @@ const Header: React.FC = () => {
                   color: text.light
                 }}
               >
-                {!isAuthenticated && <AccountCircleIcon />}
+                {!isAuthenticated && <AccountCircleOutlinedIcon />}
+                {isAuthenticated && !userFullName && <AccountCircleOutlinedIcon />}
+                {isAuthenticated && userFullName && userFullName.charAt(0).toUpperCase()}
               </Avatar>
             </IconButton>
           </Tooltip>
@@ -226,7 +231,7 @@ const Header: React.FC = () => {
                 display: 'block',
                 position: 'absolute',
                 top: 0,
-                right: 14,
+                [isRTL ? 'left' : 'right']: 14,
                 width: 10,
                 height: 10,
                 bgcolor: surface.paper,
@@ -235,8 +240,8 @@ const Header: React.FC = () => {
               },
             },
           }}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          transformOrigin={{ horizontal: isRTL ? 'left' : 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: isRTL ? 'left' : 'right', vertical: 'bottom' }}
         >
           {isAuthenticated ? (
             <>
@@ -246,41 +251,38 @@ const Header: React.FC = () => {
                 background: `linear-gradient(135deg, ${primary.light}11, ${accent.purple.light}22)`,
               }}>
                 <Typography variant="subtitle1" fontWeight="medium" sx={{ color: text.primary }}>
-                  User Profile
-                </Typography>
-                <Typography variant="body2" sx={{ color: text.secondary }}>
-                  {userId?.substring(0, 8)}...
+                  {userFullName || 'User Profile'}
                 </Typography>
               </Box>
               <Divider />
               <MenuItem onClick={navigateToHome}>
                 <ListItemIcon>
-                  <HomeIcon fontSize="small" sx={{ color: primary.light }} />
+                  <HomeOutlinedIcon fontSize="small" sx={{ color: primary.light }} />
                 </ListItemIcon>
                 {t('home')}
               </MenuItem>
               <MenuItem onClick={navigateToDashboard}>
                 <ListItemIcon>
-                  <DashboardIcon fontSize="small" sx={{ color: primary.main }} />
+                  <DashboardOutlinedIcon fontSize="small" sx={{ color: primary.main }} />
                 </ListItemIcon>
                 {t('dashboard')}
               </MenuItem>
               <MenuItem onClick={navigateToAnalytics}>
                 <ListItemIcon>
-                  <BarChartIcon fontSize="small" sx={{ color: accent.purple.main }} />
+                  <BarChartOutlinedIcon fontSize="small" sx={{ color: accent.purple.main }} />
                 </ListItemIcon>
                 {t('analytics')}
               </MenuItem>
               <MenuItem onClick={() => router.push('/profile')}>
                 <ListItemIcon>
-                  <AccountCircleIcon fontSize="small" sx={{ color: accent.green.main }} />
+                  <AccountCircleOutlinedIcon fontSize="small" sx={{ color: accent.green.main }} />
                 </ListItemIcon>
                 {t('profile')}
               </MenuItem>
               <Divider />
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
-                  <LogoutIcon fontSize="small" sx={{ color: secondary.main }} />
+                  <LogoutOutlinedIcon fontSize="small" sx={{ color: secondary.main }} />
                 </ListItemIcon>
                 Logout
               </MenuItem>
@@ -288,7 +290,7 @@ const Header: React.FC = () => {
           ) : (
             <MenuItem onClick={handleLogin}>
               <ListItemIcon>
-                <LoginIcon fontSize="small" sx={{ color: primary.main }} />
+                <LoginOutlinedIcon fontSize="small" sx={{ color: primary.main }} />
               </ListItemIcon>
               Login
             </MenuItem>

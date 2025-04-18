@@ -14,7 +14,7 @@ interface WorkspaceContextType {
   loading: boolean;
   error: string | null;
   fetchWorkspaces: () => Promise<void>;
-  createWorkspace: (name: string, description?: string) => Promise<Workspace | null>;
+  createWorkspace: (name: string) => Promise<Workspace | null>;
   deleteWorkspace: (workspaceId: string) => Promise<boolean>;
   selectWorkspace: (workspace: Workspace) => void;
   addFileToWorkspace: (workspaceId: string, file: FileMetadata) => void;
@@ -142,12 +142,12 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({ children }
   };
 
   // Create a new workspace
-  const createWorkspace = async (name: string, description?: string): Promise<Workspace | null> => {
+  const createWorkspace = async (name: string): Promise<Workspace | null> => {
     if (!userId || !accessToken) return null;
     
     try {
       setLoading(true);
-      const newWorkspace = await createWorkspaceClient(userId, name, description, accessToken);
+      const newWorkspace = await createWorkspaceClient(userId, name, undefined, accessToken);
       
       // Update the workspaces list with the new workspace
       setWorkspaces(prevWorkspaces => [...prevWorkspaces, newWorkspace]);

@@ -5,6 +5,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { saveAs } from 'file-saver';
 import { exportQuizClient } from '@/app/lib-client/quizClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRTL } from '@/contexts/RTLContext';
 
 interface ExportQuizButtonProps {
   quizId: string;
@@ -27,6 +28,7 @@ const ExportQuizButton: React.FC<ExportQuizButtonProps> = ({
 }) => {
   const [exporting, setExporting] = useState(false);
   const { accessToken } = useAuth();
+  const { isRTL } = useRTL();
 
   const handleExport = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -63,14 +65,14 @@ const ExportQuizButton: React.FC<ExportQuizButtonProps> = ({
   // If variant is icon, render an IconButton
   if (variant === 'icon') {
     return (
-      <Tooltip title={label}>
+      <Tooltip title={label} placement={isRTL ? 'left' : 'right'}>
         <span>
           <IconButton
             size={size}
             color={color}
             onClick={handleExport}
             disabled={exporting}
-            sx={sx}
+            sx={{ ...sx, transform: isRTL ? 'scaleX(-1)' : 'none' }}
           >
             {exporting ? (
               <CircularProgress size={size === 'small' ? 20 : 24} color="inherit" />
@@ -98,7 +100,10 @@ const ExportQuizButton: React.FC<ExportQuizButtonProps> = ({
           <FileDownloadIcon />
         )
       }
-      sx={sx}
+      sx={{ 
+        ...sx, 
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }}
     >
       {label}
     </Button>

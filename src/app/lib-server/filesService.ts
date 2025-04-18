@@ -20,22 +20,45 @@ interface Database {
 
 export const uploadFile = async (
   userId: string,
-  workspaceId: string,
+  workspaceName: string,
   file: File,
   token: string
 ): Promise<FileMetadata> => {
   // Get authenticated client
   const client = await getAuthenticatedClient(token);
 
-  // Generate a safe filename without using encodeURIComponent
-  const timestamp = new Date().getTime();
+  // Get the original file name and extension
+  const fileNameParts = file.name.split('.');
+  const fileExtension = fileNameParts.pop() || '';
+  const baseFileName = fileNameParts.join('.');
+
+  // First sanitize by replacing spaces with underscores
+  const sanitizedFileName = baseFileName
+    .replace(/\s+/g, '_');    // Replace spaces with underscores
+
+  // Then encode to handle Hebrew and other non-ASCII characters
+  // Generate a base64 encoding to make it safe for storage paths
+  const encodedFileName = Buffer.from(sanitizedFileName).toString('base64')
+    .replace(/\+/g, '-')  // Replace + with - (URL-safe base64)
+    .replace(/\//g, '_')  // Replace / with _ (URL-safe base64)
+    .replace(/=/g, '');   // Remove padding = characters
+
+  // Use the encoded file name for storage path
+  const safeFileName = `${encodedFileName}.${fileExtension}`;
+
+  // Keep storing the original sanitized name for display purposes
+  const displayName = `${sanitizedFileName}.${fileExtension}`;
+
+  // Create a safe workspace id
+  const safeWorkspaceName = workspaceName
+    .replace(/[^\w-]/g, '_'); // Replace any non-alphanumeric or hyphen char
   
-  // Replace non-ASCII characters and problematic characters with underscores
-  // Avoid encodeURIComponent which can cause double-encoding issues
-  const cleanFileName = file.name.replace(/[^\x00-\x7F]/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '_');
-  const safeFileName = `${timestamp}_${cleanFileName}`;
+  // Use userId for organization
+  const safeUserId = userId
+    .replace(/[^\w-]/g, '_'); // Replace any non-alphanumeric or hyphen char
   
-  const filePath = `private/${userId}/${workspaceId}/${safeFileName}`;
+  // Path format: private/userId/workspaceId/encodedFileName.ext
+  const filePath = `private/${safeUserId}/${safeWorkspaceName}/${safeFileName}`;
   
   // Check if the bucket exists and create it if it doesn't
   try {
@@ -95,7 +118,6 @@ export const uploadFile = async (
   let detectedLanguage = null;
   try {
     // Get file extension and appropriate MIME type
-    const fileExtension = file.name.split('.').pop()?.toLowerCase();
     const mimeType = file.type || getMimeTypeFromExtension(fileExtension);
     
     // Attempt language detection for common file types
@@ -156,13 +178,15 @@ export const uploadFile = async (
   const { data: fileData, error: fileError } = await client
     .from("files")
     .insert({
-      workspace_id: workspaceId,
+      workspace_id: workspaceName,
       user_id: userId,
       name: file.name,
       file_type: "document",
       url: publicUrl,
       metadata: {
-        detectedLanguage: detectedLanguage
+        detectedLanguage: detectedLanguage,
+        displayName: displayName,
+        encodedName: safeFileName
       },
     })
     .select()
@@ -342,3 +366,145 @@ function getMimeTypeFromExtension(extension?: string): string {
   
   return mimeTypes[extension] || 'application/octet-stream';
 }
+
+export const getFileDownloadUrl = async (
+  fileUrl: string, 
+  token?: string,
+  fileName?: string
+): Promise<string> => {
+  try {
+    console.log(`[getFileDownloadUrl] Starting with fileUrl: ${fileUrl}, fileName: ${fileName || 'not provided'}`);
+    
+    const client = token ? await getAuthenticatedClient(token) : supabase;
+    console.log(`[getFileDownloadUrl] Using ${token ? 'authenticated' : 'anonymous'} client`);
+    
+    // Extract the file path from the URL
+    const filePath = extractFilePathFromUrl(fileUrl);
+    console.log(`[getFileDownloadUrl] Extracted filePath: ${filePath || 'failed to extract'}`);
+    
+    if (!filePath) {
+      throw new Error(`Invalid file URL format: ${fileUrl}`);
+    }
+    
+    // If no fileName was provided, try to extract one from the file path
+    if (!fileName) {
+      try {
+        console.log('[getFileDownloadUrl] No fileName provided, attempting to find one');
+        
+        // Try to get the file name from the database
+        const { data: files } = await client
+          .from("files")
+          .select("name")
+          .eq("url", fileUrl)
+          .limit(1);
+          
+        if (files && files.length > 0) {
+          fileName = files[0].name;
+          console.log(`[getFileDownloadUrl] Found fileName from database: ${fileName}`);
+        } else {
+          // Fallback to using the path's filename
+          const pathParts = filePath.split('/');
+          fileName = pathParts[pathParts.length - 1];
+          console.log(`[getFileDownloadUrl] Using filename from path: ${fileName}`);
+        }
+      } catch (err) {
+        console.warn("Could not determine fileName:", err);
+      }
+    }
+    
+    // Set download options with content-disposition
+    const options = { 
+      download: true 
+    } as {download: boolean | string};
+    
+    // If we have a fileName, set the content-disposition header
+    if (fileName) {
+     options.download = fileName
+    }
+    
+    console.log(`[getFileDownloadUrl] Creating signed URL for path: ${filePath} with options:`, options);
+    
+    // Create a signed URL with 60 seconds expiry
+    const { data, error } = await client.storage
+      .from('files')
+      .createSignedUrl(filePath, 60, options);
+    
+    if (error) {
+      console.error('Error creating signed URL:', error);
+      throw error;
+    }
+    
+    console.log(`[getFileDownloadUrl] Successfully created signed URL. Preview: ${data.signedUrl.substring(0, 100)}...`);
+    
+    return data.signedUrl;
+  } catch (error) {
+    console.error('Error getting file download URL:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gets file size and type information for a specific file by ID.
+ * This is useful for validation before processing files.
+ */
+export const getFileSizeFromId = async (fileId: string, token?: string): Promise<{ size: number; type: string } | null> => {
+  try {
+    const client = token ? await getAuthenticatedClient(token) : supabase;
+    
+    // Get file metadata from database
+    const { data: file, error } = await client
+      .from('files')
+      .select('*')
+      .eq('id', fileId)
+      .single();
+    
+    if (error || !file) {
+      console.error('Error getting file:', error);
+      return null;
+    }
+    
+    // Extract size and MIME type from metadata
+    let fileSize = file.metadata?.size;
+    let fileType = file.metadata?.mimeType;
+    
+    // If size is not in metadata, we might need to fetch it from storage
+    if (!fileSize && file.url) {
+      try {
+        // Extract file path from URL
+        const filePath = extractFilePathFromUrl(file.url);
+        
+        if (filePath) {
+          // Get file information from storage
+          const { data: fileData, error: fileError } = await client.storage
+            .from('files')
+            .download(filePath);
+          
+          if (!fileError && fileData) {
+            fileSize = fileData.size;
+          }
+        }
+      } catch (downloadError) {
+        console.warn('Error getting file size from storage:', downloadError);
+      }
+    }
+    
+    // If file type is not in metadata, try to determine from file name
+    if (!fileType && file.name) {
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      fileType = getMimeTypeFromExtension(extension);
+    }
+    
+    // Return file size and type info if available
+    if (fileSize && fileType) {
+      return {
+        size: fileSize,
+        type: fileType
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error in getFileSizeFromId:', error);
+    return null;
+  }
+};

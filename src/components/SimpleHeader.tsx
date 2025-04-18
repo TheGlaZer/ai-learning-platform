@@ -13,6 +13,7 @@ import {
 import { styled } from "@mui/material/styles";
 import Logo from "./Logo";
 import { useRouter } from "next/navigation";
+import { useRTL } from "@/contexts/RTLContext";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
@@ -25,13 +26,14 @@ const SimpleHeader: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const router = useRouter();
+  const { isRTL } = useRTL();
 
   return (
     <StyledAppBar position="fixed">
       <Toolbar>
         {/* Left: Logo */}
         <Box sx={{ display: "flex", alignItems: "center", cursor: 'pointer' }} onClick={() => router.push('/')}>
-          <Box mr={1}>
+          <Box mr={isRTL ? 0 : 1} ml={isRTL ? 1 : 0}>
             <Logo width={isMobile ? 36 : 42} height={isMobile ? 36 : 42} variant="auto" />
           </Box>
           <Typography 
@@ -39,7 +41,8 @@ const SimpleHeader: React.FC = () => {
             noWrap 
             component="div" 
             sx={{ 
-              ml: 1, 
+              ml: isRTL ? 0 : 1,
+              mr: isRTL ? 1 : 0,
               fontWeight: 'bold',
               display: { xs: 'none', sm: 'block' }
             }}

@@ -12,25 +12,36 @@ import {
   Avatar,
   Fab,
   Chip,
-  Grid
+  Grid,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon
 } from '@mui/material';
 import { primary, secondary, accent, text, surface, gradients } from '../../../../colors';
 
 // Main container styling
 export const DashboardContainer = styled(Box)`
-  padding: 1rem;
+  border: none;
+  height: 100%;
+  transition: all 0.3s ease;
 `;
 
 export const ContentPaper = styled(Paper)`
-  border-radius: 12px;
+  height: 100%;
+  background-color: transparent;
   padding: 1.5rem;
+  padding-top: 0px;
+  padding-left: 12px;
+  border: none;
   min-height: 400px;
-  max-height: calc(100vh - 140px);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  background-color: ${surface.paper};
   display: flex;
   flex-direction: column;
+  box-shadow: none;
 `;
 
 export const ContentScrollArea = styled(Box)`
@@ -40,28 +51,31 @@ export const ContentScrollArea = styled(Box)`
   padding: 0 1.5rem;
   scrollbar-width: thin;
   
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
+  // &::-webkit-scrollbar {
+  //   width: 6px;
+  // }
   
-  &::-webkit-scrollbar-track {
-    background: ${surface.background}; 
-  }
+  // &::-webkit-scrollbar-track {
+  //   background: ${surface.background}; 
+  // }
   
-  &::-webkit-scrollbar-thumb {
-    background-color: ${primary.light}33;
-    border-radius: 20px;
-  }
+  // &::-webkit-scrollbar-thumb {
+  //   background-color: ${primary.light}33;
+  //   border-radius: 20px;
+  // }
 `;
 
 // Header section
-export const HeaderContainer = styled(Box)`
+export const HeaderContainer = styled(Box)<{ isRTL: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   flex-wrap: wrap;
   gap: 1rem;
+  padding-top: 1.5rem;
+  padding-left: ${({ isRTL }) => isRTL ? '0' : '2rem'};
+  padding-right: ${({ isRTL }) => isRTL ? '2rem' : '0'};
 `;
 
 export const WorkspaceTitle = styled(Typography)`
@@ -71,6 +85,7 @@ export const WorkspaceTitle = styled(Typography)`
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  font-size: 2.3rem;
 `;
 
 export const WorkspaceDescription = styled(Typography)`
@@ -85,9 +100,109 @@ export const ButtonGroup = styled(Box)`
   flex-wrap: wrap;
 `;
 
+// New Action Menu styling
+export const ActionMenuButton = styled(IconButton)`
+  background: ${gradients.primaryGradient};
+  border-radius: 50%;
+  color: ${text.white};
+  padding: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+export const ActionMenuAvatar = styled(Avatar)`
+  width: 50px;
+  height: 50px;
+  background: ${gradients.primaryGradient};
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+export const StyledMenu = styled(Menu)`
+  .MuiPaper-root {
+    border-radius: 12px;
+    min-width: 230px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    padding: 8px 0;
+    overflow: visible;
+    
+    &:before {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 14px;
+      width: 10px;
+      height: 10px;
+      background-color: ${surface.paper};
+      transform: translateY(-50%) rotate(45deg);
+      z-index: 0;
+    }
+  }
+`;
+
+export const StyledMenuItem = styled(MenuItem)<{ color?: string }>`
+  padding: 12px 16px;
+  transition: background-color 0.2s;
+  
+  .MuiListItemIcon-root {
+    color: ${props => props.color || primary.main};
+    min-width: 42px;
+  }
+  
+  .MuiTypography-root {
+    font-weight: 500;
+    color: ${text.primary};
+  }
+  
+  &:hover {
+    background-color: ${surface.background}80;
+  }
+`;
+
+export const MenuDivider = styled(Box)`
+  height: 1px;
+  background-color: ${surface.border};
+  margin: 8px 16px;
+`;
+
+export const StyledSpeedDial = styled(SpeedDial)`
+  position: absolute;
+  right: 16px;
+  top: -28px;
+  
+  .MuiFab-primary {
+    background: ${gradients.primaryGradient};
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
+  
+  .MuiSpeedDialAction-staticTooltipLabel {
+    background-color: ${surface.paper};
+    color: ${text.primary};
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 6px 12px;
+    border-radius: 6px;
+  }
+`;
+
 // Tabs styling
-export const StyledTabs = styled(Tabs)`
-  margin-bottom: 1.5rem;
+export const StyledTabs = styled(Tabs)<{ isRTL: boolean }>`
+  // margin-bottom: 1.5rem;
+  width: 75%;
+  margin-left: ${({ isRTL }) => isRTL ? 'auto' : '0'};
+  margin-right: ${({ isRTL }) => isRTL ? '0' : 'auto'};
   
   .MuiTabs-indicator {
     background: ${gradients.primaryGradient};
@@ -110,9 +225,9 @@ export const StyledTab = styled(Tab)`
 // Card styling
 export const BaseCard = styled(Card)`
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 1rem;
-  height: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -141,6 +256,7 @@ export const CardIconAvatar = styled(Avatar)`
   width: 32px;
   height: 32px;
   margin-right: 0.75rem;
+  margin-left: 0.75rem;
   font-size: 1rem;
 `;
 
@@ -154,7 +270,6 @@ export const CardTitle = styled(Typography)`
 
 export const CardMenuButton = styled(IconButton)`
   padding: 4px;
-  margin-left: auto;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.04);
@@ -207,27 +322,34 @@ export const AddButtonBox = styled(Box)`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: 2px dashed ${primary.light}66;
-  border-radius: 12px;
-  padding: 1.5rem;
+  border: 2px dashed ${accent.green.light};
+  border-radius: 8px;
+  padding: 0.8rem 1rem 0.9rem;
   cursor: pointer;
   transition: all 0.2s;
+  background-color: transparent;
+  position: relative;
   
   &:hover {
-    border-color: ${primary.main};
-    background-color: ${primary.light}11;
-    transform: translateY(-4px);
+    border-color: ${accent.green.main};
+    background-color: ${accent.green.light}11;
   }
 `;
 
 // Action buttons
 export const PrimaryButton = styled(Button)`
   background: ${gradients.primaryGradient};
+  color: ${text.white};
   text-transform: none;
   font-weight: 600;
   padding: 0.5rem 1.25rem;
   border-radius: 8px;
   box-shadow: 0 4px 8px ${primary.main}33;
+  
+  .MuiButton-startIcon {
+    margin-right: 8px;
+    margin-left: 8px;
+  }
   
   &:hover {
     box-shadow: 0 6px 12px ${primary.main}55;
@@ -240,10 +362,10 @@ export const SecondaryButton = styled(Button)`
   padding: 0.5rem 1.25rem;
   border-radius: 8px;
   border-color: ${primary.main};
-  color: ${primary.main};
   
-  &:hover {
-    background-color: ${primary.main}11;
+  .MuiButton-startIcon {
+    margin-right: 8px;
+    margin-left: 8px;
   }
 `;
 
@@ -267,4 +389,16 @@ export const ResponsiveGrid = styled(Grid)`
   display: flex;
   flex-direction: column;
   height: 100%;
+`;
+
+// Section styling
+export const SectionContainer = styled(Box)`
+  margin-bottom: 2rem;
+`;
+
+export const SectionTitle = styled(Typography)`
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: ${text.primary};
+  padding-left: 0.5rem;
 `; 

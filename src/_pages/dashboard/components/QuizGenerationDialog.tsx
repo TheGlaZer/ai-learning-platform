@@ -48,6 +48,8 @@ import { useSubjects } from '@/app/lib-client/hooks/useSubjects';
 import { usePastExams } from '@/hooks/usePastExams';
 import { useTranslations } from 'next-intl';
 import * as colors from '../../../../colors';
+import { useFileUpload, formatFileSize } from '@/hooks/useFileUpload';
+import { validateUserInstructions } from '@/utils/securityValidation';
 
 
 
@@ -195,6 +197,9 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
   // Use the past exams hook to get past exams
   const { workspacePastExams, loading: pastExamsLoading, fetchPastExams } = usePastExams(userId);
   
+  // Get file validation from hook
+  const { validateFileSize } = useFileUpload();
+  
   // Form state
   const [selectedFileId, setSelectedFileId] = useState<string>('');
   const [topic, setTopic] = useState<string>('');
@@ -214,6 +219,8 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
     topic?: string;
     numberOfQuestions?: string;
     pastExam?: string;
+    fileSize?: string;
+    userComments?: string;
   }>({});
 
   // Quiz generation hook
@@ -287,6 +294,39 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
     setHighPrioritySubjectIds([]);
   };
 
+  const handleFileChange = (event: SelectChangeEvent<string>) => {
+    const fileId = event.target.value;
+    
+    // Reset previous file size error if any
+    if (formErrors.fileSize) {
+      setFormErrors(prev => ({ ...prev, fileSize: undefined }));
+    }
+    
+    // Validate file size if a file is selected
+    if (fileId) {
+      const selectedFile = files.find(file => file.id === fileId);
+      
+      if (selectedFile && selectedFile.metadata?.size) {
+        const fileType = selectedFile.metadata.mimeType || selectedFile.name.split('.').pop()?.toLowerCase();
+        const fileSize = selectedFile.metadata.size;
+        
+        // Create a mock File object for validation
+        const mockFile = {
+          type: fileType,
+          size: fileSize
+        } as File;
+        
+        const sizeValidation = validateFileSize(mockFile);
+        
+        if (!sizeValidation.valid) {
+          setFormErrors(prev => ({ ...prev, fileSize: sizeValidation.message || t('fileSizeError') }));
+        }
+      }
+    }
+    
+    setSelectedFileId(fileId);
+  };
+
   const validateForm = (): boolean => {
     const errors: typeof formErrors = {};
     
@@ -304,6 +344,47 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
     
     if (includePastExam && !selectedPastExamId) {
       errors.pastExam = t('pastExamRequired');
+    }
+    
+    // Validate user instructions for security
+    if (userComments.trim()) {
+      const instructionsValidation = validateUserInstructions(userComments);
+      if (!instructionsValidation.valid) {
+        // Map validation messages to translation keys
+        let errorKey = 'instructionsError';
+        
+        if (instructionsValidation.message?.includes('code blocks')) {
+          errorKey = 'instructionsCodeError';
+        } else if (instructionsValidation.message?.includes('security-related terms')) {
+          errorKey = 'instructionsSecurityError';
+        } else if (instructionsValidation.message?.includes('too long')) {
+          errorKey = 'instructionsLengthError';
+        }
+        
+        errors.userComments = t(errorKey);
+      }
+    }
+    
+    // Check if there's a file size error
+    if (selectedFileId) {
+      const selectedFile = files.find(file => file.id === selectedFileId);
+      
+      if (selectedFile && selectedFile.metadata?.size) {
+        const fileType = selectedFile.metadata.mimeType || selectedFile.name.split('.').pop()?.toLowerCase();
+        const fileSize = selectedFile.metadata.size;
+        
+        // Create a mock File object for validation
+        const mockFile = {
+          type: fileType,
+          size: fileSize
+        } as File;
+        
+        const sizeValidation = validateFileSize(mockFile);
+        
+        if (!sizeValidation.valid) {
+          errors.fileSize = sizeValidation.message || t('fileSizeError');
+        }
+      }
     }
     
     setFormErrors(errors);
@@ -398,25 +479,28 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
                 <SectionNumber>1</SectionNumber>
                 {t('selectFile')}
               </SectionTitle>
-              <FormControl fullWidth error={!!formErrors.fileId} sx={{ mb: 4 }}>
-                <InputLabel id="file-select-label">{t('file')}</InputLabel>
+              <FormControl fullWidth required error={!!formErrors.fileId || !!formErrors.fileSize} sx={{ mb: 2 }}>
+                <InputLabel id="file-label">{t('file')}</InputLabel>
                 <Select
-                  labelId="file-select-label"
+                  labelId="file-label"
                   value={selectedFileId}
-                  onChange={(e) => setSelectedFileId(e.target.value)}
-                  disabled={isGenerating}
+                  onChange={handleFileChange}
                   label={t('file')}
+                  disabled={isGenerating}
                 >
+                  <MenuItem value="" disabled><em>{t('selectFile')}</em></MenuItem>
                   {files.map((file) => (
                     <MenuItem key={file.id} value={file.id}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <DescriptionIcon sx={{ mr: 1, color: colors.text.secondary }} />
-                        {file.name}
-                      </Box>
+                      {file.name}
                     </MenuItem>
                   ))}
                 </Select>
-                {formErrors.fileId && <FormHelperText>{formErrors.fileId}</FormHelperText>}
+                {formErrors.fileId && (
+                  <FormHelperText>{formErrors.fileId}</FormHelperText>
+                )}
+                {formErrors.fileSize && (
+                  <FormHelperText error>{formErrors.fileSize}</FormHelperText>
+                )}
               </FormControl>
               
               <SectionTitle>
@@ -490,6 +574,8 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
                 onChange={(e) => setUserComments(e.target.value)}
                 disabled={isGenerating}
                 placeholder={t('instructionsPlaceholder')}
+                error={!!formErrors.userComments}
+                helperText={formErrors.userComments}
                 sx={{ mb: 4 }}
               />
               

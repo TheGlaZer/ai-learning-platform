@@ -3,6 +3,9 @@ import { supabase } from '@/app/lib-server/supabaseClient';
 import { generateQuiz, getQuizzesByWorkspace } from '@/app/lib-server/quizService';
 import { QuizGenerationParams } from '@/app/models/quiz';
 import { extractToken } from '@/app/lib-server/authService';
+import { getFileSizeFromId } from '@/app/lib-server/filesService';
+import { FILE_SIZE_LIMITS, formatFileSize } from '@/hooks/useFileUpload';
+import { validateUserInstructions } from '@/app/lib-server/securityService';
 
 export const dynamic = 'force-dynamic'; // This ensures the route is not statically optimized
 export const maxDuration = 60; // 5 minutes
@@ -77,6 +80,45 @@ export async function POST(req: Request) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+    
+    // Validate user instructions for security concerns
+    if (userComments && userComments.trim()) {
+      const instructionsValidation = validateUserInstructions(userComments);
+      if (!instructionsValidation.valid) {
+        console.log('User instructions validation failed:', instructionsValidation.message);
+        return NextResponse.json(
+          { error: instructionsValidation.message || 'Invalid instructions' },
+          { status: 400 }
+        );
+      }
+    }
+    
+    // Validate file size
+    try {
+      const fileInfo = await getFileSizeFromId(fileId, token);
+      
+      if (fileInfo) {
+        const { size, type } = fileInfo;
+        const sizeLimit = FILE_SIZE_LIMITS[type as keyof typeof FILE_SIZE_LIMITS] || FILE_SIZE_LIMITS['default'];
+        
+        if (size > sizeLimit) {
+          const readableSize = formatFileSize(size);
+          const readableLimit = formatFileSize(sizeLimit);
+          
+          console.log(`File size validation failed: ${readableSize} exceeds limit of ${readableLimit}`);
+          
+          return NextResponse.json(
+            { 
+              error: `File size (${readableSize}) exceeds the maximum allowed size (${readableLimit}) for quiz generation.` 
+            },
+            { status: 400 }
+          );
+        }
+      }
+    } catch (error) {
+      console.warn('Error validating file size:', error);
+      // Continue processing even if validation fails
     }
 
     // Log the locale for debugging

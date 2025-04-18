@@ -12,7 +12,7 @@ const AuthGuardWithNoSSR = dynamic(
     ssr: false,
     loading: () => (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-        <CircularProgress size={60} />
+        <CircularProgress size={100} />
       </Box>
     )
   }

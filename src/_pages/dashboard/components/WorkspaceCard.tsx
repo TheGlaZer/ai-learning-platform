@@ -8,10 +8,10 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import FolderIcon from '@mui/icons-material/Folder';
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import { Workspace } from '@/app/models/workspace';
 import {
   BaseCard,
@@ -92,8 +92,8 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = ({ workspace, onClick, onEdi
           <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
             <CardHeader>
               <CardTitleContainer>
-                <CardIconAvatar sx={{ bgcolor: accent.yellow.light, width: 28, height: 28 }}>
-                  <FolderIcon fontSize="small" />
+                <CardIconAvatar sx={{ bgcolor: 'white', width: 28, height: 28, border: '1px solid #d0d0d0' }}>
+                  <FolderOutlinedIcon fontSize="small" sx={{ color: 'black' }} />
                 </CardIconAvatar>
                 <CardTitle variant="subtitle1">
                   {workspace.name || 'Unnamed Workspace'}
@@ -136,7 +136,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = ({ workspace, onClick, onEdi
         {onEdit && (
           <MenuItem onClick={handleEdit}>
             <ListItemIcon>
-              <EditIcon fontSize="small" />
+              <EditOutlinedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText primary="Edit Workspace" />
           </MenuItem>
@@ -145,7 +145,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = ({ workspace, onClick, onEdi
         {onDelete && (
           <MenuItem onClick={handleDelete}>
             <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
+              <DeleteOutlinedIcon fontSize="small" color="error" />
             </ListItemIcon>
             <ListItemText primary="Delete Workspace" sx={{ color: 'error.main' }} />
           </MenuItem>

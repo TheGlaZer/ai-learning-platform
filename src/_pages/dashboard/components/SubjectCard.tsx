@@ -8,9 +8,9 @@ import {
   ListItemIcon,
   ListItemText
 } from '@mui/material';
-import SubjectIcon from '@mui/icons-material/Subject';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import SubjectOutlinedIcon from '@mui/icons-material/SubjectOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Subject } from '@/app/models/subject';
 import { accent } from '../../../../colors';
@@ -25,6 +25,7 @@ import {
   CardDate,
   CardChip
 } from './DashboardStyledComponents';
+import { useRTL } from '@/contexts/RTLContext';
 
 interface SubjectCardProps {
   subject?: Subject;
@@ -36,6 +37,7 @@ interface SubjectCardProps {
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onDelete }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const { isRTL } = useRTL();
 
   // Early return if subject is undefined
   if (!subject) {
@@ -92,8 +94,8 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
           <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
             <CardHeader>
               <CardTitleContainer>
-                <CardIconAvatar sx={{ bgcolor: accent.green.light, width: 28, height: 28 }}>
-                  <SubjectIcon fontSize="small" />
+                <CardIconAvatar sx={{ bgcolor: 'white', border: '1px solid #d0d0d0', width: 28, height: 28 }}>
+                  <SubjectOutlinedIcon fontSize="small" sx={{ color: 'black' }} />
                 </CardIconAvatar>
                 <CardTitle variant="subtitle1">
                   {subject.name || 'Unnamed Subject'}
@@ -103,6 +105,10 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
                 size="small"
                 onClick={handleMenuOpen}
                 aria-label="subject options"
+                sx={{
+                  marginLeft: isRTL ? 'unset' : 'auto',
+                  marginRight: isRTL ? 'auto' : 'unset'
+                }}
               >
                 <MoreVertIcon fontSize="small" />
               </CardMenuButton>
@@ -143,14 +149,14 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
       >
         <MenuItem onClick={handleEdit}>
           <ListItemIcon>
-            <EditIcon fontSize="small" />
+            <EditOutlinedIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Edit Subject" />
         </MenuItem>
         
         <MenuItem onClick={handleDelete}>
           <ListItemIcon>
-            <DeleteIcon fontSize="small" color="error" />
+            <DeleteOutlinedIcon fontSize="small" color="error" />
           </ListItemIcon>
           <ListItemText primary="Delete Subject" sx={{ color: 'error.main' }} />
         </MenuItem>

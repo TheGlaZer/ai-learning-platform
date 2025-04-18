@@ -1,10 +1,11 @@
 'use client';
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { Box, Container, useTheme, useMediaQuery } from '@mui/material';
 import Header from './Header';
 import WorkspaceSidebar from './WorkspaceSidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRTL } from '@/contexts/RTLContext';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -14,11 +15,28 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isAuthenticated } = useAuth();
+  const { isRTL } = useRTL();
   
   const SIDEBAR_WIDTH = 250;
+  const MINIMIZED_SIDEBAR_WIDTH = 60;
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
+  
+  const handleSidebarToggle = (collapsed: boolean) => {
+    setIsSidebarMinimized(collapsed);
+  };
+  
+  const currentSidebarWidth = isSidebarMinimized ? MINIMIZED_SIDEBAR_WIDTH : SIDEBAR_WIDTH;
+  
+  // Add a constant for the transition timing to keep animations in sync
+  const TRANSITION_DURATION = '0.3s';
   
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      minHeight: '100vh',
+      overflow: 'visible'
+    }}>
       <Header />
       
       <Box 
@@ -26,24 +44,31 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         sx={{ 
           display: 'flex',
           flexGrow: 1,
-          pt: { xs: 7, sm: 8 }, // Adjust top padding to account for header
+          pt: { xs: 7, sm: 6 }, // Adjust top padding to account for header
+          overflow: 'visible', // Ensure nothing gets clipped
+          position: 'relative', // Establish a positioning context
         }}
       >
         {/* Workspace Sidebar - only show if authenticated */}
         {isAuthenticated && (
           <Box
             sx={{
-              width: SIDEBAR_WIDTH,
+              width: currentSidebarWidth,
               flexShrink: 0,
               height: 'calc(100vh - 64px)', // Subtracting header height
               position: 'fixed',
               top: 64, // Header height
               left: 0,
-              zIndex: 10,
-              display: { xs: 'none', md: 'block' } // Hide on mobile
+              zIndex: 1000,
+              display: { xs: 'none', md: 'block' }, // Hide on mobile
+              overflow: 'visible', // Ensure the toggle button is not clipped
+              transition: `width ${TRANSITION_DURATION} ease`, // Add transition for width changes
             }}
           >
-            <WorkspaceSidebar width={SIDEBAR_WIDTH} />
+            <WorkspaceSidebar 
+              width={SIDEBAR_WIDTH} 
+              onToggleCollapse={handleSidebarToggle}
+            />
           </Box>
         )}
         
@@ -52,8 +77,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           sx={{
             flexGrow: 1,
             p: { xs: 2, sm: 3 },
-            ml: { xs: 0, md: isAuthenticated ? `${SIDEBAR_WIDTH}px` : 0 }, // Add margin on desktop when sidebar is shown
-            width: { xs: '100%', md: isAuthenticated ? `calc(100% - ${SIDEBAR_WIDTH}px)` : '100%' }
+            [isRTL ? 'pr' : 'pl']: {sm: 2, md: 2},
+            [isRTL ? 'mr' : 'ml']: { 
+              xs: 0, 
+              md: isAuthenticated ? `${currentSidebarWidth}px` : 0 
+            }, // Add margin based on current sidebar width
+            width: { xs: '100%', md: "auto"},
+            border: "none",
+            transition: `all ${TRANSITION_DURATION} ease`, // Synchronized with sidebar transition
           }}
         >
           {children}

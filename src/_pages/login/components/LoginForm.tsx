@@ -18,9 +18,11 @@ import {
   BottomLeftDecoration,
   ForgotPasswordLink
 } from './StyledComponents';
+import { useRTL } from '@/contexts/RTLContext';
 
 const LoginForm: React.FC = () => {
   const t = useTranslations('LoginPage');
+  const { isRTL } = useRTL();
   const { 
     register, 
     handleSubmit, 
@@ -41,7 +43,7 @@ const LoginForm: React.FC = () => {
       <TopRightDecoration />
       <BottomLeftDecoration />
       
-      <Box position="relative" zIndex={1}>
+      <Box position="relative" zIndex={1} sx={{ textAlign: isRTL ? 'right' : 'left' }}>
         <FormTitle variant="h5">{t('formTitle')}</FormTitle>
         <FormSubtitle variant="body2">
           {t('formSubtitle')}
@@ -49,7 +51,7 @@ const LoginForm: React.FC = () => {
         
         {errorMsg && <Alert severity="error" sx={{ mb: 1.5 }}>{errorMsg}</Alert>}
         
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
           <StyledTextField
             label={t('emailLabel')}
             variant="outlined"
@@ -73,6 +75,7 @@ const LoginForm: React.FC = () => {
             error={!!errors.email}
             helperText={errors.email?.message}
             disabled={isLoading}
+            dir={isRTL ? 'rtl' : 'ltr'}
           />
           
           <StyledTextField
@@ -105,9 +108,10 @@ const LoginForm: React.FC = () => {
             error={!!errors.password}
             helperText={errors.password?.message}
             disabled={isLoading}
+            dir={isRTL ? 'rtl' : 'ltr'}
           />
           
-          <ForgotPasswordLink>
+          <ForgotPasswordLink sx={{ textAlign: isRTL ? 'left' : 'right' }}>
             <NextLink href="/forgot-password" passHref>
               <MuiLink>{t('forgotPassword')}</MuiLink>
             </NextLink>

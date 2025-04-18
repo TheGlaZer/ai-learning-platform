@@ -23,6 +23,7 @@ import QuizResults from './QuizResults';
 import { useQuizSimulation } from '../hooks/useQuizSimulation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuizSubmission } from '@/app/lib-client/hooks/useQuizSubmissions';
+import { useTranslations } from 'next-intl';
 
 interface QuizSimulationDialogProps {
   open: boolean;
@@ -43,6 +44,7 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+  const t = useTranslations('QuizDialog');
   
   // Get user auth information and refresh capabilities
   const { userId, isAuthenticated, accessToken, refreshSession } = useAuth();
@@ -109,21 +111,21 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
   // Handle session refresh
   const handleRefreshSession = async () => {
     try {
-      setSnackbarMessage('Refreshing authentication session...');
+      setSnackbarMessage(t('refreshingSession'));
       setSnackbarSeverity('info');
       setSnackbarOpen(true);
       
       const refreshed = await refreshSession();
       
       if (refreshed) {
-        setSnackbarMessage('Session refreshed successfully. Try submitting again.');
+        setSnackbarMessage(t('sessionRefreshed'));
         setSnackbarSeverity('success');
       } else {
-        setSnackbarMessage('Could not refresh session. Please log in again.');
+        setSnackbarMessage(t('sessionRefreshFailed'));
         setSnackbarSeverity('error');
       }
     } catch (error) {
-      setSnackbarMessage('Failed to refresh session. Please log in again.');
+      setSnackbarMessage(t('sessionRefreshFailed'));
       setSnackbarSeverity('error');
     } finally {
       setSnackbarOpen(true);
@@ -134,11 +136,11 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
   const handleFinishQuiz = async () => {
     const success = await finishAndSubmitQuiz();
     if (success) {
-      setSnackbarMessage('Quiz results saved successfully!');
+      setSnackbarMessage(t('resultsSaved'));
       setSnackbarSeverity('success');
     } else if (isAuthenticated && userId && accessToken) {
       // Only show error if user is authenticated but submission failed
-      setSnackbarMessage('Note: Failed to save quiz results.');
+      setSnackbarMessage(t('resultsSaveFailed'));
       setSnackbarSeverity('error');
     }
     setSnackbarOpen(true);
@@ -147,11 +149,11 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
   // Show error message if submission fails
   useEffect(() => {
     if (submissionError) {
-      setSnackbarMessage('Failed to save quiz results. Your answers will not be tracked.');
+      setSnackbarMessage(t('submissionError'));
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
-  }, [submissionError]);
+  }, [submissionError, t]);
 
   if (!quiz) return null;
   
@@ -228,6 +230,7 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
               onReviewQuestions={handleReviewQuestions}
               submissionSuccess={submissionSuccess}
               isSubmitting={isSubmitting || loadingSubmission}
+              workspaceId={quiz?.workspaceId}
             />
           ) : (
             <>

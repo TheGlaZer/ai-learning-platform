@@ -14,12 +14,13 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import GetAppIcon from '@mui/icons-material/GetApp';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import GetAppOutlinedIcon from '@mui/icons-material/GetAppOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
+import HistoryEduOutlinedIcon from '@mui/icons-material/HistoryEduOutlined';
 import { PastExam } from '@/app/models/pastExam';
+import { useRTL } from '@/contexts/RTLContext';
 
 interface PastExamCardProps {
   pastExam?: PastExam;
@@ -31,6 +32,7 @@ interface PastExamCardProps {
 const PastExamCard: React.FC<PastExamCardProps> = ({ pastExam, onClick, onDelete, onEdit }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const { isRTL } = useRTL();
 
   // Early return if pastExam is undefined
   if (!pastExam) {
@@ -127,21 +129,34 @@ const PastExamCard: React.FC<PastExamCardProps> = ({ pastExam, onClick, onDelete
           onClick={handleClick}
           sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
         >
-          <CardContent sx={{ p: 2, pb: 1.5, flexGrow: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 0.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', maxWidth: 'calc(100% - 50px)' }}>
+          <CardContent sx={{ p: 1.5, pb: 1, flexGrow: 1 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'flex-start', 
+              justifyContent: 'space-between', 
+              mb: 0.5,
+              flexDirection: isRTL ? 'row-reverse' : 'row'
+            }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                maxWidth: 'calc(100% - 50px)',
+                flexDirection: isRTL ? 'row-reverse' : 'row'
+              }}>
                 <Avatar 
                   sx={{ 
-                    mr: 1, 
-                    width: 32, 
-                    height: 32, 
-                    bgcolor: 'info.light',
-                    color: 'info.main'
+                    mr: isRTL ? 0 : 1, 
+                    ml: isRTL ? 1 : 0,
+                    width: 28, 
+                    height: 28, 
+                    bgcolor: 'white',
+                    color: 'black',
+                    border: '1px solid #d0d0d0'
                   }}
                 >
-                  <HistoryEduIcon sx={{ fontSize: 20 }} />
+                  <HistoryEduOutlinedIcon sx={{ fontSize: 18 }} />
                 </Avatar>
-                <Typography variant="subtitle1" noWrap sx={{ fontWeight: 500 }}>
+                <Typography variant="subtitle2" noWrap sx={{ fontWeight: 500 }}>
                   {pastExam.name || 'Unnamed Exam'}
                 </Typography>
               </Box>
@@ -149,7 +164,8 @@ const PastExamCard: React.FC<PastExamCardProps> = ({ pastExam, onClick, onDelete
                 size="small" 
                 onClick={handleMenuOpen}
                 sx={{ 
-                  ml: 'auto', 
+                  ml: isRTL ? 'unset' : 'auto',
+                  mr: isRTL ? 'auto' : 'unset',
                   p: 0.5,
                   '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' } 
                 }}
@@ -159,21 +175,26 @@ const PastExamCard: React.FC<PastExamCardProps> = ({ pastExam, onClick, onDelete
             </Box>
 
             {(yearInfo || semesterInfo || courseInfo) && (
-              <Box sx={{ mt: 1, mb: 1 }}>
+              <Box sx={{ mt: 0.5, mb: 0.5 }}>
                 {courseInfo && (
-                  <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                  <Typography variant="caption" color="text.primary" sx={{ mb: 0.25, display: 'block' }}>
                     Course: {courseInfo}
                   </Typography>
                 )}
                 {(yearInfo || semesterInfo) && (
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 0.5, 
+                    flexWrap: 'wrap',
+                    flexDirection: isRTL ? 'row-reverse' : 'row' 
+                  }}>
                     {yearInfo && (
                       <Chip 
                         label={yearInfo} 
                         size="small" 
                         color="primary"
                         variant="outlined"
-                        sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.65rem' } }}
+                        sx={{ height: 18, '& .MuiChip-label': { px: 1, fontSize: '0.6rem' } }}
                       />
                     )}
                     {semesterInfo && (
@@ -182,7 +203,7 @@ const PastExamCard: React.FC<PastExamCardProps> = ({ pastExam, onClick, onDelete
                         size="small" 
                         color="secondary"
                         variant="outlined"
-                        sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.65rem' } }}
+                        sx={{ height: 18, '& .MuiChip-label': { px: 1, fontSize: '0.6rem' } }}
                       />
                     )}
                   </Box>
@@ -190,7 +211,13 @@ const PastExamCard: React.FC<PastExamCardProps> = ({ pastExam, onClick, onDelete
               </Box>
             )}
             
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              mt: 0.5,
+              flexDirection: isRTL ? 'row-reverse' : 'row'
+            }}>
               <Typography variant="caption" color="text.secondary">
                 {formattedDate}
               </Typography>
@@ -199,7 +226,7 @@ const PastExamCard: React.FC<PastExamCardProps> = ({ pastExam, onClick, onDelete
                 size="small" 
                 color="info"
                 variant="outlined"
-                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.65rem' } }}
+                sx={{ height: 18, '& .MuiChip-label': { px: 1, fontSize: '0.6rem' } }}
               />
             </Box>
           </CardContent>
@@ -211,20 +238,29 @@ const PastExamCard: React.FC<PastExamCardProps> = ({ pastExam, onClick, onDelete
         open={open}
         onClose={handleMenuCloseGeneric}
         onClick={handleMenuClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: isRTL ? 'left' : 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: isRTL ? 'left' : 'right', vertical: 'bottom' }}
+        PaperProps={{
+          elevation: 2,
+          sx: { 
+            minWidth: 180,
+            borderRadius: '8px',
+            mt: 0.5,
+            direction: isRTL ? 'rtl' : 'ltr'
+          }
+        }}
       >
-        <MenuItem onClick={handleDownload}>
-          <ListItemIcon>
-            <GetAppIcon fontSize="small" />
+        <MenuItem onClick={handleDownload} disabled={!pastExam.url}>
+          <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+            <GetAppOutlinedIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Download</ListItemText>
         </MenuItem>
         
         {onEdit && (
           <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" />
+            <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+              <EditOutlinedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText>Edit Details</ListItemText>
           </MenuItem>
@@ -232,8 +268,8 @@ const PastExamCard: React.FC<PastExamCardProps> = ({ pastExam, onClick, onDelete
         
         {onDelete && (
           <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
+            <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+              <DeleteOutlinedIcon fontSize="small" color="error" />
             </ListItemIcon>
             <ListItemText>Delete Exam</ListItemText>
           </MenuItem>

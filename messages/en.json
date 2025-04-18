@@ -84,6 +84,7 @@
     "feature3Title": "Knowledge Library",
     "feature3Desc": "Access quality educational materials",
     "registrationSuccess": "Registration successful! Please check your email to confirm your account before logging in.",
+    "emailConfirmationSent": "A confirmation email has been sent to {email}. Please check your inbox and click the verification link to activate your account.",
     "redirectingToDashboard": "Registration successful! Redirecting to dashboard..."
   },
   "LoginPage": {
@@ -152,7 +153,10 @@
     "preferredFormatParagraphs": "Paragraphs",
     "preferredFormatRequired": "Select a preferred format",
     "highlightTermsLabel": "Highlight Important Terms?",
-    "summarizeButton": "Summarize"
+    "summarizeButton": "Summarize",
+    "fileName": "File Name",
+    "fileNameRequired": "File name is required",
+    "fileNameHelp": "Enter a name for your file"
   },
   "Workspace": {
     "deleteDialog": {
@@ -163,7 +167,19 @@
       "thisWorkspace": "this workspace",
       "deleting": "Deleting...",
       "confirmDelete": "Delete Workspace"
-    }
+    },
+    "createDialog": {
+      "title": "Create New Workspace",
+      "nameLabel": "Workspace Name",
+      "nameRequired": "Workspace name is required",
+      "creating": "Creating...",
+      "create": "Create",
+      "successMessage": "Workspace \"{name}\" created successfully!"
+    },
+    "workspaces": "Workspaces",
+    "newWorkspace": "New Workspace",
+    "deleteWorkspace": "Delete Current Workspace",
+    "noWorkspaces": "No workspaces found. Create your first workspace to get started."
   },
   "QuizGeneration": {
     "dialogTitle": "Generate Quiz with AI",
@@ -186,6 +202,10 @@
     "additionalInstructionsTooltip": "Your instructions will be given high priority in the quiz generation process",
     "instructionsLabel": "Add your own comments/instructions (high priority)",
     "instructionsPlaceholder": "e.g., 'Focus on theoretical concepts', 'Include at least 2 coding questions', 'Make questions about specific sections...'",
+    "instructionsError": "Instructions contain potentially unsafe content",
+    "instructionsCodeError": "Instructions should not contain code blocks",
+    "instructionsSecurityError": "Instructions contain security-sensitive terms",
+    "instructionsLengthError": "Instructions are too long. Please limit to 1000 characters",
     "pastExamReference": "Past Exam Reference",
     "pastExamTooltip": "Include a past exam to guide the AI in creating questions with similar patterns",
     "includePastExam": "Include a past exam as reference",
@@ -204,7 +224,12 @@
     "generateQuiz": "Generate Quiz",
     "quizGeneratedSuccess": "Quiz Generated Successfully!",
     "quizGeneratedMessage": "Your quiz \"{title}\" with {count} questions has been created.",
-    "untitled": "Untitled"
+    "untitled": "Untitled",
+    "fileSizeError": "File size exceeds the maximum allowed size for quiz generation",
+    "fileSizeErrorForType": "File size exceeds the maximum allowed for this file type",
+    "docSizeLimit": "Word documents should be limited to approximately 150 pages",
+    "pdfSizeLimit": "PDF files should be limited to approximately 100 pages",
+    "pptSizeLimit": "PowerPoint files should be limited to approximately 200 slides"
   },
   "Navigation": {
     "home": "Home",
@@ -213,7 +238,168 @@
     "profile": "Profile Settings"
   },
   "Common": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "question": "Question",
+    "answer": "Answer",
+    "confirmDelete": "Are you sure you want to delete this item?",
+    "logIn": "Log In",
+    "signUp": "Sign Up",
+    "unnamed": "Unnamed File"
+  },
+  "Flashcards": {
+    "pageTitle": "Flashcards",
+    "pageDescription": "Create and manage flashcards to help you study",
+    "createFlashcards": "Create Flashcards",
+    "hideAnswers": "Hide Answers",
+    "showAnswers": "Show Answers",
+    "dontKnow": "Don't Know",
+    "partiallyKnow": "Partially Know",
+    "know": "Know For Sure",
+    "noFlashcards": "No flashcards found",
+    "noFlashcardsDescription": "Create flashcards from a quiz to start studying",
+    "loading": "Loading flashcards...",
+    "error": "Error loading flashcards",
+    "delete": "Delete",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "createFromQuiz": "Create Flashcards from Quiz",
+    "createFromQuizDescription": "Create flashcards from this quiz to help you study. You can create cards for all questions or only for the questions you answered incorrectly.",
+    "allQuestions": "All questions",
+    "wrongAnswersOnly": "Only questions I got wrong",
+    "creating": "Creating flashcards...",
+    "successCreated": "Successfully created {count} flashcards!",
+    "noFlashcardsCreated": "No flashcards were created. You might not have any wrong answers.",
+    "confirmDelete": "Are you sure you want to delete this flashcard? This action cannot be undone.",
+    "deleteFlashcard": "Delete Flashcard"
+  },
+  "Files": {
+    "uploadButton": "Upload File",
+    "noFiles": "No files in this workspace yet. Click \"Upload File\" to add files.",
+    "openFile": "Open File",
+    "opening": "Opening...",
+    "editDetails": "Edit Details",
+    "deleteFile": "Delete File",
+    "confirmDelete": "Are you sure you want to delete \"{name}\"?"
+  },
+  "Dashboard": {
+    "workspace": "Workspace",
+    "files": "Files",
+    "quizzes": "Quizzes",
+    "subjects": "Subjects",
+    "pastExams": "Past Exams",
+    "flashcards": "Flashcards",
+    "noSubjects": "No subjects in this workspace yet.",
+    "generateSubjectsFromFiles": "Generate Subjects from Files",
+    "addSubjectManually": "Add Subject Manually",
+    "noPastExams": "No past exams in this workspace yet. Upload past exam files to create a reference library.",
+    "uploadPastExam": "Upload Past Exam",
+    "noQuizzes": "No quizzes in this workspace yet.",
+    "generateQuiz": "Generate Quiz",
+    "selectWorkspacePrompt": "Select a workspace to view files",
+    "generateSubjects": "Generate Subjects",
+    "uploadFile": "Upload File",
+    "mainActions": "Main Actions",
+    "studyMaterials": "Study Materials",
+    "tabs": {
+      "files": "Files ({count})",
+      "subjects": "Subjects ({count})",
+      "pastExams": "Past Exams ({count})",
+      "quizzes": "Quizzes ({count})",
+      "flashcards": "Flashcards"
+    },
+    "emptyStates": {
+      "files": "No files in this workspace yet. Click \"Upload File\" to add files.",
+      "subjects": "No subjects in this workspace yet.",
+      "pastExams": "No past exams in this workspace yet. Upload past exam files to create a reference library.",
+      "quizzes": "No quizzes in this workspace yet."
+    }
+  },
+  "Export": {
+    "exportToWord": "Export to Word",
+    "quizIdMissing": "Quiz ID is missing. Cannot export.",
+    "loginRequired": "You must be logged in to export quizzes.",
+    "exportFailed": "Failed to export quiz. Please try again later."
+  },
+  "SubjectDialog": {
+    "addTitle": "Add New Subject",
+    "editTitle": "Edit Subject",
+    "nameLabel": "Subject Name",
+    "nameRequired": "Subject name is required",
+    "saveError": "Failed to save subject. Please try again.",
+    "addError": "Failed to add subject. Please try again.",
+    "adding": "Adding...",
+    "saving": "Saving...",
+    "addSubject": "Add Subject",
+    "saveChanges": "Save Changes"
+  },
+  "FileDialog": {
+    "uploadTitle": "Upload File",
+    "editTitle": "Edit File",
+    "metadataTitle": "File Properties",
+    "nameLabel": "File Name",
+    "nameRequired": "File name is required",
+    "fileLabel": "File",
+    "fileRequired": "File is required",
+    "descriptionLabel": "Description",
+    "uploading": "Uploading...",
+    "upload": "Upload",
+    "saving": "Saving...",
+    "save": "Save",
+    "successMessage": "File successfully uploaded!",
+    "dragDropText": "Drag and drop your file here, or click to browse",
+    "formatSupported": "Supported formats: PDF, DOCX, TXT, etc."
+  },
+  "PastExamDialog": {
+    "uploadTitle": "Upload Past Exam",
+    "editTitle": "Edit Past Exam",
+    "nameLabel": "Exam Name",
+    "nameRequired": "Exam name is required",
+    "fileLabel": "Exam File",
+    "fileRequired": "Exam file is required",
+    "dateLabel": "Exam Date",
+    "courseLabel": "Course Name",
+    "institutionLabel": "Institution",
+    "descriptionLabel": "Description",
+    "uploading": "Uploading...",
+    "upload": "Upload",
+    "saving": "Saving...",
+    "save": "Save"
+  },
+  "QuizDialog": {
+    "simulationTitle": "Quiz: {quizName}",
+    "confirmationTitle": "Generate Quiz",
+    "confirmationMessage": "Are you sure you want to generate a quiz from the selected content?",
+    "confirmationWarning": "This will create a new quiz based on the files and topics you've selected.",
+    "loading": "Loading questions...",
+    "startQuiz": "Start Quiz",
+    "cancel": "Cancel",
+    "proceed": "Generate Quiz",
+    "retry": "Try Again",
+    "timeRemaining": "Time Remaining: {time}",
+    "question": "Question {current} of {total}",
+    "correctAnswers": "Correct Answers: {count}",
+    "submit": "Submit",
+    "next": "Next Question",
+    "finish": "Finish Quiz",
+    "quizComplete": "Quiz Complete!",
+    "yourScore": "Your Score: {score}%",
+    "correctCount": "{correct} out of {total} correct",
+    "reviewAnswers": "Review Answers",
+    "returnToDashboard": "Return to Dashboard",
+    "details": "Details",
+    "questions": "questions",
+    "navigationInfo": "You can navigate between questions",
+    "feedbackInfo": "You'll receive feedback after completing the quiz",
+    "refreshingSession": "Refreshing authentication session...",
+    "sessionRefreshed": "Session refreshed successfully. Try submitting again.",
+    "sessionRefreshFailed": "Could not refresh session. Please log in again.",
+    "resultsSaved": "Quiz results saved successfully!",
+    "resultsSaveFailed": "Note: Failed to save quiz results.",
+    "submissionError": "Failed to save quiz results. Your answers will not be tracked."
   }
 }
   

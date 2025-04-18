@@ -1,3 +1,5 @@
+"use client";
+
 import styled from '@emotion/styled';
 import { Box, Paper, TextField, Typography, Button } from '@mui/material';
 import { primary, secondary, accent, gradients, surface } from '../../../../colors';
@@ -31,11 +33,9 @@ export const FormTitle = styled(Typography)`
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  text-align: center;
 `;
 
 export const FormSubtitle = styled(Typography)`
-  text-align: center;
   margin-bottom: 1.25rem;
   color: ${secondary.dark};
 `;
@@ -169,7 +169,6 @@ export const BottomLeftDecoration = styled(FormCircleDecoration)`
 `;
 
 export const ForgotPasswordLink = styled(Box)`
-  text-align: right;
   margin-bottom: 1rem;
   
   a {

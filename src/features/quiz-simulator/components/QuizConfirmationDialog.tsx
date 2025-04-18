@@ -14,6 +14,7 @@ import QuizIcon from '@mui/icons-material/Quiz';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CloseIcon from '@mui/icons-material/Close';
 import { Quiz } from '@/app/models/quiz';
+import { useTranslations } from 'next-intl';
 
 interface QuizConfirmationDialogProps {
   open: boolean;
@@ -28,6 +29,9 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
   onStartQuiz,
   quiz
 }) => {
+  const t = useTranslations('QuizDialog');
+  const commonT = useTranslations('Common');
+  
   if (!quiz) return null;
 
   return (
@@ -51,7 +55,7 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
         gap: 1
       }}>
         <QuizIcon />
-        <Typography variant="h6">Start Quiz</Typography>
+        <Typography variant="h6">{t('confirmationTitle')}</Typography>
       </DialogTitle>
       
       <DialogContent sx={{ pt: 3, pb: 2 }}>
@@ -60,29 +64,29 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
             {quiz.title}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Are you ready to test your knowledge?
+            {t('confirmationMessage')}
           </Typography>
         </Box>
         
         <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'background.default' }}>
           <Typography variant="body2" sx={{ mb: 1 }}>
-            <strong>Quiz Details:</strong>
+            <strong>{commonT('question')} {t('details')}:</strong>
           </Typography>
           
           <Box component="ul" sx={{ pl: 2, m: 0 }}>
             <Box component="li">
               <Typography variant="body2">
-                {quiz.questions.length} questions
+                {quiz.questions.length} {t('questions')}
               </Typography>
             </Box>
             <Box component="li">
               <Typography variant="body2">
-                You can navigate between questions
+                {t('navigationInfo')}
               </Typography>
             </Box>
             <Box component="li">
               <Typography variant="body2">
-                You'll receive feedback after completing the quiz
+                {t('feedbackInfo')}
               </Typography>
             </Box>
           </Box>
@@ -95,7 +99,7 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
           startIcon={<CloseIcon />}
           color="inherit"
         >
-          Cancel
+          {commonT('cancel')}
         </Button>
         <Button 
           onClick={onStartQuiz} 
@@ -104,7 +108,7 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
           startIcon={<PlayArrowIcon />}
           sx={{ ml: 1 }}
         >
-          Start Quiz
+          {t('startQuiz')}
         </Button>
       </DialogActions>
     </Dialog>

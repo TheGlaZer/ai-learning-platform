@@ -13,7 +13,7 @@ interface UseWorkspaceManagementReturn {
   loading: boolean;
   error: string | null;
   fetchWorkspaces: (userId: string) => Promise<void>;
-  createWorkspace: (name: string, description?: string) => Promise<Workspace | null>;
+  createWorkspace: (name: string) => Promise<Workspace | null>;
   selectWorkspace: (workspace: Workspace) => void;
   addFileToWorkspace: (workspaceId: string, file: FileMetadata) => void;
   removeFileFromWorkspace: (workspaceId: string, fileId: string) => void;
@@ -57,12 +57,12 @@ export const useWorkspaceManagement = (userId: string | null): UseWorkspaceManag
     }
   };
 
-  const createWorkspace = async (name: string, description?: string): Promise<Workspace | null> => {
+  const createWorkspace = async (name: string): Promise<Workspace | null> => {
     if (!userId || !accessToken) return null;
     
     try {
       setLoading(true);
-      const newWorkspace = await createWorkspaceClient(userId, name, description, accessToken);
+      const newWorkspace = await createWorkspaceClient(userId, name, undefined, accessToken);
       
       // Update the workspaces list with the new workspace
       setWorkspaces(prevWorkspaces => [...prevWorkspaces, newWorkspace]);

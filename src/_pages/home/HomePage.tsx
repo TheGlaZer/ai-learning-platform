@@ -11,8 +11,6 @@ import {
   TestimonialSection,
   CTASection
 } from './components';
-import PublicLayout from '@/components/PublicLayout';
-import AppLayout from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 
 const HomePage: React.FC = () => {
@@ -21,7 +19,7 @@ const HomePage: React.FC = () => {
   const locale = useLocale();
   const isRtl = locale === 'he';
 
-  const HomeContent = () => (
+  return (
     <Box 
       sx={{
         display: 'flex',
@@ -30,6 +28,11 @@ const HomePage: React.FC = () => {
         gap: 8,
         backgroundColor: colors.surface.background,
         direction: isRtl ? 'rtl' : 'ltr',
+        px: {
+          xs: 0, // No padding on mobile
+          md: 6, // Medium padding on medium screens (tablets)
+          lg: 12, // Large padding on large screens (desktops)
+        }
       }}
     >
       <HeroSection isRtl={isRtl} />
@@ -37,17 +40,6 @@ const HomePage: React.FC = () => {
       <TestimonialSection isRtl={isRtl} />
       <CTASection isRtl={isRtl} />
     </Box>
-  );
-
-  // Use AppLayout for authenticated users, PublicLayout for guests
-  return isAuthenticated ? (
-    <AppLayout>
-      <HomeContent />
-    </AppLayout>
-  ) : (
-    <PublicLayout>
-      <HomeContent />
-    </PublicLayout>
   );
 };
 

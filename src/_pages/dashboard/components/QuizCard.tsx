@@ -8,13 +8,13 @@ import {
   ListItemIcon,
   ListItemText
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import QuizIcon from '@mui/icons-material/Quiz';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import QuizOutlinedIcon from '@mui/icons-material/QuizOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
 import { Quiz } from '@/app/models/quiz';
 import QuizSimulator from '@/features/quiz-simulator';
 import { exportQuizClient } from '@/app/lib-client/quizClient';
@@ -33,6 +33,7 @@ import {
   CardChip
 } from './DashboardStyledComponents';
 import { primary, accent } from '../../../../colors';
+import { useRTL } from '@/contexts/RTLContext';
 
 interface QuizCardProps {
   quiz: Quiz;
@@ -46,6 +47,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const { userId, accessToken } = useAuth();
+  const { isRTL } = useRTL();
   
   // Check if this quiz has previous submissions
   const { submission: previousSubmission, loading: loadingSubmission } = useQuizSubmission(
@@ -160,10 +162,17 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
       <BaseCard>
         <CardActionArea onClick={handleClick}>
           <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
-            <CardHeader>
-              <CardTitleContainer>
-                <CardIconAvatar sx={{ bgcolor: accent.purple.light, width: 28, height: 28 }}>
-                  <QuizIcon fontSize="small" />
+            <CardHeader sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+              <CardTitleContainer sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                <CardIconAvatar sx={{ 
+                  bgcolor: 'white', 
+                  border: '1px solid #d0d0d0',
+                  width: 28, 
+                  height: 28,
+                  marginRight: isRTL ? 0 : '0.75rem',
+                  marginLeft: isRTL ? '0.75rem' : 0
+                }}>
+                  <QuizOutlinedIcon fontSize="small" sx={{ color: 'black' }} />
                 </CardIconAvatar>
                 <CardTitle variant="subtitle1">
                   {quiz.title}
@@ -173,12 +182,16 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
                 size="small"
                 onClick={handleMenuOpen}
                 aria-label="quiz options"
+                sx={{
+                  marginLeft: isRTL ? 'unset' : 'auto',
+                  marginRight: isRTL ? 'auto' : 'unset'
+                }}
               >
                 <MoreVertIcon fontSize="small" />
               </CardMenuButton>
             </CardHeader>
             
-            <CardFooter>
+            <CardFooter sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
               <CardDate variant="caption">
                 {formattedDate}
               </CardDate>
@@ -198,44 +211,45 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
         open={open}
         onClose={handleMenuCloseGeneric}
         onClick={handleMenuClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: isRTL ? 'left' : 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: isRTL ? 'left' : 'right', vertical: 'bottom' }}
         PaperProps={{
           elevation: 2,
           sx: { 
             minWidth: 180,
             borderRadius: '8px',
-            mt: 0.5
+            mt: 0.5,
+            direction: isRTL ? 'rtl' : 'ltr'
           }
         }}
       >
         {hasPreviousSubmission ? (
           <MenuItem onClick={handleContinueQuiz}>
-            <ListItemIcon>
-              <PlayArrowIcon fontSize="small" color="primary" />
+            <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+              <PlayArrowOutlinedIcon fontSize="small" color="primary" />
             </ListItemIcon>
             <ListItemText primary="Continue Quiz" />
           </MenuItem>
         ) : (
           <MenuItem onClick={handleStartQuiz}>
-            <ListItemIcon>
-              <VisibilityIcon fontSize="small" />
+            <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+              <VisibilityOutlinedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText primary="Start Quiz" />
           </MenuItem>
         )}
         
         <MenuItem onClick={handleResetQuiz}>
-          <ListItemIcon>
-            <RefreshIcon fontSize="small" />
+          <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+            <RefreshOutlinedIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Reset Quiz" />
         </MenuItem>
         
         {quiz.id && (
           <MenuItem onClick={handleExport}>
-            <ListItemIcon>
-              <FileDownloadIcon fontSize="small" />
+            <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+              <FileDownloadOutlinedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText primary="Export to Word" />
           </MenuItem>
@@ -243,8 +257,8 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
         
         {onDelete && quiz.id && (
           <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
+            <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto' }}>
+              <DeleteOutlinedIcon fontSize="small" color="error" />
             </ListItemIcon>
             <ListItemText primary="Delete Quiz" />
           </MenuItem>
