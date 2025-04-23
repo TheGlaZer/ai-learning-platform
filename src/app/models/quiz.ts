@@ -10,6 +10,8 @@ export interface QuizQuestion {
   correctAnswer: string;
   explanation: string;
   relatedSubject?: string; // The specific subject this question tests
+  pages?: number[];       // Array of page numbers where the question's content is found
+  lines?: { [pageNumber: string]: number[] }; // Map of page numbers to line numbers relative to that page
 }
 
 export interface Quiz {

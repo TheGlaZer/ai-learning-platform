@@ -162,8 +162,8 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
       <BaseCard>
         <CardActionArea onClick={handleClick}>
           <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
-            <CardHeader sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-              <CardTitleContainer sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+            <CardHeader>
+              <CardTitleContainer>
                 <CardIconAvatar sx={{ 
                   bgcolor: 'white', 
                   border: '1px solid #d0d0d0',

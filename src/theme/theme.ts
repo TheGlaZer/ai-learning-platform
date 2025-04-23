@@ -11,7 +11,7 @@ const createAppTheme = (direction: 'ltr' | 'rtl', mode: PaletteMode = 'light'): 
         xs: 0,     // Extra Small (default for MUI)
         sm: 768,   // Mobile
         md: 1024,  // Medium Desktop
-        lg: 1440,  // Large Desktop
+        lg: 1640,  // Large Desktop
         xl: 1920,  // Extra Large (keep for consistency)
       },
     },

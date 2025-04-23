@@ -12,6 +12,9 @@ dont write inline stylings.. write styled components with meaningfull names
 add client side validations for forms 
 every api call need to be implment in the matching client service!!!
 IMPORTANT !!!! when implment custom hook never access supabase or any backend logic.. you will always implmet a route or use existsing one and there abstrct BL logic to matching service.. dont write backend code in client side at all !!!!! 
+when supporting RTL plz dont change flex-drection css prop!!
+
+
 
 backend rules:
 write in typescript and clean senioer level code 
@@ -22,6 +25,7 @@ add servier side validations for buisness logic
 insure in backend api route you send auth token if needed useing verifyAuth function from authService.ts
 when need to create an action or check error about an main entity in the system check the matching api route and services 
 if exists.. do you changes or addons there..
+IMPORTANT !!! always choose the most simple soultion for every decistion you make plz!!!
 
 ai features:
 see th ai folder unedr lib-server. and follow this modular interfaces and services and intergrate the feature in there for the backend side

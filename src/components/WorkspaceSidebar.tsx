@@ -56,11 +56,6 @@ const SidebarContainer = styled(Paper)(({ theme }) => ({
 const ToggleButton = styled(IconButton)(({ theme }) => ({
   position: 'absolute',
   top: 70,
-  right: 0,
-  transform: 'translateX(50%)',
-  backgroundColor: 'white',
-  border: `1px solid #d0d0d0`,
-  borderRadius: '50%',
   width: 32,
   height: 32,
   display: 'flex',
@@ -68,6 +63,9 @@ const ToggleButton = styled(IconButton)(({ theme }) => ({
   justifyContent: 'center',
   zIndex: 9999,
   color: 'black',
+  backgroundColor: 'white',
+  border: `1px solid #d0d0d0`,
+  borderRadius: '50%',
   boxShadow: '0 3px 10px rgba(0,0,0,0.2)',
   '&:hover': {
     backgroundColor: '#f5f5f5',
@@ -118,8 +116,10 @@ const useWorkspaceSidebarCollapse = (defaultWidth = 250, collapsedWidth = 60, on
     toggleCollapse,
     getToggleIcon: () => {
       if (isRTL) {
+        // For RTL - when collapsed, show left arrow (to expand), when expanded, show right arrow (to collapse)
         return isCollapsed ? <ChevronLeftIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />;
       } else {
+        // For LTR - when collapsed, show right arrow (to expand), when expanded, show left arrow (to collapse)
         return isCollapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />;
       }
     }
@@ -228,6 +228,10 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
         elevation={0}
         sx={{
           width,
+          borderRight: isRTL ? 'none' : '1px solid',
+          borderLeft: isRTL ? '1px solid' : 'none',
+          borderColor: surface.border,
+          direction: isRTL ? 'rtl' : 'ltr',
         }}
       >
         {/* Toggle button to collapse/expand sidebar */}
@@ -277,7 +281,8 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                           sx={{ 
                             color: 'black',
                             bgcolor: 'white',
-                            borderRadius: '2px'
+                            borderRadius: '2px',
+                            backgroundColor: 'inherit'
                           }}
                         />
                       </ListItemButton>
@@ -314,7 +319,7 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
           <>
             {/* Header */}
             <SidebarHeader>
-              <Box display="flex" alignItems="center">
+              <Box display="flex" alignItems="center" sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                 <Typography 
                   variant="subtitle1" 
                   fontWeight="bold"
@@ -323,6 +328,7 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     color: 'transparent',
+                    textAlign: isRTL ? 'right' : 'left',
                   }}
                 >
                   {t('workspaces')}
@@ -331,8 +337,8 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                   size="small" 
                   onClick={handleToggleExpand}
                   sx={{ 
-                    ml: isRTL ? 0 : 0.5,
-                    mr: isRTL ? 0.5 : 0,
+                    ml: isRTL ? 0.5 : 0.5,
+                    mr: isRTL ? 0 : 0,
                     color: primary.main
                   }}
                 >
@@ -386,16 +392,19 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                           },
                           '&:hover': {
                             bgcolor: background.hover
-                          }
+                          },
+                          justifyContent: isRTL ? 'flex-end' : 'flex-start',
+
                         }}
                       >
-                        <ListItemIcon sx={{ minWidth: 36 }}>
+                        <ListItemIcon sx={{ minWidth: 36, marginRight: isRTL ? 'auto' : 0, marginLeft: isRTL ? 0 : 'auto',  }}>
                           <FolderOutlinedIcon 
                             fontSize="small" 
                             sx={{ 
                               color: 'black',
                               bgcolor: 'white',
-                              borderRadius: '2px'
+                              borderRadius: '2px',
+                                         backgroundColor: 'inherit'
                             }}
                           />
                         </ListItemIcon>

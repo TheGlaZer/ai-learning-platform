@@ -48,7 +48,8 @@ const NavButton = styled(Button)<{ $isSelected?: boolean }>(({ $isSelected }) =>
   '&:hover': {
     backgroundColor: background.hover,
     color: primary.main,
-  }
+  },
+
 }));
 
 const Header: React.FC = () => {
@@ -153,9 +154,15 @@ const Header: React.FC = () => {
         {isAuthenticated && !isMobile && (
           <Box sx={{ display: 'flex', alignItems: 'center', mr: isRTL ? 0 : 2, ml: isRTL ? 2 : 0 }}>
             <NavButton
+              dir={isRTL ? 'rtl' : 'ltr'}
               startIcon={<HomeOutlinedIcon />}
               onClick={navigateToHome}
               $isSelected={isCurrentPage('')}
+              sx={{
+                '& .MuiButton-startIcon': {
+                  margin: isRTL ? '0 0 0 8px' : '0 8px 0 0',
+                }
+              }}
             >
               {t('home')}
             </NavButton>
@@ -163,6 +170,11 @@ const Header: React.FC = () => {
               startIcon={<DashboardOutlinedIcon />}
               onClick={navigateToDashboard}
               $isSelected={isCurrentPage('dashboard')}
+              sx={{
+                '& .MuiButton-startIcon': {
+                  margin: isRTL ? '0 0 0 8px' : '0 8px 0 0',
+                }
+              }}
             >
               {t('dashboard')}
             </NavButton>
@@ -170,6 +182,11 @@ const Header: React.FC = () => {
               startIcon={<BarChartOutlinedIcon />}
               onClick={navigateToAnalytics}
               $isSelected={isCurrentPage('analytics')}
+              sx={{
+                '& .MuiButton-startIcon': {
+                  margin: isRTL ? '0 0 0 8px' : '0 8px 0 0',
+                }
+              }}
             >
               {t('analytics')}
             </NavButton>

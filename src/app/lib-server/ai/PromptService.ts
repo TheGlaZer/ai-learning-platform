@@ -80,12 +80,16 @@ export class PromptService {
     const language = options?.language || 'en';
     // Get existing subjects if provided
     const existingSubjects = options?.existingSubjects || [];
+    // Get custom generation options
+    const countRange = options?.countRange || 'medium';
+    const specificity = options?.specificity || 'general';
     
     // Log the language being used for better debugging
     console.log(`Creating subjects prompt with language: ${language}`);
+    console.log(`Custom options: countRange=${countRange}, specificity=${specificity}`);
     
     // Construct base prompt
-    let prompt = this.getBaseSubjectsPrompt(fileContent);
+    let prompt = this.getBaseSubjectsPrompt(fileContent, countRange, specificity);
 
     // Add existing subjects section if needed
     if (existingSubjects.length > 0) {
@@ -109,11 +113,36 @@ export class PromptService {
       return content;
     }
     
-    // Split the content by lines and add line numbers
+    // Split the content by lines
     const lines = content.split('\n');
-    // Add line numbers to each line (1-indexed)
-    const processedContent = lines.map((line, index) => `[LINE:${index + 1}] ${line}`).join('\n');
-    console.log('Added line numbers to content for file references');
+    
+    // Variables to track current page and line number within page
+    let currentPage = 1;
+    let lineNumberInPage = 1;
+    
+    // Process each line, preserving page markers and adding line numbers
+    const processedLines = lines.map((line, index) => {
+      // Check if this is a page marker line
+      if (line.trim().startsWith('------ PAGE:')) {
+        // Extract the page number
+        const pageMatch = line.match(/------ PAGE: (\d+) ----------/);
+        if (pageMatch && pageMatch[1]) {
+          currentPage = parseInt(pageMatch[1], 10);
+          lineNumberInPage = 1; // Reset line counter for the new page
+        }
+        // Return the page marker line unchanged
+        return line;
+      } else {
+        // Add line number to non-marker lines, including page info
+        const result = `[PAGE:${currentPage}:LINE:${lineNumberInPage}] ${line}`;
+        lineNumberInPage++; // Increment line counter within the current page
+        return result;
+      }
+    });
+    
+    // Join the processed lines back together
+    const processedContent = processedLines.join('\n');
+    console.log('Added page-relative line numbers to content for file references');
     
     return processedContent;
   }
@@ -124,6 +153,8 @@ export class PromptService {
   private getBaseQuizPrompt(difficultyLevel: string, numberOfQuestions: number, topic: string, content: string): string {
     return `
 Generate a ${difficultyLevel} level quiz with ${numberOfQuestions} questions about ${topic} based on the following content:
+
+IMPORTANT: The content below includes PAGE MARKERS in the format "------ PAGE: X ----------". Pay attention to these markers as you'll need to record which pages each question's content comes from.
 
 ${content}
 
@@ -252,9 +283,9 @@ IMPORTANT REQUIREMENT FOR QUESTIONS:
   private getFileReferencesInstructions(): string {
     return `
 IMPORTANT: For each question's explanation, include specific file references that point to where the answer can be found.
-Look for the [LINE:X] markers in the content and include "Reference: Line X" at the end of each explanation.
+Look for the [PAGE:X:LINE:Y] markers in the content and include "Reference: Page X, Line Y" at the end of each explanation.
 This helps students locate the relevant information in the original material.
-For example: "Reference: Line 42" or "References: Lines 15-20".
+For example: "Reference: Page 2, Line 42" or "References: Page 1, Lines 15-20".
 
 `;
   }
@@ -278,13 +309,23 @@ Format the quiz as a JSON object with the following structure:
         {"id": "d", "text": "Fourth option"}
       ],
       "correctAnswer": "a",
-      "explanation": "Explanation of why this is the correct answer AND why the other options are incorrect${includeFileReferences ? '. Reference: Line X' : ''}",
-      "relatedSubject": "Name of the specific subject this question is testing"
+      "explanation": "Explanation of why this is the correct answer AND why the other options are incorrect${includeFileReferences ? '. Reference: Page X, Line Y' : ''}",
+      "relatedSubject": "Name of the specific subject this question is testing",
+      "pages": [1, 2], // Array of page numbers where this question's content appears
+      "lines": { // Object mapping page numbers to arrays of line numbers
+        "1": [42, 43],
+        "2": [15, 16, 17]
+      }
     }
   ]
 }
 
-IMPORTANT: 
+IMPORTANT:
+- NOTICE: The content has page markers in the format "------ PAGE: X ----------" and line markers in format [PAGE:X:LINE:Y].
+- For each question, set the "pages" field to an array of page numbers where the question's content can be found.
+- If a question spans multiple pages, include all relevant page numbers in the array.
+- For each question, add a "lines" field as an object that maps page numbers to arrays of line numbers relevant on that page.
+- Extract line numbers from the [PAGE:X:LINE:Y] markers for each reference.
 - For each question, set the "relatedSubject" field to ONE specific subject name from the provided list of subjects
 - The "relatedSubject" field is REQUIRED for every question
 - Each question should test knowledge specific to its related subject
@@ -315,7 +356,41 @@ DO NOT translate to English - generate native Hebrew content directly.
   /**
    * Gets the base prompt for subject extraction
    */
-  private getBaseSubjectsPrompt(fileContent: string): string {
+  private getBaseSubjectsPrompt(fileContent: string, countRange: string, specificity: string): string {
+    // Determine the number of subjects to generate based on countRange
+    let subjectCountText;
+    switch(countRange) {
+      case 'small':
+        subjectCountText = '5-10';
+        break;
+      case 'medium':
+        subjectCountText = '10-15';
+        break;
+      case 'large':
+        subjectCountText = '15-20';
+        break;
+      default:
+        subjectCountText = '10-15'; // Default to medium
+    }
+    
+    // Determine the specificity instructions
+    let specificityInstructions;
+    if (specificity === 'specific') {
+      specificityInstructions = `
+When identifying subjects, focus on SPECIFIC, DETAILED topics rather than general categories.
+Create narrowly defined subjects that delve into particular aspects or sub-areas of the content.
+For example, instead of "Mathematics", use more specific subjects like "Linear Algebra", "Differential Calculus", or "Number Theory".
+Each subject should cover a distinct, specific area of knowledge that could be taught as an individual lesson or topic.
+`;
+    } else {
+      specificityInstructions = `
+When identifying subjects, focus on GENERAL topics that provide a good high-level organization of the content.
+Create broader subjects that encompass multiple related concepts under a common theme.
+Avoid creating subjects that are too narrow or specific unless the content strongly indicates the need for such detail.
+Each subject should represent a meaningful category that could organize multiple lessons or sub-topics.
+`;
+    }
+    
     return `
 You are an AI educational assistant tasked with analyzing learning material and organizing it into logical subjects.
 
@@ -326,11 +401,13 @@ ${fileContent}
 First, look for any explicit headings, chapter titles, or section markers that might indicate subject divisions.
 If such structural elements exist, use them as the primary basis for subject identification.
 
-If no clear structure exists, analyze the content and identify 3-7 distinct main subjects based on the following criteria:
+If no clear structure exists, analyze the content and identify ${subjectCountText} distinct subjects based on the following criteria:
 1. Topics that are significantly different from each other
 2. Topics that have enough content to stand as their own subject
 3. Topics that form a logical progression or organization of the material
-4. Consider the core concepts that a student would need to master to understand the material`;
+4. Consider the core concepts that a student would need to master to understand the material
+
+${specificityInstructions}`;
   }
 
   /**
@@ -340,7 +417,32 @@ If no clear structure exists, analyze the content and identify 3-7 distinct main
     return `
 
 IMPORTANT: The following subjects ALREADY EXIST in the course. DO NOT include these in your response, only generate NEW subjects that are not in this list:
-${existingSubjects.map(subject => `- ${subject.name}`).join('\n')}`;
+${existingSubjects.map(subject => `- ${subject.name}`).join('\n')}
+
+CRITICAL INSTRUCTIONS FOR AVOIDING SIMILAR OR DUPLICATE SUBJECTS:
+1. Do NOT generate subjects that are semantically similar to existing ones, even if worded differently
+2. Do NOT generate subjects that are just variations or rephrased versions of existing subjects
+3. Do NOT generate subjects that are more specific subsets of existing subjects (e.g., if "Mathematics" exists, don't create "Advanced Mathematics")
+4. Do NOT generate subjects that are more general versions of existing subjects (e.g., if "Linear Algebra" exists, don't create "Algebra")
+5. Do NOT generate subjects that combine existing subjects with minor additions
+6. If you have any doubt about whether a subject is too similar to an existing one, DO NOT include it
+
+IMPORTANT CRITERIA FOR NEW SUBJECTS:
+1. New subjects must be COMPLETELY DISTINCT in meaning and scope from all existing subjects
+2. New subjects should cover entirely different knowledge areas or topics
+3. If all potential subjects from the content are already covered in the existing list, return an empty array []
+
+CRITICAL INSTRUCTION FOR HANDLING DIFFERENT TOPIC AREAS:
+1. If the content covers topics in a COMPLETELY DIFFERENT DOMAIN from the existing subjects, that's perfectly fine.
+2. Please generate appropriate subjects for that new domain or topic area.
+3. The new subjects do NOT need to be related to the existing ones - they just should not duplicate them.
+
+SPECIAL CASE - COMPLETELY UNRELATED CONTENT:
+If you determine that the content is completely unrelated to educational purposes or cannot be organized into meaningful academic subjects:
+- Instead of returning an empty array, return a special JSON structure:
+[{ "status": "unrelated_content", "message": "The provided content appears unrelated to the existing academic subjects. Please provide educational content with clear topics that can be organized into meaningful subjects." }]
+
+ONLY return an empty array [] if you can identify subjects but they ALL already exist in the list above or are too similar to existing subjects.`;
   }
 
   /**
@@ -368,7 +470,10 @@ Format your response as a JSON array of subject names with the following structu
     if (existingSubjects.length > 0) {
       instructions += `
 
-REMEMBER: Only include NEW subjects not already in the list provided above.`;
+REMEMBER: Only include NEW subjects that are COMPLETELY DISTINCT from the existing ones.
+DO NOT include subjects that are similar in meaning, scope, or intent to any existing subjects.
+It is BETTER to return fewer subjects or an empty array than to include similar or duplicate subjects.
+If you're unsure whether a subject is distinct enough, DO NOT include it.`;
     }
 
     instructions += `
@@ -386,9 +491,23 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
     if (language === 'he') {
       return `
 VERY IMPORTANT: Create ALL the subjects in HEBREW LANGUAGE ONLY. 
+This is absolutely critical - the response MUST be in HEBREW, not English.
 The response must be in Hebrew, with Hebrew characters, written right-to-left. 
 Make sure the subject names are grammatically correct in Hebrew and culturally appropriate.
 DO NOT translate to English - generate native Hebrew subject names directly.
+NEVER output English text in the results - ONLY Hebrew is acceptable.
+
+Example of correctly formatted Hebrew subjects:
+[
+  {
+    "name": "מבנה נתונים"
+  },
+  {
+    "name": "אלגוריתמים"
+  }
+]
+
+Check each subject name to ensure it is written in Hebrew before including it in your response.
 `;
     }
     

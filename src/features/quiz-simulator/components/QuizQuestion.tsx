@@ -29,6 +29,20 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
 }) => {
   const isCorrect = selectedOptionId === question.correctAnswer;
   
+  // Extract line references from explanation if they exist
+  const extractLineReferences = (explanation: string): string[] | null => {
+    // Match patterns like "Reference: Line 1145-1147" or "References: Lines 1145-1147"
+    const linePattern = /references?:\s*lines?\s*(\d+(?:\s*-\s*\d+)?)/i;
+    const match = explanation.match(linePattern);
+    
+    if (match && match[1]) {
+      return match[1].split('-').map(num => num.trim());
+    }
+    return null;
+  };
+  
+  const lineReferences = extractLineReferences(question.explanation);
+  
   return (
     <Box sx={{ mb: 4 }}>
       <Paper 
@@ -135,16 +149,32 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
               bgcolor: isCorrect ? 'success.lighter' : 'error.lighter'
             }}
           >
-            <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               <Chip 
                 label={isCorrect ? 'Correct' : 'Incorrect'} 
                 color={isCorrect ? 'success' : 'error'} 
                 size="small"
                 icon={isCorrect ? <CheckCircleIcon /> : <CancelIcon />}
               />
+              {question.pages && question.pages.length > 0 && (
+                <Chip
+                  label={`Page${question.pages.length > 1 ? 's' : ''}: ${question.pages.join(', ')}`}
+                  color="primary"
+                  variant="outlined"
+                  size="small"
+                />
+              )}
+              {lineReferences && (
+                <Chip
+                  label={`Line${lineReferences.length > 1 ? 's' : ''}: ${lineReferences.join('-')}`}
+                  color="secondary"
+                  variant="outlined"
+                  size="small"
+                />
+              )}
             </Box>
             <Typography variant="body2">
-              {question.explanation}
+              {question.explanation.replace(/\s*references?:\s*lines?\s*\d+(?:\s*-\s*\d+)?\.?\s*$/i, '')}
             </Typography>
           </Paper>
         </Fade>

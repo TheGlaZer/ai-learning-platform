@@ -45,6 +45,8 @@ export const createFlashcard = async (
       workspace_id: flashcardData.workspaceId,
       user_id: flashcardData.userId,
       status: flashcardData.status || "dont_know",
+      pages: flashcardData.pages || null,
+      file_name: flashcardData.fileName || null
     })
     .select()
     .single();
@@ -75,6 +77,8 @@ export const createFlashcardsBatch = async (
         workspace_id: card.workspaceId,
         user_id: card.userId,
         status: card.status || "dont_know",
+        pages: card.pages || null,
+        file_name: card.fileName || null
       }))
     );
 

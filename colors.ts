@@ -82,4 +82,4 @@ export const border = {
   light: '#DDDDDD',
   medium: '#CCCCCC',
   dark: '#AAAAAA'
-}; 
+};

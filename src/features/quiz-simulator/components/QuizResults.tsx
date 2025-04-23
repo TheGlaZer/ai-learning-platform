@@ -18,7 +18,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ReplayIcon from '@mui/icons-material/Replay';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
-import FlashcardIcon from '@mui/icons-material/Style';
+import StyleOutlinedIcon from '@mui/icons-material/StyleOutlined';
 import { UserAnswer } from '../hooks/useQuizSimulation';
 import ExportQuizButton from '@/components/quiz/ExportQuizButton';
 import CreateFlashcardsDialog from '@/components/flashcards/CreateFlashcardsDialog';
@@ -197,6 +197,21 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         <Grid container spacing={2} sx={{ mb: 3 }}>
           {quiz.questions.map((question, index) => {
             const isCorrect = results.questionResults[question.id];
+            
+            // Extract line references from explanation if they exist
+            const extractLineReferences = (explanation: string): string[] | null => {
+              // Match patterns like "Reference: Line 1145-1147" or "References: Lines 1145-1147"
+              const linePattern = /references?:\s*lines?\s*(\d+(?:\s*-\s*\d+)?)/i;
+              const match = explanation.match(linePattern);
+              
+              if (match && match[1]) {
+                return match[1].split('-').map(num => num.trim());
+              }
+              return null;
+            };
+            
+            const lineReferences = extractLineReferences(question.explanation);
+            
             return (
               <Grid item xs={12} sm={6} md={4} key={question.id}>
                 <Paper
@@ -207,18 +222,42 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                     borderLeft: '4px solid',
                     borderLeftColor: isCorrect ? 'success.main' : 'error.main',
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5
+                    flexDirection: 'column',
+                    gap: 1
                   }}
                 >
-                  {isCorrect ? (
-                    <CheckCircleIcon color="success" />
-                  ) : (
-                    <CloseIcon color="error" />
-                  )}
-                  <Typography variant="body2" noWrap>
-                    Question {index + 1}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    {isCorrect ? (
+                      <CheckCircleIcon color="success" />
+                    ) : (
+                      <CloseIcon color="error" />
+                    )}
+                    <Typography variant="body2" noWrap>
+                      Question {index + 1}
+                    </Typography>
+                  </Box>
+                    
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 4 }}>
+                    {question.pages && question.pages.length > 0 && (
+                      <Chip
+                        label={`Page${question.pages.length > 1 ? 's' : ''}: ${question.pages.join(', ')}`}
+                        color="primary"
+                        variant="outlined"
+                        size="small"
+                        sx={{ height: 24 }}
+                      />
+                    )}
+                    
+                    {lineReferences && lineReferences.length > 0 && (
+                      <Chip
+                        label={`Line${lineReferences.length > 1 ? 's' : ''}: ${lineReferences.join('-')}`}
+                        color="secondary"
+                        variant="outlined"
+                        size="small"
+                        sx={{ height: 24 }}
+                      />
+                    )}
+                  </Box>
                 </Paper>
               </Grid>
             );
@@ -263,7 +302,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             variant="outlined"
             color="primary"
             onClick={handleOpenFlashcardsDialog}
-            startIcon={<FlashcardIcon />}
+            startIcon={<StyleOutlinedIcon />}
           >
             Create Flashcards
           </Button>

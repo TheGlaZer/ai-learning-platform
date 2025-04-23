@@ -13,7 +13,8 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  Chip
 } from '@mui/material';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -84,6 +85,16 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
     setAnswer(flashcard.answer);
     setEditMode(false);
   };
+
+  // Extract line references from the flashcard if they exist
+  const extractLineReferences = (): number[] | null => {
+    if (flashcard.lines && flashcard.lines.length > 0) {
+      return flashcard.lines;
+    }
+    return null;
+  };
+  
+  const lineReferences = extractLineReferences();
 
   return (
     <>
@@ -195,29 +206,20 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
                 }}
                 onClick={(e) => e.stopPropagation()}
               />
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: isRTL ? 'flex-start' : 'flex-end', 
-                mt: 2, 
-                gap: 1,
-                flexDirection: isRTL ? 'row-reverse' : 'row'
-              }}
-              onClick={(e) => e.stopPropagation()}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<CancelIcon />}
+              
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+                <Button 
                   onClick={cancelEdit}
-                  sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}
+                  startIcon={<CancelIcon />}
+                  sx={{ color: 'text.secondary' }}
                 >
                   {t('cancel')}
                 </Button>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<SaveIcon />}
+                <Button 
                   onClick={handleSave}
-                  sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}
+                  startIcon={<SaveIcon />}
+                  variant="contained"
+                  color="primary"
                 >
                   {t('save')}
                 </Button>
@@ -247,6 +249,47 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
                 >
                   {flashcard.answer}
                 </Typography>
+                
+                {(flashcard.pages?.length > 0 || flashcard.fileName || lineReferences) && (
+                  <Box sx={{ 
+                    mt: 2, 
+                    pt: 1, 
+                    borderTop: '1px dashed rgba(0,0,0,0.1)', 
+                    fontSize: '0.75rem', 
+                    color: 'text.secondary',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.5
+                  }}>
+                    {flashcard.fileName && (
+                      <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
+                        {t('source')}: {flashcard.fileName}
+                      </Typography>
+                    )}
+                    
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {flashcard.pages && flashcard.pages.length > 0 && (
+                        <Chip
+                          label={`${t('pages')}: ${flashcard.pages.join(', ')}`}
+                          size="small"
+                          variant="outlined"
+                          color="primary"
+                          sx={{ height: 24 }}
+                        />
+                      )}
+                      
+                      {lineReferences && lineReferences.length > 0 && (
+                        <Chip
+                          label={`${t('lines')}: ${lineReferences.join(', ')}`}
+                          size="small"
+                          variant="outlined"
+                          color="secondary"
+                          sx={{ height: 24 }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                )}
               </Collapse>
             </>
           )}
@@ -256,24 +299,19 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
       <Dialog
         open={showDeleteDialog}
         onClose={cancelDelete}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
+        aria-labelledby="delete-dialog-title"
       >
-        <DialogTitle id="alert-dialog-title">
-          {t('deleteFlashcard')}
-        </DialogTitle>
+        <DialogTitle id="delete-dialog-title">{t('deleteFlashcard')}</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {t('confirmDelete')}
+          <DialogContentText>
+            {t('deleteConfirmation')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={cancelDelete}>{t('cancel')}</Button>
-          <Button 
-            onClick={confirmDelete} 
-            color="error" 
-            autoFocus
-          >
+          <Button onClick={cancelDelete} color="primary">
+            {t('cancel')}
+          </Button>
+          <Button onClick={confirmDelete} color="error" autoFocus>
             {t('delete')}
           </Button>
         </DialogActions>

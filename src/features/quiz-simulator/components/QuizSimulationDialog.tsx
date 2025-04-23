@@ -24,6 +24,8 @@ import { useQuizSimulation } from '../hooks/useQuizSimulation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuizSubmission } from '@/app/lib-client/hooks/useQuizSubmissions';
 import { useTranslations } from 'next-intl';
+import { useRTL } from '@/contexts/RTLContext';
+import styled from '@emotion/styled';
 
 interface QuizSimulationDialogProps {
   open: boolean;
@@ -31,6 +33,13 @@ interface QuizSimulationDialogProps {
   quiz: Quiz | null;
   resetMode?: boolean;
 }
+
+const StyledCloseButton = styled(IconButton)<{ isRTL?: boolean }>`
+  position: absolute;
+  ${props => props.isRTL ? 'left' : 'right'}: 8px;
+  top: 8px;
+  color: text.secondary;
+`;
 
 const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({ 
   open, 
@@ -45,6 +54,7 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const t = useTranslations('QuizDialog');
+  const { isRTL } = useRTL();
   
   // Get user auth information and refresh capabilities
   const { userId, isAuthenticated, accessToken, refreshSession } = useAuth();
@@ -82,20 +92,30 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
   // Reset quiz state when resetMode changes
   useEffect(() => {
     if (open && resetMode) {
+      console.log('Resetting quiz state due to resetMode');
       resetQuiz();
       resetSubmission();
-      setReviewMode(false);
+      
+      // Instead of directly setting state, which could cause conflicts with the hook,
+      // only set if needed (and the hook's review mode state will sync via the other effect)
+      if (reviewMode) {
+        setReviewMode(false);
+      }
     }
   }, [open, resetMode, resetQuiz, resetSubmission]);
   
   // Sync review mode between component and hook
   useEffect(() => {
-    setReviewMode(simulationReviewMode);
+    if (reviewMode !== simulationReviewMode) {
+      setReviewMode(simulationReviewMode);
+    }
   }, [simulationReviewMode]);
   
   // Update review mode in the hook when changed in component
   useEffect(() => {
-    setSimulationReviewMode(reviewMode);
+    if (simulationReviewMode !== reviewMode) {
+      setSimulationReviewMode(reviewMode);
+    }
   }, [reviewMode, setSimulationReviewMode]);
   
   // Log user authentication state when component mounts or auth changes
@@ -185,9 +205,10 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
         aria-labelledby="quiz-dialog-title"
         maxWidth="md"
         fullWidth
-        sx={{
-          '& .MuiDialog-paper': {
-            bgcolor: 'background.default'
+        PaperProps={{
+          sx: {
+            bgcolor: 'background.default',
+            direction: isRTL ? 'rtl' : 'ltr'
           }
         }}
       >
@@ -198,18 +219,13 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
               {quiz.title}
             </Typography>
           </Box>
-          <IconButton
+          <StyledCloseButton
             aria-label="close"
             onClick={onClose}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: 'text.secondary'
-            }}
+            isRTL={isRTL}
           >
             <CloseIcon />
-          </IconButton>
+          </StyledCloseButton>
         </DialogTitle>
         
         <Divider />
@@ -281,7 +297,7 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
           onClose={handleCloseSnackbar} 
           severity={snackbarSeverity}
           variant="filled"
-          sx={{ width: '100%' }}
+          sx={{ width: '100%', direction: isRTL ? 'rtl' : 'ltr' }}
         >
           {snackbarMessage}
         </Alert>

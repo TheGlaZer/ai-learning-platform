@@ -12,7 +12,8 @@ import {
   LinearProgress, 
   Alert, 
   Paper, 
-  IconButton 
+  IconButton,
+  PaperProps
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
@@ -21,6 +22,8 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
 import { useFileUpload, ALLOWED_FILE_EXTENSIONS } from '@/hooks/useFileUpload';
 import { FileMetadata } from '@/app/models/file';
+import { useRTL } from '@/contexts/RTLContext';
+import { useTranslations } from 'next-intl';
 
 interface FileUploadDialogProps {
   open: boolean;
@@ -29,22 +32,31 @@ interface FileUploadDialogProps {
   onFileUploaded: (file: FileMetadata) => void;
 }
 
-const UploadZone = styled(Paper)(({ theme, isDragging }: { theme: any, isDragging: boolean }) => ({
-  padding: '2rem',
-  border: `2px dashed ${isDragging ? '#2196f3' : '#cccccc'}`,
-  borderRadius: '8px',
-  textAlign: 'center',
-  cursor: 'pointer',
-  backgroundColor: isDragging ? 'rgba(33, 150, 243, 0.04)' : 'transparent',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-    borderColor: '#999999'
+interface UploadZoneProps extends PaperProps {
+  isDragging: boolean;
+}
+
+const UploadZone = styled(Paper)<UploadZoneProps>`
+  padding: 2rem;
+  border: 2px dashed ${props => props.isDragging ? '#2196f3' : '#cccccc'};
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  background-color: ${props => props.isDragging ? 'rgba(33, 150, 243, 0.04)' : 'transparent'};
+  transition: all 0.3s ease;
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    border-color: #999999;
   }
-}));
+`;
 
 const HiddenInput = styled.input`
   display: none;
+`;
+
+const StyledCloseButton = styled(IconButton)<{ isRTL?: boolean }>`
+  margin-left: ${props => props.isRTL ? '0' : 'auto'};
+  margin-right: ${props => props.isRTL ? 'auto' : '0'};
 `;
 
 const FileTypeIcon = ({ fileType }: { fileType: string }) => {
@@ -72,6 +84,9 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const { isRTL } = useRTL();
+  const t = useTranslations('FileUpload');
+  const commonT = useTranslations('Common');
   
   const { 
     isUploading, 
@@ -111,7 +126,7 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
 
   const handleFileSelection = (file: File) => {
     if (!validateFileType(file)) {
-      alert(`Invalid file type. Allowed types: ${ALLOWED_FILE_EXTENSIONS.join(', ')}`);
+      alert(`${t('invalidFileType')} ${ALLOWED_FILE_EXTENSIONS.join(', ')}`);
       return;
     }
     setSelectedFile(file);
@@ -145,15 +160,16 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
       PaperProps={{
         sx: {
           borderRadius: 2,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          direction: isRTL ? 'rtl' : 'ltr'
         }
       }}
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Upload File</Typography>
-        <IconButton onClick={handleClose} disabled={isUploading}>
+        <Typography variant="h6">{t('title')}</Typography>
+        <StyledCloseButton onClick={handleClose} disabled={isUploading} isRTL={isRTL}>
           <CloseIcon />
-        </IconButton>
+        </StyledCloseButton>
       </DialogTitle>
       
       <DialogContent>
@@ -174,13 +190,13 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
             >
               <CloudUploadIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
               <Typography variant="h6" gutterBottom>
-                Drag & drop your file here
+                {t('dragDropText')}
               </Typography>
               <Typography variant="body2" color="textSecondary" gutterBottom>
-                or click to browse files
+                {t('browseText')}
               </Typography>
               <Typography variant="caption" color="textSecondary">
-                Allowed file types: {ALLOWED_FILE_EXTENSIONS.join(', ')}
+                {t('allowedTypes')}: {ALLOWED_FILE_EXTENSIONS.join(', ')}
               </Typography>
               <HiddenInput
                 id="file-upload-input"
@@ -192,9 +208,20 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
           </>
         ) : (
           <Box sx={{ mt: 2 }}>
-            <Paper sx={{ p: 2, display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Paper sx={{ 
+              p: 2, 
+              display: 'flex', 
+              alignItems: 'center', 
+              mb: 2,
+              flexDirection: isRTL ? 'row-reverse' : 'row'
+            }}>
               <FileTypeIcon fileType={selectedFile.type} />
-              <Box sx={{ ml: 2, flexGrow: 1 }}>
+              <Box sx={{ 
+                ml: isRTL ? 0 : 2, 
+                mr: isRTL ? 2 : 0, 
+                flexGrow: 1,
+                textAlign: isRTL ? 'right' : 'left'
+              }}>
                 <Typography variant="subtitle1" noWrap>{selectedFile.name}</Typography>
                 <Typography variant="caption" color="textSecondary">
                   {formatFileSize(selectedFile.size)}
@@ -215,7 +242,7 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
                   sx={{ height: 8, borderRadius: 4 }}
                 />
                 <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-                  Uploading... {Math.round(uploadProgress)}%
+                  {t('uploading')}... {Math.round(uploadProgress)}%
                 </Typography>
               </Box>
             )}
@@ -225,7 +252,7 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
       
       <DialogActions sx={{ px: 3, pb: 3 }}>
         <Button onClick={handleClose} disabled={isUploading}>
-          Cancel
+          {commonT('cancel')}
         </Button>
         <Button 
           variant="contained" 
@@ -234,7 +261,7 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
           disabled={!selectedFile || isUploading}
           startIcon={isUploading ? null : <CloudUploadIcon />}
         >
-          {isUploading ? 'Uploading...' : 'Upload File'}
+          {isUploading ? t('uploading') : t('uploadButton')}
         </Button>
       </DialogActions>
     </Dialog>

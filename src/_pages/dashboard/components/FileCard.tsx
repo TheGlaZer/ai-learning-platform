@@ -1,18 +1,14 @@
 "use client";
 import React, { useState } from 'react';
 import {
-  Card,
-  CardActionArea,
-  CardContent,
   Box,
   Typography,
-  Avatar,
-  Chip,
   IconButton,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Tooltip,
 } from '@mui/material';
 import GetAppOutlinedIcon from '@mui/icons-material/GetAppOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -33,54 +29,54 @@ interface FileTypeMap {
   [key: string]: {
     label: string;
     icon: React.ReactNode;
-    color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+    color: string;
   };
 }
 
-// Add more types as needed
+// Add more types as needed with larger icon sizes
 const FILE_TYPES: FileTypeMap = {
   pdf: { 
     label: 'PDF', 
-    icon: <PictureAsPdfOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
-    color: 'error'
+    icon: <PictureAsPdfOutlinedIcon sx={{ fontSize: 60, color: '#f44336' }} />, 
+    color: '#f44336'
   },
   doc: { 
     label: 'DOC', 
-    icon: <DescriptionOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
-    color: 'primary'
+    icon: <DescriptionOutlinedIcon sx={{ fontSize: 60, color: '#2196f3' }} />, 
+    color: '#2196f3'
   },
   docx: { 
     label: 'DOCX', 
-    icon: <DescriptionOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
-    color: 'primary'
+    icon: <DescriptionOutlinedIcon sx={{ fontSize: 60, color: '#2196f3' }} />, 
+    color: '#2196f3'
   },
   txt: { 
     label: 'TXT', 
-    icon: <ArticleOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
-    color: 'secondary'
+    icon: <ArticleOutlinedIcon sx={{ fontSize: 60, color: '#9c27b0' }} />, 
+    color: '#9c27b0'
   },
   jpg: { 
     label: 'JPG', 
-    icon: <ImageOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
-    color: 'success'
+    icon: <ImageOutlinedIcon sx={{ fontSize: 60, color: '#4caf50' }} />, 
+    color: '#4caf50'
   },
   jpeg: { 
     label: 'JPEG', 
-    icon: <ImageOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
-    color: 'success'
+    icon: <ImageOutlinedIcon sx={{ fontSize: 60, color: '#4caf50' }} />, 
+    color: '#4caf50'
   },
   png: { 
     label: 'PNG', 
-    icon: <ImageOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
-    color: 'success'
+    icon: <ImageOutlinedIcon sx={{ fontSize: 60, color: '#4caf50' }} />, 
+    color: '#4caf50'
   }
 };
 
 // Default for any unrecognized file type
 const DEFAULT_FILE_TYPE = { 
   label: 'FILE', 
-  icon: <InsertDriveFileOutlinedIcon sx={{ fontSize: 24, color: 'black' }} />, 
-  color: 'default' as const
+  icon: <InsertDriveFileOutlinedIcon sx={{ fontSize: 60, color: '#757575' }} />, 
+  color: '#757575'
 };
 
 interface FileCardProps {
@@ -173,91 +169,85 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) 
 
   return (
     <>
-      <Card
+      <Box
+        onClick={handleClick}
         sx={{
-          mb: 2,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          '&:hover': {
-            transform: 'translateY(-3px)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-          },
-          maxWidth: '100%',
-          height: '100%',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          alignItems: 'center',
+          width: '90%',
+          height: '100%',
+          position: 'relative',
+          cursor: 'pointer',
+          p: 1.5,
+          borderRadius: 1,
+          transition: 'background-color 0.2s',
+          '&:hover': {
+            backgroundColor: 'rgba(0,0,0,0.04)'
+          }
         }}
       >
-        <CardActionArea
-          onClick={handleClick}
-          sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+        {/* File Icon - Larger size */}
+        <Box 
+          sx={{ 
+            width: 70, 
+            height: 70, 
+            display: 'flex', 
+            alignItems: 'center',
+            justifyContent: 'center',
+            mb: 1,
+            color: fileTypeInfo.color
+          }}
         >
-          <CardContent sx={{ p: 1.5, pb: 1, flexGrow: 1 }}>
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'flex-start', 
-              justifyContent: 'space-between', 
-              mb: 0.5,
-              flexDirection: isRTL ? 'row-reverse' : 'row'
-            }}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                maxWidth: 'calc(100% - 50px)',
-                flexDirection: isRTL ? 'row-reverse' : 'row'
-              }}>
-                <Avatar 
-                  sx={{ 
-                    mr: isRTL ? 0 : 1,
-                    ml: isRTL ? 1 : 0,
-                    width: 28, 
-                    height: 28, 
-                    bgcolor: 'white',
-                    border: '1px solid #d0d0d0',
-                    color: 'black'
-                  }}
-                >
-                  {fileTypeInfo.icon}
-                </Avatar>
-                <Typography variant="subtitle2" noWrap sx={{ fontWeight: 500 }}>
-                  {file.name || 'Unnamed File'}
-                </Typography>
-              </Box>
-              <IconButton 
-                size="small" 
-                onClick={handleMenuOpen}
-                sx={{ 
-                  ml: isRTL ? 'unset' : 'auto',
-                  mr: isRTL ? 'auto' : 'unset',
-                  p: 0.5,
-                  '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' } 
-                }}
-              >
-                <MoreVertIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
-              mt: 0.5,
-              flexDirection: isRTL ? 'row-reverse' : 'row'
-            }}>
-              <Typography variant="caption" color="text.secondary">
-                {formattedDate}
-              </Typography>
-              <Chip 
-                label={fileTypeInfo.label} 
-                size="small" 
-                color={fileTypeInfo.color}
-                variant="outlined"
-                sx={{ height: 18, '& .MuiChip-label': { px: 1, fontSize: '0.6rem' } }}
-              />
-            </Box>
-          </CardContent>
-        </CardActionArea>
-      </Card>
+          {fileTypeInfo.icon}
+        </Box>
+        
+        {/* File Name with Tooltip */}
+        <Tooltip title={file.name || 'Unnamed File'}>
+          <Typography 
+            variant="body2" 
+            align="center" 
+            noWrap 
+            sx={{ 
+              width: '100%', 
+              fontWeight: 500,
+              fontSize: '0.875rem',
+              lineHeight: 1.2
+            }}
+          >
+            {file.name || 'Unnamed File'}
+          </Typography>
+        </Tooltip>
+        
+        {/* Date */}
+        <Typography 
+          variant="caption" 
+          color="text.secondary" 
+          align="center"
+          sx={{ mt: 0.5 }}
+        >
+          {formattedDate}
+        </Typography>
+        
+        {/* Menu button (absolute positioned) */}
+        <IconButton
+          size="small"
+          onClick={handleMenuOpen}
+          sx={{
+            position: 'absolute',
+            top: 4,
+            right: 4,
+            p: 0.5,
+            backgroundColor: 'rgba(255,255,255,0.9)',
+            '&:hover': { 
+              backgroundColor: 'rgba(255,255,255,0.95)'
+            }
+          }}
+          component="div"
+        >
+          <MoreVertIcon fontSize="small" />
+        </IconButton>
+      </Box>
 
       <Menu
         anchorEl={anchorEl}

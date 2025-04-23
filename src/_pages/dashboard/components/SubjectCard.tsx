@@ -6,7 +6,8 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Tooltip
 } from '@mui/material';
 import SubjectOutlinedIcon from '@mui/icons-material/SubjectOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -94,12 +95,15 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEdit, onD
           <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
             <CardHeader>
               <CardTitleContainer>
-                <CardIconAvatar sx={{ bgcolor: 'white', border: '1px solid #d0d0d0', width: 28, height: 28 }}>
-                  <SubjectOutlinedIcon fontSize="small" sx={{ color: 'black' }} />
-                </CardIconAvatar>
-                <CardTitle variant="subtitle1">
-                  {subject.name || 'Unnamed Subject'}
-                </CardTitle>
+                <SubjectOutlinedIcon 
+                  fontSize="small" 
+                  sx={{ mr: 1, color: 'black' }} 
+                />
+                <Tooltip title={subject.name || 'Unnamed Subject'}>
+                  <CardTitle variant="subtitle1">
+                    {subject.name || 'Unnamed Subject'}
+                  </CardTitle>
+                </Tooltip>
               </CardTitleContainer>
               <CardMenuButton
                 size="small"

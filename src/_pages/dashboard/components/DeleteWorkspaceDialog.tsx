@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import { useTranslations } from 'next-intl';
-import { useUserLocale } from '@/hooks/useLocale';
+import { useRTL } from '@/contexts/RTLContext';
 import { primary, secondary } from '../../../../colors';
 
 interface DeleteWorkspaceDialogProps {
@@ -33,6 +33,7 @@ const DeleteWorkspaceDialog: React.FC<DeleteWorkspaceDialogProps> = ({
   const t = useTranslations('Workspace.deleteDialog');
   const commonT = useTranslations('Common');
   const [isDeleting, setIsDeleting] = useState(false);
+  const { isRTL } = useRTL();
 
   const handleDelete = async () => {
     if (isDeleting) return;
@@ -57,6 +58,9 @@ const DeleteWorkspaceDialog: React.FC<DeleteWorkspaceDialogProps> = ({
       aria-labelledby="delete-workspace-dialog-title"
       maxWidth="sm"
       fullWidth
+      PaperProps={{
+        sx: { direction: isRTL ? 'rtl' : 'ltr' }
+      }}
     >
       <DialogTitle 
         id="delete-workspace-dialog-title"

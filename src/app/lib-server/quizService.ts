@@ -150,7 +150,10 @@ export const getFileContent = async (
       arrayBuffer,
       mimeType,
       file.name,
-      { language: 'auto' }
+      { 
+        language: 'auto',
+        addPageMarkers: true // Add page markers for better context in quiz generation
+      }
     );
     
     console.log(`Text extraction complete, extracted ${content.length} characters`);
@@ -331,7 +334,10 @@ export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> 
           arrayBuffer,
           mimeType,
           filePath.split('/').pop() || 'past_exam',
-          { language: 'auto' }
+          { 
+            language: 'auto',
+            addPageMarkers: true // Add page markers for better context
+          }
         );
         
         // Set the extracted text as pastExamContent

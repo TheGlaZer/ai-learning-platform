@@ -19,12 +19,29 @@ export async function processPdfFile(
     const buffer = Buffer.from(fileBuffer);
     console.log(`Converted to Node.js Buffer of length: ${buffer.length} bytes`);
     
-    // Set pdf-parse options
+    // Store pages separately
+    let pages: string[] = [];
+    
+    // Set pdf-parse options with custom page renderer
     const pdfOptions = {
       // Optional pdf-parse options
       max: options.maxPages || undefined,
       // Set a reasonable timeout (30 seconds)
-      timeout: 30000
+      timeout: 30000,
+      // Custom page renderer that adds page markers
+      pagerender: function(pageData: any) {
+        const pageNumber = pageData.pageIndex + 1;
+        
+        return pageData.getTextContent()
+          .then(function(textContent: any) {
+            let text = textContent.items.map((item: any) => item.str).join(" ");
+            
+            // Store this page's text with its page number
+            pages[pageNumber-1] = `------ PAGE: ${pageNumber} ----------\n${text}`;
+            
+            return text;
+          });
+      }
     };
     
     console.log(`Starting PDF parsing with options:`, pdfOptions);
@@ -32,8 +49,15 @@ export async function processPdfFile(
     // Use pdf-parse to extract text
     const result = await pdfParse(buffer, pdfOptions);
     
-    // Get the text content
-    let fullText = result.text || '';
+    // If the page renderer worked, use the collected pages
+    let fullText = '';
+    
+    if (pages.length > 0) {
+      fullText = pages.join('\n\n');
+    } else {
+      // Fallback to using the full text with a single page marker
+      fullText = `------ PAGE: 1 ----------\n${result.text || ''}`;
+    }
     
     console.log(`Processed PDF with ${result.numpages} pages, extracted ${fullText.length} characters`);
     

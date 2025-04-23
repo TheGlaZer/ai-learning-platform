@@ -15,6 +15,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CloseIcon from '@mui/icons-material/Close';
 import { Quiz } from '@/app/models/quiz';
 import { useTranslations } from 'next-intl';
+import { useRTL } from '@/contexts/RTLContext';
 
 interface QuizConfirmationDialogProps {
   open: boolean;
@@ -31,6 +32,7 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
 }) => {
   const t = useTranslations('QuizDialog');
   const commonT = useTranslations('Common');
+  const { isRTL } = useRTL();
   
   if (!quiz) return null;
 
@@ -43,7 +45,8 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
       PaperProps={{
         sx: {
           borderRadius: 2,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          direction: isRTL ? 'rtl' : 'ltr'
         }
       }}
     >
@@ -73,7 +76,7 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
             <strong>{commonT('question')} {t('details')}:</strong>
           </Typography>
           
-          <Box component="ul" sx={{ pl: 2, m: 0 }}>
+          <Box component="ul" sx={{ pl: isRTL ? 0 : 2, pr: isRTL ? 2 : 0, m: 0 }}>
             <Box component="li">
               <Typography variant="body2">
                 {quiz.questions.length} {t('questions')}
@@ -96,7 +99,8 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
       <DialogActions sx={{ px: 3, pb: 3 }}>
         <Button 
           onClick={onClose} 
-          startIcon={<CloseIcon />}
+          startIcon={isRTL ? null : <CloseIcon />}
+          endIcon={isRTL ? <CloseIcon /> : null}
           color="inherit"
         >
           {commonT('cancel')}
@@ -105,8 +109,9 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
           onClick={onStartQuiz} 
           variant="contained" 
           color="primary"
-          startIcon={<PlayArrowIcon />}
-          sx={{ ml: 1 }}
+          startIcon={isRTL ? null : <PlayArrowIcon />}
+          endIcon={isRTL ? <PlayArrowIcon /> : null}
+          sx={{ ml: isRTL ? 0 : 1, mr: isRTL ? 1 : 0 }}
         >
           {t('startQuiz')}
         </Button>

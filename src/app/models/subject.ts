@@ -17,4 +17,6 @@ export interface SubjectGenerationParams {
   aiProvider?: string;
   token?: string;  // Authentication token for accessing protected resources
   locale?: string; // User interface locale (e.g., 'en', 'he') for language preference
+  countRange?: 'small' | 'medium' | 'large'; // Range of subjects to generate (5-10, 10-15, 15-20)
+  specificity?: 'general' | 'specific'; // Whether subjects should be general or specific
 } 

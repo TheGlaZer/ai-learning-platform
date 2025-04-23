@@ -228,7 +228,19 @@ export const getWorkspaceSubjects = async (workspaceId: string, token?: string):
  * Generates subjects from a file and saves them to the database
  * Will maintain existing subjects and only add new ones
  */
-export const generateSubjectsFromFile = async (params: SubjectGenerationParams): Promise<Subject[]> => {
+export const generateSubjectsFromFile = async (params: SubjectGenerationParams): Promise<{
+  existingSubjects: Subject[],
+  newSubjects: Subject[],
+  debug?: { 
+    aiResponse?: string,
+    parsedSubjects?: any[],
+    existingSubjectNames?: string[],
+    unrelatedContent?: boolean,
+    unrelatedMessage?: string
+  },
+  unrelatedContent?: boolean,
+  unrelatedMessage?: string
+}> => {
   console.log(`Starting subject generation with params:`, params);
   
   try {
@@ -282,11 +294,15 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
       language: languageForGeneration,
       model: 'gpt-4o-mini',
       // Pass simplified subject list with just names to the AI
-      existingSubjects: existingSubjects.map(subject => ({ name: subject.name }))
+      existingSubjects: existingSubjects.map(subject => ({ name: subject.name })),
+      // Custom options for subject generation
+      countRange: params.countRange || 'medium', // Default to medium (10-15 subjects)
+      specificity: params.specificity || 'general' // Default to general subjects
     };
     
     console.log(`Sending request to AI service for subject generation using model: gpt-4o-mini in language: ${languageForGeneration}`);
     console.log(`Including ${existingSubjects.length} existing subjects in the prompt`);
+    console.log(`Custom options: countRange=${aiOptions.countRange}, specificity=${aiOptions.specificity}`);
     
     const response = await aiService.generateSubjects(content, aiOptions);
     
@@ -295,6 +311,16 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
       tokenCount: response.tokenCount,
       contentLength: response.content.length,
     });
+    
+    // For debugging: Log the full AI response content
+    console.log('=============== FULL AI RESPONSE START ===============');
+    console.log(response.content);
+    console.log('=============== FULL AI RESPONSE END ===============');
+    
+    // Debug info to be returned
+    const debugInfo: any = {
+      aiResponse: response.content
+    };
     
     // Parse the response to get subjects
     // The response is expected to be a JSON array of subjects
@@ -320,11 +346,54 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
         throw new Error('AI response is not a valid array of subjects');
       }
       
+      // Check for special status response (unrelated content)
+      if (parsedSubjects.length === 1 && parsedSubjects[0].status === 'unrelated_content') {
+        console.log('AI detected unrelated content:', parsedSubjects[0].message);
+        debugInfo.unrelatedContent = true;
+        debugInfo.unrelatedMessage = parsedSubjects[0].message;
+        
+        // Return with special status to indicate unrelated content
+        return {
+          existingSubjects: existingSubjects,
+          newSubjects: [],
+          debug: debugInfo,
+          unrelatedContent: true,
+          unrelatedMessage: parsedSubjects[0].message
+        };
+      }
+      
+      // Store parsed subjects for debugging
+      debugInfo.parsedSubjects = parsedSubjects;
+      debugInfo.existingSubjectNames = Array.from(existingSubjectNames);
+      
+      // Helper function to check if names are too similar (additional safeguard)
+      const areTooSimilar = (name1: string, name2: string): boolean => {
+        const normalizedName1 = name1.toLowerCase().trim();
+        const normalizedName2 = name2.toLowerCase().trim();
+        
+        // Check for exact match after normalization
+        if (normalizedName1 === normalizedName2) return true;
+        
+        // Check if one is a subset of the other
+        if (normalizedName1.includes(normalizedName2) || normalizedName2.includes(normalizedName1)) return true;
+        
+        return false;
+      };
+      
       // As an extra safety measure, filter out any subjects that might still match existing ones
       // (although the AI should have already excluded them)
       generatedSubjects = parsedSubjects
         .filter(subject => subject && typeof subject === 'object' && subject.name)
-        .filter(subject => !existingSubjectNames.has(subject.name.toLowerCase().trim()))
+        .filter(subject => {
+          // Check against all existing subjects for similarity
+          for (const existingName of Array.from(existingSubjectNames)) {
+            if (areTooSimilar(subject.name, existingName)) {
+              console.log(`Filtered out similar subject: "${subject.name}" (similar to existing "${existingName}")`);
+              return false;
+            }
+          }
+          return true;
+        })
         .map(subject => ({
           workspaceId: params.workspaceId,
           userId: params.userId,
@@ -344,7 +413,13 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
     // If no new subjects, return the existing ones
     if (generatedSubjects.length === 0) {
       console.log('No new subjects found, returning existing subjects');
-      return existingSubjects;
+      return {
+        existingSubjects: existingSubjects,
+        newSubjects: [],
+        debug: debugInfo,
+        unrelatedContent: false,
+        unrelatedMessage: undefined
+      };
     }
     
     // Save the new subjects to the database
@@ -371,8 +446,14 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
       savedSubjects.push(savedSubject);
     }
     
-    // Return all subjects: existing ones plus newly created ones
-    return [...existingSubjects, ...savedSubjects];
+    // Return existing subjects and new subjects as separate arrays
+    return {
+      existingSubjects: existingSubjects,
+      newSubjects: savedSubjects,
+      debug: debugInfo,
+      unrelatedContent: false,
+      unrelatedMessage: undefined
+    };
   } catch (error) {
     console.error('Error in generateSubjectsFromFile:', error);
     throw error;

@@ -16,6 +16,8 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { FileMetadata } from '@/app/models/file';
+import { useRTL } from '@/contexts/RTLContext';
+import { useTranslations } from 'next-intl';
 
 interface FileMetadataDialogProps {
   open: boolean;
@@ -35,6 +37,9 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { isRTL } = useRTL();
+  const t = useTranslations('FileMetadata');
+  const commonT = useTranslations('Common');
 
   useEffect(() => {
     if (file && file.name) {
@@ -77,18 +82,26 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
           onClose();
         }, 1000);
       } else {
-        setError('Failed to save file metadata. Please try again.');
+        setError(t('saveError'));
       }
     } catch (err) {
       console.error('Error saving file metadata:', err);
-      setError('An error occurred while saving. Please try again.');
+      setError(t('generalError'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: { direction: isRTL ? 'rtl' : 'ltr' }
+      }}
+    >
       <DialogTitle sx={{ 
         display: 'flex', 
         alignItems: 'center', 
@@ -97,8 +110,17 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
         borderBottom: '1px solid',
         borderColor: 'divider'
       }}>
-        <Typography variant="h6">Edit File Information</Typography>
-        <IconButton edge="end" color="inherit" onClick={onClose} aria-label="close">
+        <Typography variant="h6">{t('title')}</Typography>
+        <IconButton 
+          edge={isRTL ? "start" : "end"} 
+          color="inherit" 
+          onClick={onClose} 
+          aria-label="close"
+          sx={{
+            marginLeft: isRTL ? 'auto' : undefined,
+            marginRight: isRTL ? undefined : 'auto'
+          }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -112,13 +134,13 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
         
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            File information saved successfully!
+            {t('saveSuccess')}
           </Alert>
         )}
         
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <TextField
-            label="File Name"
+            label={t('fileNameLabel')}
             value={nameWithoutExtension}
             onChange={(e) => setNameWithoutExtension(e.target.value)}
             fullWidth
@@ -148,7 +170,7 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
           disabled={loading}
           sx={{ color: 'text.secondary' }}
         >
-          Cancel
+          {commonT('cancel')}
         </Button>
         <Button
           onClick={handleSave}
@@ -157,7 +179,7 @@ const FileMetadataDialog: React.FC<FileMetadataDialogProps> = ({
           disabled={loading || !nameWithoutExtension.trim() || success}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
-          Save Changes
+          {t('saveChanges')}
         </Button>
       </DialogActions>
     </Dialog>

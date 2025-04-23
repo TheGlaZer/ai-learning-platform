@@ -92,12 +92,22 @@ export async function deleteSubjectClient(
  *
  * @param params - Parameters for subject generation
  * @param token - Access token for authentication
- * @returns A promise that resolves to an array of generated Subjects
+ * @returns A promise that resolves to the response with subjects or status
  */
 export async function generateSubjectsClient(
   params: SubjectGenerationParams,
   token?: string | null
-): Promise<Subject[]> {
+): Promise<{
+  existingSubjects?: Subject[],
+  newSubjects?: Subject[],
+  status?: string,
+  message?: string,
+  count?: number,
+  newSubjectsCount?: number,
+  existingSubjectsCount?: number,
+  hasNewSubjects?: boolean,
+  debugInfo?: any
+}> {
   try {
     const response = await axiosInstance.post('/api/subjects/generate', {
       ...params,
