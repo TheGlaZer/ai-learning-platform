@@ -18,21 +18,8 @@ export class OpenAIService implements AIService {
    * @param organizationId Optional organization ID (falls back to environment variable)
    */
   constructor(apiKey?: string, organizationId?: string) {
-    // Add error handling and debugging for API key
-    const configuredApiKey = apiKey || process.env.OPENAI_API_KEY;
-    
-    if (!configuredApiKey) {
-      console.error("ERROR: OpenAI API key is missing! Check your environment variables.");
-      // Log environment information for debugging (don't log the actual keys)
-      console.log("Environment:", {
-        nodeEnv: process.env.NODE_ENV,
-        hasKey: !!process.env.OPENAI_API_KEY,
-        keyLength: process.env.OPENAI_API_KEY?.length || 0
-      });
-    }
-    
     const config: any = {
-      apiKey: configuredApiKey,
+      apiKey: apiKey || process.env.OPENAI_API_KEY,
     };
     
     // Only add organization if it's actually provided
@@ -40,12 +27,7 @@ export class OpenAIService implements AIService {
       config.organization = organizationId || process.env.OPENAI_ORGANIZATION_ID;
     }
     
-    try {
-      this.openai = new OpenAI(config);
-    } catch (error) {
-      console.error("Failed to initialize OpenAI client:", error);
-      throw error;
-    }
+    this.openai = new OpenAI(config);
   }
 
   /**
