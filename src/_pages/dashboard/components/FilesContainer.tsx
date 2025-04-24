@@ -323,7 +323,7 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
           <>
             {subjects?.length > 0 ? (
               <Box sx={{ position: "relative" }}>
-                <Grid container spacing={2}>
+                <Grid container spacing={2} sx={{ width: '100%', margin: 0 }}>
                   {subjects.map((subject) => (
                     <Grid item xs={12} sm={6} md={4} lg={3} key={subject.id}>
                       <SubjectCard
@@ -377,7 +377,7 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
         {tabValue === 2 && (
           <>
             {quizzes?.length > 0 ? (
-              <Grid container spacing={2}>
+              <Grid container spacing={2} sx={{ width: '100%', margin: 0 }}>
                 {quizzes.map((quiz) => (
                   <Grid item xs={12} sm={6} md={4} lg={3} key={quiz.id}>
                     <QuizCard

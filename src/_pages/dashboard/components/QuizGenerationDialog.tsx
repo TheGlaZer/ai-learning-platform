@@ -493,7 +493,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={4}>
+          <Grid container spacing={4} sx={{ width: '100%', margin: 0 }}>
             <Grid item xs={12} md={6}>
               <SectionTitle>
                 <SectionNumber>1</SectionNumber>
@@ -543,7 +543,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
                 <SectionNumber>3</SectionNumber>
                 {t('configureOptions')}
               </SectionTitle>
-              <Grid container spacing={2} sx={{ mb: 4 }}>
+              <Grid container spacing={2} sx={{ mb: 4, width: '100%', margin: 0, marginBottom: 4 }}>
                 <Grid item xs={6}>
                   <TextField
                     label={t('questionCount')}

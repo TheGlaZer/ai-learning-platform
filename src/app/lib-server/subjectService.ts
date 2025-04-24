@@ -225,8 +225,8 @@ export const getWorkspaceSubjects = async (workspaceId: string, token?: string):
 };
 
 /**
- * Generates subjects from a file and saves them to the database
- * Will maintain existing subjects and only add new ones
+ * Generates subjects from a file but does NOT save them to the database
+ * Returns both existing subjects and newly generated ones separately
  */
 export const generateSubjectsFromFile = async (params: SubjectGenerationParams): Promise<{
   existingSubjects: Subject[],
@@ -324,7 +324,8 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
     
     // Parse the response to get subjects
     // The response is expected to be a JSON array of subjects
-    let generatedSubjects: Subject[] = [];
+    let parsedSubjects: any[] = [];
+    let newSubjects: Subject[] = [];
     try {
       // Clean the response content by removing any markdown formatting
       let cleanedContent = response.content;
@@ -339,7 +340,7 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
       console.log('Cleaned content for parsing:', cleanedContent.substring(0, 100) + '...');
       
       // Parse the JSON
-      const parsedSubjects = JSON.parse(cleanedContent);
+      parsedSubjects = JSON.parse(cleanedContent);
       
       // Ensure the parsed content is an array of subjects
       if (!Array.isArray(parsedSubjects)) {
@@ -382,7 +383,7 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
       
       // As an extra safety measure, filter out any subjects that might still match existing ones
       // (although the AI should have already excluded them)
-      generatedSubjects = parsedSubjects
+      newSubjects = parsedSubjects
         .filter(subject => subject && typeof subject === 'object' && subject.name)
         .filter(subject => {
           // Check against all existing subjects for similarity
@@ -403,7 +404,7 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
           processedInChunks: isLargeFile
         }));
       
-      console.log(`Successfully parsed ${parsedSubjects.length} subjects from AI response, ${generatedSubjects.length} are new`);
+      console.log(`Successfully parsed ${parsedSubjects.length} subjects from AI response, ${newSubjects.length} are new`);
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
       console.error('AI response content:', response.content.substring(0, 500) + '...');
@@ -411,7 +412,7 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
     }
     
     // If no new subjects, return the existing ones
-    if (generatedSubjects.length === 0) {
+    if (newSubjects.length === 0) {
       console.log('No new subjects found, returning existing subjects');
       return {
         existingSubjects: existingSubjects,
@@ -422,34 +423,11 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
       };
     }
     
-    // Save the new subjects to the database
-    const savedSubjects: Subject[] = [];
-    
-    // Get max order of existing subjects to ensure new ones are added at the end
-    const maxOrder = existingSubjects.length > 0
-      ? Math.max(...existingSubjects.map(s => s.order || 0))
-      : -1;
-    
-    for (let i = 0; i < generatedSubjects.length; i++) {
-      const subject = generatedSubjects[i];
-      
-      const savedSubject = await createSubject({
-        ...subject,
-        order: maxOrder + i + 1, // Ensure new subjects are at the end in order
-      }, params.token);
-      
-      // Add processedInChunks property to the savedSubject to pass it back
-      if (isLargeFile) {
-        Object.assign(savedSubject, { processedInChunks: true });
-      }
-      
-      savedSubjects.push(savedSubject);
-    }
-    
     // Return existing subjects and new subjects as separate arrays
+    // New subjects are NOT saved to the database!
     return {
       existingSubjects: existingSubjects,
-      newSubjects: savedSubjects,
+      newSubjects: newSubjects,
       debug: debugInfo,
       unrelatedContent: false,
       unrelatedMessage: undefined

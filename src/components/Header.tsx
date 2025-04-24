@@ -17,6 +17,7 @@ import {
   ListItemIcon,
   Tooltip,
   Button,
+  SvgIcon,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import Logo from "./Logo";
@@ -26,11 +27,17 @@ import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import LoginOutlinedIcon from "@mui/icons-material/LoginOutlined";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
-import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import { primary, secondary, accent, surface, text, gradients, background } from "../../colors";
 import { useTranslations } from "next-intl";
 import { useRTL } from "@/contexts/RTLContext";
+
+// Custom BarChartOutlined Icon
+export const BarChartOutlinedIcon = (props: any) => (
+  <SvgIcon {...props} viewBox="0 0 24 24" sx={{ fontSize: 'inherit', transform: 'scale(1.2)' }}>
+    <path fill="none" stroke="currentColor" strokeWidth="1.6" d="M3,20v-9h3.5v9H3z M10.25,20V5h3.5v15H10.25z M17.5,20v-12h3.5v12H17.5z" />
+  </SvgIcon>
+);
 
 const StyledAppBar = styled(AppBar)(() => ({
   backgroundColor: surface.paper,

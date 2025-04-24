@@ -312,7 +312,7 @@
     "pastExams": "מבחנים קודמים",
     "flashcards": "כרטיסי לימוד",
     "noSubjects": "אין נושאים במרחב העבודה הזה עדיין.",
-    "generateSubjectsFromFiles": "✨ גילוי נושאים מבוסס בינה מלאכותית",
+    "generateSubjectsFromFiles": "גילוי נושאים מבוסס בינה מלאכותית",
     "addSubjectManually": "הוסף נושא באופן ידני",
     "noPastExams": "אין מבחנים קודמים במרחב העבודה הזה עדיין. העלה קבצי מבחנים קודמים ליצירת ספריית התייחסות.",
     "uploadPastExam": "העלה מבחן קודם",
@@ -403,7 +403,10 @@
     "correctAnswers": "תשובות נכונות: {count}",
     "submit": "שלח",
     "next": "שאלה הבאה",
+    "previous": "הקודם",
     "finish": "סיים חידון",
+    "answeredOf": "{answered} מתוך {total} שאלות נענו ({percentage}%)",
+    "noTimeLimit": "ללא הגבלת זמן",
     "quizComplete": "החידון הושלם!",
     "yourScore": "הציון שלך: {score}%",
     "correctCount": "{correct} מתוך {total} נכונות",
@@ -418,7 +421,17 @@
     "sessionRefreshFailed": "לא ניתן היה לרענן את הפעלת המשתמש. אנא התחבר מחדש.",
     "resultsSaved": "תוצאות החידון נשמרו בהצלחה!",
     "resultsSaveFailed": "הערה: שמירת תוצאות החידון נכשלה.",
-    "submissionError": "שמירת תוצאות החידון נכשלה. התשובות שלך לא יישמרו."
+    "submissionError": "שמירת תוצאות החידון נכשלה. התשובות שלך לא יישמרו.",
+    "feedbackExcellent": "מצוין! שלטת בנושא הזה!",
+    "feedbackGreat": "עבודה טובה! יש לך הבנה מוצקה.",
+    "feedbackGood": "מאמץ טוב! המשך לתרגל כדי להשתפר.",
+    "feedbackOnTrack": "אתה בכיוון הנכון. עוד קצת תרגול יעזור.",
+    "feedbackKeepStudying": "המשך ללמוד! אל תוותר, תשתפר עם תרגול.",
+    "questionSummary": "סיכום שאלות",
+    "questionNumber": "שאלה {number}",
+    "page": "עמוד: {number}",
+    "exportToWord": "ייצא ל-Word",
+    "createFlashcards": "צור כרטיסיות לימוד"
   },
   "SubjectGeneration": {
     "generatedSubjectsTitle": "נושאים שנוצרו",
@@ -445,7 +458,7 @@
     "specificityGeneral": "נושאים כלליים",
     "specificitySpecific": "נושאים מפורטים וספציפיים",
     "thisWillTakeTime": "זה ייקח זמן",
-    "generatingProgress": "החידון שלך נוצר... {progress}%"
+    "generatingProgress": "מנתח תוכן ומזהה נושאים מרכזיים... {progress}%"
   },
   "SubjectReview": {
     "dialogTitle": "סקירת נושאים",

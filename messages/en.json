@@ -243,7 +243,7 @@
     "selectFileTitle": "Generate Smart Subjects from Your Content",
     "selectFileDescription": "Let our AI analyze your files and automatically extract key topics and concepts. Our advanced algorithms will identify the most relevant subject areas to help you organize your learning materials better.",
     "selectFile": "Select File",
-    "generateSubjects": "✨ Discover Subjects with AI",
+    "generateSubjects": "Discover Subjects with AI",
     "editSubjectTitle": "Edit Subject",
     "subjectNameLabel": "Subject Name",
     "countRangeLabel": "Number of Subjects",
@@ -436,7 +436,10 @@
     "correctAnswers": "Correct Answers: {count}",
     "submit": "Submit",
     "next": "Next Question",
+    "previous": "Previous",
     "finish": "Finish Quiz",
+    "answeredOf": "{answered} of {total} questions answered ({percentage}%)",
+    "noTimeLimit": "No time limit",
     "quizComplete": "Quiz Complete!",
     "yourScore": "Your Score: {score}%",
     "correctCount": "{correct} out of {total} correct",
@@ -449,9 +452,19 @@
     "refreshingSession": "Refreshing authentication session...",
     "sessionRefreshed": "Session refreshed successfully. Try submitting again.",
     "sessionRefreshFailed": "Could not refresh session. Please log in again.",
-    "resultsSaved": "Quiz results saved successfully!",
+    "resultsSaved": "Results saved",
     "resultsSaveFailed": "Note: Failed to save quiz results.",
-    "submissionError": "Failed to save quiz results. Your answers will not be tracked."
+    "submissionError": "Failed to save quiz results. Your answers will not be tracked.",
+    "feedbackExcellent": "Excellent! You've mastered this topic!",
+    "feedbackGreat": "Great job! You have a solid understanding.",
+    "feedbackGood": "Good effort! Keep practicing to improve.",
+    "feedbackOnTrack": "You're on the right track. A bit more practice will help.",
+    "feedbackKeepStudying": "Keep studying! Don't give up, you'll improve with practice.",
+    "questionSummary": "Question Summary",
+    "questionNumber": "Question {number}",
+    "page": "Page: {number}",
+    "exportToWord": "Export to Word",
+    "createFlashcards": "Create Flashcards"
   }
 }
   

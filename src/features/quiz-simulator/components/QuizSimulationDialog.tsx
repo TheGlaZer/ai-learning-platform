@@ -38,7 +38,44 @@ const StyledCloseButton = styled(IconButton)<{ isRTL?: boolean }>`
   position: absolute;
   ${props => props.isRTL ? 'left' : 'right'}: 8px;
   top: 8px;
-  color: text.secondary;
+  color: ${props => props.theme.palette.text.secondary};
+`;
+
+const StyledDialogTitle = styled(DialogTitle)`
+  padding-left: ${props => props.theme.spacing(3)};
+  padding-right: ${props => props.theme.spacing(3)};
+  padding-top: ${props => props.theme.spacing(2)};
+  padding-bottom: ${props => props.theme.spacing(2)};
+  
+  ${props => props.theme.breakpoints.down('sm')} {
+    padding-left: ${props => props.theme.spacing(2)};
+    padding-right: ${props => props.theme.spacing(2)};
+  }
+`;
+
+const TitleContainer = styled(Box)`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing(1)};
+`;
+
+const StyledDialogContent = styled(DialogContent)`
+  padding-top: ${props => props.theme.spacing(3)};
+  padding-left: ${props => props.theme.spacing(3)};
+  padding-right: ${props => props.theme.spacing(3)};
+  padding-bottom: ${props => props.theme.spacing(3)};
+  overflow-y: auto;
+  
+  ${props => props.theme.breakpoints.down('sm')} {
+    padding-left: ${props => props.theme.spacing(2)};
+    padding-right: ${props => props.theme.spacing(2)};
+  }
+`;
+
+const StyledDialog = styled(Dialog)<{ isRTL: boolean }>`
+  .MuiDialog-paper {
+    direction: ${props => props.isRTL ? 'rtl' : 'ltr'};
+  }
 `;
 
 const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({ 
@@ -198,27 +235,22 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
 
   return (
     <>
-      <Dialog
+      <StyledDialog
         fullScreen={fullScreen}
         open={open}
         onClose={onClose}
         aria-labelledby="quiz-dialog-title"
         maxWidth="md"
         fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: 'background.default',
-            direction: isRTL ? 'rtl' : 'ltr'
-          }
-        }}
+        isRTL={isRTL}
       >
-        <DialogTitle id="quiz-dialog-title" sx={{ px: { xs: 2, sm: 3 }, pt: 2, pb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <StyledDialogTitle id="quiz-dialog-title">
+          <TitleContainer>
             <QuizIcon color="primary" />
             <Typography variant="h6" component="span" fontWeight="medium">
               {quiz.title}
             </Typography>
-          </Box>
+          </TitleContainer>
           <StyledCloseButton
             aria-label="close"
             onClick={onClose}
@@ -226,16 +258,11 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
           >
             <CloseIcon />
           </StyledCloseButton>
-        </DialogTitle>
+        </StyledDialogTitle>
         
         <Divider />
         
-        <DialogContent sx={{ 
-          pt: 3, 
-          px: { xs: 2, sm: 3 }, 
-          pb: 3,
-          overflowY: 'auto'
-        }}>
+        <StyledDialogContent>
           {isFinished && !reviewMode ? (
             <QuizResults 
               quiz={quiz} 
@@ -284,8 +311,8 @@ const QuizSimulationDialog: React.FC<QuizSimulationDialogProps> = ({
               )}
             </>
           )}
-        </DialogContent>
-      </Dialog>
+        </StyledDialogContent>
+      </StyledDialog>
       
       <Snackbar
         open={snackbarOpen}

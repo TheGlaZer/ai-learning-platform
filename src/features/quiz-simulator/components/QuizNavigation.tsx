@@ -4,6 +4,8 @@ import { Box, Button, useTheme, useMediaQuery } from '@mui/material';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import CheckIcon from '@mui/icons-material/Check';
+import styled from '@emotion/styled';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface QuizNavigationProps {
   currentQuestion: number;
@@ -13,6 +15,25 @@ interface QuizNavigationProps {
   onFinish: () => void;
   canFinish: boolean;
 }
+
+const NavigationContainer = styled(Box)<{ isMobile: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  margin-top: ${props => props.theme.spacing(4)};
+  flex-direction: ${props => props.isMobile ? 'column' : 'row'};
+  gap: ${props => props.isMobile ? props.theme.spacing(2) : 0};
+`;
+
+const ButtonContainer = styled(Box)<{ isMobile: boolean }>`
+  display: flex;
+  gap: ${props => props.theme.spacing(2)};
+  flex-direction: ${props => props.isMobile ? 'column' : 'row'};
+`;
+
+const NavigationButton = styled(Button)<{ isMobile: boolean; isRtl?: boolean }>`
+  min-width: 120px;
+  width: ${props => props.isMobile ? '100%' : 'auto'};
+`;
 
 const QuizNavigation: React.FC<QuizNavigationProps> = ({
   currentQuestion,
@@ -24,59 +45,58 @@ const QuizNavigation: React.FC<QuizNavigationProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const locale = useLocale();
+  const isRtl = locale === 'he';
+  const t = useTranslations('QuizDialog');
   
   const isFirstQuestion = currentQuestion === 1;
   const isLastQuestion = currentQuestion === totalQuestions;
   
+  // Use the appropriate icon based on direction
+  const PreviousIcon = isRtl ? NavigateNextIcon : NavigateBeforeIcon;
+  const NextIcon = isRtl ? NavigateBeforeIcon : NavigateNextIcon;
+  
   return (
-    <Box 
-      sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        mt: 4,
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: isMobile ? 2 : 0
-      }}
-    >
-      <Button
+    <NavigationContainer isMobile={isMobile}>
+      <NavigationButton
         variant="outlined"
         color="primary"
         onClick={onPrevious}
         disabled={isFirstQuestion}
-        startIcon={<NavigateBeforeIcon />}
-        sx={{ minWidth: '120px' }}
-        fullWidth={isMobile}
+        startIcon={<PreviousIcon />}
+        isMobile={isMobile}
+        isRtl={isRtl}
       >
-        Previous
-      </Button>
+        {t('previous')}
+      </NavigationButton>
       
-      <Box sx={{ display: 'flex', gap: 2, flexDirection: isMobile ? 'column' : 'row' }}>
+      <ButtonContainer isMobile={isMobile}>
         {isLastQuestion ? (
-          <Button
+          <NavigationButton
             variant="contained"
             color="primary"
             onClick={onFinish}
             endIcon={<CheckIcon />}
             disabled={!canFinish}
-            sx={{ minWidth: '120px' }}
-            fullWidth={isMobile}
+            isMobile={isMobile}
+            isRtl={isRtl}
           >
-            Finish Quiz
-          </Button>
+            {t('finish')}
+          </NavigationButton>
         ) : (
-          <Button
+          <NavigationButton
             variant="contained"
             color="primary"
             onClick={onNext}
-            endIcon={<NavigateNextIcon />}
-            sx={{ minWidth: '120px' }}
-            fullWidth={isMobile}
+            endIcon={<NextIcon />}
+            isMobile={isMobile}
+            isRtl={isRtl}
           >
-            Next
-          </Button>
+            {t('next')}
+          </NavigationButton>
         )}
-      </Box>
-    </Box>
+      </ButtonContainer>
+    </NavigationContainer>
   );
 };
 

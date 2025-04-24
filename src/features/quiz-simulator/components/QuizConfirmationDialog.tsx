@@ -16,6 +16,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Quiz } from '@/app/models/quiz';
 import { useTranslations } from 'next-intl';
 import { useRTL } from '@/contexts/RTLContext';
+import styled from '@emotion/styled';
 
 interface QuizConfirmationDialogProps {
   open: boolean;
@@ -23,6 +24,55 @@ interface QuizConfirmationDialogProps {
   onStartQuiz: () => void;
   quiz: Quiz | null;
 }
+
+const StyledDialog = styled(Dialog)<{ isRTL: boolean }>`
+  .MuiDialog-paper {
+    border-radius: ${props => props.theme.shape.borderRadius * 2}px;
+    overflow: hidden;
+    direction: ${props => props.isRTL ? 'rtl' : 'ltr'};
+  }
+`;
+
+const StyledDialogTitle = styled(DialogTitle)`
+  background-color: ${props => props.theme.palette.primary.main};
+  color: ${props => props.theme.palette.primary.contrastText};
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing(1)};
+`;
+
+const StyledDialogContent = styled(DialogContent)`
+  padding-top: ${props => props.theme.spacing(3)};
+  padding-bottom: ${props => props.theme.spacing(2)};
+`;
+
+const ContentContainer = styled(Box)`
+  margin-bottom: ${props => props.theme.spacing(3)};
+`;
+
+const InfoPaper = styled(Paper)`
+  padding: ${props => props.theme.spacing(2)};
+  margin-bottom: ${props => props.theme.spacing(2)};
+  background-color: ${props => props.theme.palette.background.default};
+`;
+
+const StyledList = styled('ul')<{ isRTL: boolean }>`
+  padding-left: ${props => props.isRTL ? 0 : props.theme.spacing(2)}px;
+  padding-right: ${props => props.isRTL ? props.theme.spacing(2) : 0}px;
+  margin: 0;
+  list-style-position: inside;
+`;
+
+const StyledDialogActions = styled(DialogActions)`
+  padding-left: ${props => props.theme.spacing(3)};
+  padding-right: ${props => props.theme.spacing(3)};
+  padding-bottom: ${props => props.theme.spacing(3)};
+`;
+
+const StartButton = styled(Button)<{ isRTL: boolean }>`
+  margin-left: ${props => props.isRTL ? 0 : props.theme.spacing(1)}px;
+  margin-right: ${props => props.isRTL ? props.theme.spacing(1) : 0}px;
+`;
 
 const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
   open,
@@ -37,46 +87,34 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
   if (!quiz) return null;
 
   return (
-    <Dialog 
+    <StyledDialog 
       open={open} 
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          overflow: 'hidden',
-          direction: isRTL ? 'rtl' : 'ltr'
-        }
-      }}
+      isRTL={isRTL}
     >
-      <DialogTitle sx={{ 
-        bgcolor: 'primary.main', 
-        color: 'primary.contrastText',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1
-      }}>
+      <StyledDialogTitle>
         <QuizIcon />
         <Typography variant="h6">{t('confirmationTitle')}</Typography>
-      </DialogTitle>
+      </StyledDialogTitle>
       
-      <DialogContent sx={{ pt: 3, pb: 2 }}>
-        <Box sx={{ mb: 3 }}>
+      <StyledDialogContent>
+        <ContentContainer>
           <Typography variant="h5" gutterBottom>
             {quiz.title}
           </Typography>
           <Typography variant="body1" color="text.secondary">
             {t('confirmationMessage')}
           </Typography>
-        </Box>
+        </ContentContainer>
         
-        <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'background.default' }}>
+        <InfoPaper variant="outlined">
           <Typography variant="body2" sx={{ mb: 1 }}>
             <strong>{commonT('question')} {t('details')}:</strong>
           </Typography>
           
-          <Box component="ul" sx={{ pl: isRTL ? 0 : 2, pr: isRTL ? 2 : 0, m: 0 }}>
+          <StyledList isRTL={isRTL}>
             <Box component="li">
               <Typography variant="body2">
                 {quiz.questions.length} {t('questions')}
@@ -92,11 +130,11 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
                 {t('feedbackInfo')}
               </Typography>
             </Box>
-          </Box>
-        </Paper>
-      </DialogContent>
+          </StyledList>
+        </InfoPaper>
+      </StyledDialogContent>
       
-      <DialogActions sx={{ px: 3, pb: 3 }}>
+      <StyledDialogActions>
         <Button 
           onClick={onClose} 
           startIcon={isRTL ? null : <CloseIcon />}
@@ -105,18 +143,18 @@ const QuizConfirmationDialog: React.FC<QuizConfirmationDialogProps> = ({
         >
           {commonT('cancel')}
         </Button>
-        <Button 
+        <StartButton 
           onClick={onStartQuiz} 
           variant="contained" 
           color="primary"
           startIcon={isRTL ? null : <PlayArrowIcon />}
           endIcon={isRTL ? <PlayArrowIcon /> : null}
-          sx={{ ml: isRTL ? 0 : 1, mr: isRTL ? 1 : 0 }}
+          isRTL={isRTL}
         >
           {t('startQuiz')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        </StartButton>
+      </StyledDialogActions>
+    </StyledDialog>
   );
 };
 

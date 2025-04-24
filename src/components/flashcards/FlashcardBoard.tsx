@@ -23,7 +23,7 @@ import { styled } from '@mui/material/styles';
 import { Flashcard as FlashcardType, CreateFlashcardParams } from '@/app/models/flashcard';
 import FlashcardItem from './FlashcardItem';
 import { useFlashcards } from '@/app/lib-client/hooks/useFlashcards';
-import { accent, primary, secondary } from '../../../colors';
+import { accent, primary, secondary, flashcardStatus } from '../../../colors';
 import { useTranslations } from 'next-intl';
 import AddIcon from '@mui/icons-material/Add';
 import { useRTL } from '@/contexts/RTLContext';
@@ -202,19 +202,19 @@ const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
   const columnDefinitions = {
     dont_know: {
       title: t('dontKnow'),
-      color: secondary.main,
+      color: flashcardStatus.dontKnow,
       icon: '😕',
       bgColor: 'rgba(255, 122, 90, 0.05)',
     },
     partially_know: {
       title: t('partiallyKnow'),
-      color: '#FF9800',
+      color: flashcardStatus.partiallyKnow,
       icon: '🤔',
       bgColor: 'rgba(255, 209, 102, 0.05)',
     },
     know_for_sure: {
       title: t('know'),
-      color: accent.green.main,
+      color: flashcardStatus.know,
       icon: '✓',
       bgColor: 'rgba(54, 214, 183, 0.05)',
     }
@@ -440,7 +440,9 @@ const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
                   elevation={0}
                   sx={{
                     bgcolor: 'white',
-                    borderColor: key === 'dont_know' ? '#ffcdd2' : key === 'partially_know' ? '#fff9c4' : '#c8e6c9',
+                    borderColor: key === 'dont_know' ? flashcardStatus.dontKnow : 
+                                key === 'partially_know' ? flashcardStatus.partiallyKnow : 
+                                flashcardStatus.know,
                     borderWidth: '2px',
                     borderRadius: '12px',
                   }}
@@ -455,11 +457,11 @@ const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
                       <IconButton 
                         size="small" 
                         onClick={() => setOpenAddDialog(true)}
-                        color="primary"
                         sx={{ 
-                          bgcolor: 'rgba(25, 118, 210, 0.08)',
+                          color: flashcardStatus.dontKnow,
+                          bgcolor: `${flashcardStatus.dontKnow}15`,
                           '&:hover': {
-                            bgcolor: 'rgba(25, 118, 210, 0.15)',
+                            bgcolor: `${flashcardStatus.dontKnow}30`,
                           } 
                         }}
                       >

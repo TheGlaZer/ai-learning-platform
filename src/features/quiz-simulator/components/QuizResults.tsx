@@ -12,6 +12,7 @@ import {
   useTheme,
   Chip
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { Quiz } from '@/app/models/quiz';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -22,6 +23,49 @@ import StyleOutlinedIcon from '@mui/icons-material/StyleOutlined';
 import { UserAnswer } from '../hooks/useQuizSimulation';
 import ExportQuizButton from '@/components/quiz/ExportQuizButton';
 import CreateFlashcardsDialog from '@/components/flashcards/CreateFlashcardsDialog';
+import { useTranslations } from 'next-intl';
+import { useRTL } from '@/contexts/RTLContext';
+import * as colors from '../../../../colors';
+
+// Styled components
+const ResultContainer = styled(Box)(({ theme }) => ({
+  width: '100%',
+}));
+
+const ResultPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  borderRadius: theme.shape.borderRadius * 2,
+  border: '1px solid',
+  borderColor: colors.border.light,
+  marginBottom: theme.spacing(3),
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2),
+  }
+}));
+
+const StyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius * 1.5,
+  padding: '10px 16px',
+  fontWeight: 600,
+  textTransform: 'none',
+  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+  },
+}));
+
+// Function to get question card styles based on correct/incorrect
+const getQuestionCardStyles = (theme, isCorrect) => ({
+  p: 2,
+  borderRadius: 1,
+  borderLeft: '4px solid',
+  borderLeftColor: isCorrect ? colors.flashcardStatus.know : colors.flashcardStatus.dontKnow,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 1
+});
 
 interface ScoreDisplayProps {
   score: number;
@@ -113,6 +157,9 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   workspaceId
 }) => {
   const [openFlashcardsDialog, setOpenFlashcardsDialog] = useState(false);
+  const t = useTranslations('QuizDialog');
+  const { isRTL, direction } = useRTL();
+  const theme = useTheme();
 
   const handleOpenFlashcardsDialog = () => {
     setOpenFlashcardsDialog(true);
@@ -124,26 +171,16 @@ const QuizResults: React.FC<QuizResultsProps> = ({
 
   // Generate feedback based on score
   const getFeedback = () => {
-    if (results.percentage >= 90) return "Excellent! You've mastered this topic!";
-    if (results.percentage >= 75) return "Great job! You have a solid understanding.";
-    if (results.percentage >= 60) return "Good effort! Keep practicing to improve.";
-    if (results.percentage >= 40) return "You're on the right track. A bit more practice will help.";
-    return "Keep studying! Don't give up, you'll improve with practice.";
+    if (results.percentage >= 90) return t('feedbackExcellent');
+    if (results.percentage >= 75) return t('feedbackGreat');
+    if (results.percentage >= 60) return t('feedbackGood');
+    if (results.percentage >= 40) return t('feedbackOnTrack');
+    return t('feedbackKeepStudying');
   };
   
   return (
-    <Box>
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2, sm: 4 },
-          borderRadius: 2,
-          bgcolor: 'background.paper',
-          border: '1px solid',
-          borderColor: 'divider',
-          mb: 3
-        }}
-      >
+    <ResultContainer dir={direction}>
+      <ResultPaper elevation={0}>
         <Stack 
           direction={{ xs: 'column', sm: 'row' }} 
           spacing={4} 
@@ -153,24 +190,24 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         >
           <ScoreDisplay score={results.percentage} />
           
-          <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
-            <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ textAlign: { xs: 'center', sm: isRTL ? 'right' : 'left' } }}>
+            <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
               <EmojiEventsIcon color="primary" />
-              Quiz Complete!
+              {t('quizComplete')}
             </Typography>
             <Typography variant="body1" color="text.secondary" paragraph>
               {getFeedback()}
             </Typography>
             <Typography variant="body1" fontWeight={500}>
-              {results.correct} correct out of {results.total} questions
+              {t('correctCount', { correct: results.correct, total: results.total })}
             </Typography>
             
             {/* Show submission status */}
             {isSubmitting && (
-              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                 <CircularProgress size={16} />
                 <Typography variant="body2" color="text.secondary">
-                  Saving your results...
+                  {t('refreshingSession')}
                 </Typography>
               </Box>
             )}
@@ -178,7 +215,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             {submissionSuccess && (
               <Chip 
                 icon={<SaveIcon />} 
-                label="Results saved" 
+                label={t('resultsSaved')}
                 color="success" 
                 size="small" 
                 variant="outlined"
@@ -191,7 +228,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         <Divider sx={{ mb: 3 }} />
         
         <Typography variant="h6" gutterBottom>
-          Question Summary
+          {t('questionSummary')}
         </Typography>
         
         <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -216,31 +253,34 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               <Grid item xs={12} sm={6} md={4} key={question.id}>
                 <Paper
                   variant="outlined"
-                  sx={{
-                    p: 2,
-                    borderRadius: 1,
-                    borderLeft: '4px solid',
-                    borderLeftColor: isCorrect ? 'success.main' : 'error.main',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1
-                  }}
+                  sx={getQuestionCardStyles(theme, isCorrect)}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1.5,
+                    flexDirection: isRTL ? 'row-reverse' : 'row'
+                  }}>
                     {isCorrect ? (
                       <CheckCircleIcon color="success" />
                     ) : (
                       <CloseIcon color="error" />
                     )}
                     <Typography variant="body2" noWrap>
-                      Question {index + 1}
+                      {t('questionNumber', { number: index + 1 })}
                     </Typography>
                   </Box>
                     
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 4 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 0.5, 
+                    ml: isRTL ? 0 : 4,
+                    mr: isRTL ? 4 : 0
+                  }}>
                     {question.pages && question.pages.length > 0 && (
                       <Chip
-                        label={`Page${question.pages.length > 1 ? 's' : ''}: ${question.pages.join(', ')}`}
+                        label={`${t('page', { number: question.pages.join(', ') })}`}
                         color="primary"
                         variant="outlined"
                         size="small"
@@ -272,21 +312,21 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           justifyContent: 'center',
           flexWrap: 'wrap'
         }}>
-          <Button
+          <StyledButton
             variant="outlined"
             color="primary"
             onClick={onRetry}
             startIcon={<ReplayIcon />}
           >
-            Retry Quiz
-          </Button>
-          <Button
+            {t('retry')}
+          </StyledButton>
+          <StyledButton
             variant="contained"
             color="primary"
             onClick={onReviewQuestions}
           >
-            Review Answers
-          </Button>
+            {t('reviewAnswers')}
+          </StyledButton>
           
           {/* Add Export Quiz button */}
           {quiz.id && (
@@ -294,36 +334,36 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               quizId={quiz.id}
               quizTitle={quiz.title}
               color="primary"
-              label="Export to Word"
+              label={t('exportToWord') || "Export to Word"}
             />
           )}
           
-          <Button
+          <StyledButton
             variant="outlined"
             color="primary"
             onClick={handleOpenFlashcardsDialog}
             startIcon={<StyleOutlinedIcon />}
           >
-            Create Flashcards
-          </Button>
+            {t('createFlashcards') || "Create Flashcards"}
+          </StyledButton>
           
-          <Button
+          <StyledButton
             variant="outlined"
             color="inherit"
             onClick={onClose}
             startIcon={<CloseIcon />}
           >
-            Close
-          </Button>
+            {t('cancel')}
+          </StyledButton>
         </Box>
-      </Paper>
+      </ResultPaper>
       <CreateFlashcardsDialog
         open={openFlashcardsDialog}
         onClose={handleCloseFlashcardsDialog}
         quiz={quiz}
         workspaceId={workspaceId || ""}
       />
-    </Box>
+    </ResultContainer>
   );
 };
 

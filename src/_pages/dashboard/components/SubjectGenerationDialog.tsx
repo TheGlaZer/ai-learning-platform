@@ -126,15 +126,18 @@ const SubjectGenerationDialog: React.FC<SubjectGenerationDialogProps> = ({
     
     if (generating) {
       setProgressPercentage(0);
+      // Changed interval from 1000ms to 300ms and using smaller increments to make the progress bar
+      // take about 3 seconds to reach 90%
       intervalId = setInterval(() => {
         setProgressPercentage(prev => {
           // Slowly increase to 90% max during generation
           if (prev < 90) {
-            return prev + Math.floor(Math.random() * 3) + 1;
+            // Smaller increments to make it smoother and take longer
+            return prev + 1;
           }
           return prev;
         });
-      }, 1000);
+      }, 300);
     } else if (progressPercentage > 0 && progressPercentage < 100) {
       // Complete to 100% when generation is done
       setProgressPercentage(100);
@@ -292,7 +295,7 @@ const SubjectGenerationDialog: React.FC<SubjectGenerationDialogProps> = ({
                 </Typography>
               </Box>
               <ProgressStatusText variant="body2">
-                {t('generatingProgress')}
+                {t('generatingProgress', { progress: progressPercentage })}
               </ProgressStatusText>
               <Typography variant="caption" sx={{ mt: 2 }}>
                 {t('thisWillTakeTime')}

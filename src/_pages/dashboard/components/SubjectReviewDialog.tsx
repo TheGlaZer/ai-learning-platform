@@ -75,6 +75,15 @@ const StyledChip = styled(Chip)<{ isRTL?: boolean }>`
     margin-left: ${props => props.isRTL ? '0' : '-4px'};
     margin-right: ${props => props.isRTL ? '-4px' : '0'};
   }
+  
+  /* Add better padding for the chip content */
+  & .MuiChip-label {
+    padding: 8px 12px;
+    line-height: 1.4;
+  }
+  
+  height: auto;
+  margin: 4px;
 `;
 
 interface SubjectReviewDialogProps {
@@ -159,9 +168,10 @@ const SubjectReviewDialog: React.FC<SubjectReviewDialogProps> = ({
       setLoading(true);
       setError(null);
 
-      // Filter out existing subjects that were not selected
+      // Get only the new subjects that were selected
+      // We don't need to save existing subjects as they're already in the database
       const subjectsToSave = selectedSubjects.filter(subject => 
-        !subject.id || existingSubjects.some(es => es.id === subject.id)
+        !existingSubjects.some(es => es.id === subject.id)
       );
 
       // Update selected subjects in the parent component if the function is provided
@@ -272,7 +282,7 @@ const SubjectReviewDialog: React.FC<SubjectReviewDialogProps> = ({
                         deleteIcon={<CloseIcon fontSize="small" />}
                         size="small"
                         isRTL={isRTL}
-                        sx={{ padding: '4px 0', height: 'auto' }}
+                        sx={{ height: 'auto' }}
                       />
                     ))}
                   </SubjectsContainer>
@@ -305,8 +315,8 @@ const SubjectReviewDialog: React.FC<SubjectReviewDialogProps> = ({
                         label={subject.name}
                         variant="outlined"
                         size="small"
-                        sx={{ padding: '4px 0', height: 'auto' }}
                         isRTL={isRTL}
+                        sx={{ height: 'auto' }}
                       />
                     ))}
                   </SubjectsContainer>

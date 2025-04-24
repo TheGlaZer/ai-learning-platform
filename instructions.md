@@ -1,14 +1,20 @@
 client rules:
+write css in styled compoents like this - 
+import styled from '@emotion/styled';
+export const DashboardContainer = styled(Box)`
+  border: none;
+  height: 100%;
+  transition: all 0.3s ease;
+`;
 generate high quality senior level code
 seperate big components into sub compoents component should not be more than 20-30 rows
 build custom hook under hooks folder for state and logic, keep compoents clean, use custom hook exists if it matches your needs
-write css in styled compoents in that define above the compoent and use it 
 keep related componets and sub components in same folder
 every static texts you add plz use he.json en.json messages files and useTranslation hook 
 to write texts
 reuse compoent and hooks that already exists
 follow theme colors in colors.ts file when generating the ui 
-dont write inline stylings.. write styled components with meaningfull names
+dont write inline stylings.. write styled components with meaningfull names use styled from emotion f
 add client side validations for forms 
 every api call need to be implment in the matching client service!!!
 IMPORTANT !!!! when implment custom hook never access supabase or any backend logic.. you will always implmet a route or use existsing one and there abstrct BL logic to matching service.. dont write backend code in client side at all !!!!! 

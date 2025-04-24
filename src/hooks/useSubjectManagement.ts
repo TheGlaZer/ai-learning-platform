@@ -246,11 +246,11 @@ export const useSubjectManagement = (userId: string | null): UseSubjectManagemen
       // Save all the generated subjects in state (for backward compatibility)
       setGeneratedSubjects(allSubjects);
       
-      // Save the new and existing subjects separately
+      // Save the new and existing subjects separately - these are just in state, not in the database
       setGeneratedNewSubjects(newSubjects);
       setGeneratedExistingSubjects(existingSubjects);
       
-      // Don't automatically add to workspace subjects - user will confirm first
+      // Note: The subjects are NOT saved to the database until saveGeneratedSubjects is called
       
       setError(null);
       return allSubjects;
@@ -315,20 +315,30 @@ export const useSubjectManagement = (userId: string | null): UseSubjectManagemen
       for (let i = 0; i < generatedNewSubjects.length; i++) {
         const subject = generatedNewSubjects[i];
         
-        const savedSubject = await createSubjectClient({
-          ...subject,
-          order: maxOrder + i + 1, // Ensure new subjects are at the end in order
-        }, accessToken);
-        
-        savedSubjects.push(savedSubject);
+        // Only save subjects that don't already have an ID (new subjects)
+        if (!subject.id) {
+          const savedSubject = await createSubjectClient({
+            ...subject,
+            order: maxOrder + i + 1, // Ensure new subjects are at the end in order
+          }, accessToken);
+          
+          savedSubjects.push(savedSubject);
+        } else {
+          // If it already has an ID, it's already in the database
+          savedSubjects.push(subject);
+        }
       }
       
       // Update our local state
       setWorkspaceSubjects(prev => {
         const currentSubjects = prev[workspaceId] || [];
+        // Only add subjects that don't already exist in the list
+        const newlySavedSubjects = savedSubjects.filter(
+          saved => !currentSubjects.some(existing => existing.id === saved.id)
+        );
         return {
           ...prev,
-          [workspaceId]: [...currentSubjects, ...savedSubjects]
+          [workspaceId]: [...currentSubjects, ...newlySavedSubjects]
         };
       });
       

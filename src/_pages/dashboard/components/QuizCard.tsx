@@ -76,7 +76,15 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
   };
   
   const handleClick = () => {
-    onClick(quiz);
+    // Don't call onClick(quiz) anymore, directly start the quiz
+    console.log('Quiz card clicked, opening quiz directly: ', quiz.title);
+    if (hasPreviousSubmission) {
+      // If there's a previous submission, continue the quiz
+      handleContinueQuiz();
+    } else {
+      // Otherwise start a new quiz
+      handleStartQuiz();
+    }
   };
   
   const handleStartQuiz = (e?: React.MouseEvent) => {
