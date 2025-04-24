@@ -10,6 +10,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { detectLanguage } from '@/app/utils/fileProcessing/textProcessing';
 import { getFileContent } from './quizService';
 import { AIConfig } from './ai/AIConfig';
+import { safeParseJSON } from '@/app/utils/jsonUtils';
 
 // Define the database schema types
 interface Database {
@@ -327,20 +328,10 @@ export const generateSubjectsFromFile = async (params: SubjectGenerationParams):
     let parsedSubjects: any[] = [];
     let newSubjects: Subject[] = [];
     try {
-      // Clean the response content by removing any markdown formatting
-      let cleanedContent = response.content;
-      
-      // Remove markdown code blocks if present
-      cleanedContent = cleanedContent.replace(/```json\s*/g, '');
-      cleanedContent = cleanedContent.replace(/```\s*/g, '');
-      
-      // Trim whitespace
-      cleanedContent = cleanedContent.trim();
-      
-      console.log('Cleaned content for parsing:', cleanedContent.substring(0, 100) + '...');
-      
-      // Parse the JSON
-      parsedSubjects = JSON.parse(cleanedContent);
+      // Use the robust JSON parsing utility
+      console.log('Parsing AI response with safeParseJSON utility');
+      parsedSubjects = safeParseJSON(response.content);
+      console.log('Successfully parsed AI response');
       
       // Ensure the parsed content is an array of subjects
       if (!Array.isArray(parsedSubjects)) {

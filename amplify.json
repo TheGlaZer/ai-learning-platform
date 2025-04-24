@@ -1,0 +1,18 @@
+{
+  "ssr": {
+    "enableCookieMap": true,
+    "enableImageOptimization": true,
+    "deviceSizeMap": {
+      "desktop": {
+        "width": 1920
+      },
+      "mobile": {
+        "width": 375
+      }
+    },
+    "computeFunctionSettings": {
+      "memorySize": 1024,
+      "timeout": 90
+    }
+  }
+} 

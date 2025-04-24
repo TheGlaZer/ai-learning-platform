@@ -10,7 +10,7 @@ import { AIServiceFactory } from './AIServiceFactory';
  */
 export class AnthropicService implements AIService {
   private anthropic: Anthropic;
-  private defaultModel: string = 'claude-3-5-sonnet-20240620';
+  private defaultModel: string = 'claude-3-haiku-20240307';
   private maxRetries: number = 0; // Disabled retries by default
 
   /**

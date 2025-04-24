@@ -24,7 +24,8 @@ when supporting RTL plz dont change flex-drection css prop!!
 
 backend rules:
 write in typescript and clean senioer level code 
-use functions and utils for existing functioality
+VERY IMPORTANT: use functions and utils for existing functioality !!! 
+VERY VEY VERY IMPORTANT: plz always pick the most simple solution to the problem !!! 
 seprate long logics into functions and import them if some service or funciton has too much code inside it 
 IMPORTANT! please before coding logic related to system entities check the current models and fileds and relations in the models folder!!!
 add servier side validations for buisness logic 
@@ -34,7 +35,7 @@ if exists.. do you changes or addons there..
 IMPORTANT !!! always choose the most simple soultion for every decistion you make plz!!!
 
 ai features:
-see th ai folder unedr lib-server. and follow this modular interfaces and services and intergrate the feature in there for the backend side
+see the ai folder unedr lib-server. and follow this modular interfaces and services and intergrate the feature in there for the backend side
 
 IMPORTANT: 
 when examing the soultion plz always choose the most simple solution for the problem..!!!! we dont want to over engenring problems and features!!!!

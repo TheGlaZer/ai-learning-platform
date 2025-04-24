@@ -126,6 +126,10 @@ export async function POST(req: Request) {
     console.log(`File reference inclusion: ${includeFileReferences !== false ? 'enabled' : 'disabled'}`);
     console.log(`Past exam inclusion: ${includePastExam ? 'enabled' : 'disabled'}`);
 
+    // Prioritize Claude (anthropic) as the primary AI provider, fallback to OpenAI
+    const selectedProvider = process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'openai';
+    console.log(`Using primary AI provider: ${selectedProvider}`);
+
     const params: QuizGenerationParams = {
       fileId,
       topic,
@@ -133,9 +137,9 @@ export async function POST(req: Request) {
       difficultyLevel,
       userId,
       workspaceId,
-      aiProvider: aiProvider || 'openai',
-      token, // Pass the token to the quiz generation function
-      locale,  // Pass the locale to the quiz generation function
+      aiProvider: selectedProvider, // Set Claude as default if available
+      token,
+      locale,
       userComments,
       selectedSubjects,
       includeFileReferences,
@@ -149,7 +153,7 @@ export async function POST(req: Request) {
     
     return NextResponse.json({
       ...quiz,
-      model: "gpt-4o-mini" // Indicate which model was used
+      model: selectedProvider === 'anthropic' ? 'claude-3-haiku-20240307' : 'gpt-4o-mini' // Indicate which model was used
     });
   } catch (error: any) {
     console.error('Error generating quiz:', error);
@@ -157,14 +161,29 @@ export async function POST(req: Request) {
     // Check for specific error types and provide more useful responses
     let status = 500;
     let errorMessage = error.message || 'Failed to generate quiz';
+    let model = "unknown";
+    
+    // Determine which model caused the error
+    if (errorMessage.includes('anthropic')) {
+      model = "claude-3-haiku-20240307";
+    } else if (errorMessage.includes('openai') || errorMessage.includes('gpt')) {
+      model = "gpt-4o-mini";
+    }
     
     // Handle rate limit errors specifically
     if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
       status = 429;
-      errorMessage = 'OpenAI API rate limit exceeded. We recommend:' +
-        '\n1. Try again in a few minutes' +
-        '\n2. Use a smaller file' +
-        '\n3. The system is using gpt-4o-mini which has higher limits (200K TPM) but you may still hit limits with extremely large files';
+      
+      if (model === "claude-3-haiku-20240307") {
+        errorMessage = 'Anthropic API rate limit exceeded. We recommend:' +
+          '\n1. Try again in a few minutes' +
+          '\n2. Use a smaller file';
+      } else {
+        errorMessage = 'OpenAI API rate limit exceeded. We recommend:' +
+          '\n1. Try again in a few minutes' +
+          '\n2. Use a smaller file' +
+          '\n3. The system is using gpt-4o-mini which has higher limits (200K TPM) but you may still hit limits with extremely large files';
+      }
     }
     // Handle token/context length errors
     else if (errorMessage.includes('too large') || errorMessage.includes('exceeds model limit')) {
@@ -178,7 +197,7 @@ export async function POST(req: Request) {
         error: errorMessage,
         code: status,
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-        model: "gpt-4o-mini",
+        model,
         timestamp: new Date().toISOString()
       },
       { status }
