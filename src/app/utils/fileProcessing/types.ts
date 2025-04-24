@@ -3,6 +3,7 @@ export interface FileTypeProcessorOptions {
   extractFormatting?: boolean;
   maxPages?: number;
   timeout?: number;
+  addPageMarkers?: boolean; // Whether to include page markers in the output
 }
 
 export type FileTypeProcessor = (

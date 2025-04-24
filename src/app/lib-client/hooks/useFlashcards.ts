@@ -205,7 +205,9 @@ export const useFlashcards = (workspaceId?: string) => {
           answer: `${answerText}\n\n${question.explanation || ''}`,
           workspaceId,
           userId,
-          status: 'dont_know'
+          status: 'dont_know',
+          pages: question.pages || [],
+          fileName: quiz.fileName || ''
         });
       }
     });

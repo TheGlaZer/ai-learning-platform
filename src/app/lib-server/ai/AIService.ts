@@ -16,6 +16,8 @@ export interface AIServiceOptions {
   includeFileReferences?: boolean; // Whether to include file references in explanations
   includePastExam?: boolean; // Whether to include past exam reference
   pastExamContent?: string; // Content from past exam file
+  countRange?: 'small' | 'medium' | 'large'; // Range of subjects to generate (5-10, 10-15, 15-20)
+  specificity?: 'general' | 'specific'; // Whether subjects should be general or specific
 }
 
 export interface AIService {

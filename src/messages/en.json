@@ -1,0 +1,16 @@
+{
+  "SubjectReview": {
+    "dialogTitle": "Review Subjects",
+    "instructions": "Review the newly generated subjects. Select the subjects you want to keep. Deselect any subjects that are too similar to existing ones.",
+    "newSubjectsTab": "New Subjects",
+    "existingSubjectsTab": "Existing Subjects",
+    "noNewSubjects": "No new subjects were generated.",
+    "noNewSubjectsExtended": "No new subjects that aren't linked to existing subjects were found.",
+    "noExistingSubjects": "No existing subjects found for this workspace.",
+    "unrelatedContent": "The provided content appears unrelated to academic subjects. Please provide educational content with clear topics.",
+    "saveSelected": "Save Selected",
+    "saving": "Saving...",
+    "saveSuccess": "Subjects saved successfully!",
+    "saveError": "Failed to save subjects. Please try again."
+  }
+} 

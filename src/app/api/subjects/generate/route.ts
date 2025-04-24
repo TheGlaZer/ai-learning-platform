@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Extract parameters from the request body
-    const { workspaceId, fileId, userId, aiProvider, locale } = body;
+    const { workspaceId, fileId, userId, aiProvider, locale, countRange, specificity } = body;
     
     if (!fileId || !workspaceId || !userId) {
       return NextResponse.json(
@@ -45,22 +45,61 @@ export async function POST(request: NextRequest) {
       userId,
       aiProvider: aiProvider || 'openai',
       token,
-      locale
+      locale,
+      countRange,
+      specificity
     };
     
     console.log('Generating subjects with params:', params);
     
     // Generate subjects from the file
-    const subjects = await generateSubjectsFromFile(params);
+    const result = await generateSubjectsFromFile(params);
+    const { existingSubjects, newSubjects } = result;
+    const debugInfo = result.debug;
     
     // Check if any subjects were processed in chunks
     // We added a custom property to mark subjects processed in chunks
-    const processedInChunks = subjects.some((subject: any) => subject.processedInChunks === true);
+    const processedInChunks = [...existingSubjects, ...newSubjects].some((subject: any) => subject.processedInChunks === true);
+    
+    // Check for unrelated content response
+    if (result.unrelatedContent) {
+      return NextResponse.json({
+        success: true,
+        status: 'unrelated_content',
+        message: result.unrelatedMessage,
+        count: existingSubjects.length,
+        existingSubjects: existingSubjects,
+        newSubjects: [], // No new subjects in unrelated content case
+        existingSubjectsCount: existingSubjects.length,
+        newSubjectsCount: 0,
+        hasNewSubjects: false,
+        debugInfo: {
+          locale: locale || 'not provided',
+          model: "gpt-4o-mini",
+          fileId: fileId,
+          aiDebug: process.env.NODE_ENV === 'development' ? debugInfo : undefined
+        }
+      });
+    }
+    
+    const hasNewSubjects = newSubjects.length > 0;
+    const totalCount = existingSubjects.length + newSubjects.length;
     
     return NextResponse.json({
       success: true,
-      count: subjects.length,
-      subjects: subjects,
+      count: totalCount,
+      existingSubjects: existingSubjects,
+      newSubjects: newSubjects,
+      newSubjectsCount: newSubjects.length,
+      existingSubjectsCount: existingSubjects.length,
+      hasNewSubjects: hasNewSubjects,
+      debugInfo: {
+        locale: locale || 'not provided',
+        model: "gpt-4o-mini",
+        fileId: fileId,
+        processedInChunks: processedInChunks,
+        aiDebug: process.env.NODE_ENV === 'development' ? debugInfo : undefined
+      },
       tier1Warning: processedInChunks ? 
         "Your file was processed in smaller chunks due to its size. The processing uses gpt-4o-mini which has higher token limits (200K TPM) for better handling of large files." : 
         undefined,

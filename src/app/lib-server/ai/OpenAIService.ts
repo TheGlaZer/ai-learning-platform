@@ -172,6 +172,8 @@ export class OpenAIService implements AIService {
     let allSubjects: any[] = [];
     // Keep track of retry counts for each chunk
     const retryMap = new Map<number, number>();
+    // Track subjects found in each chunk for better logging
+    const subjectsByChunk: Record<number, string[]> = {};
     
     for (let i = 0; i < chunks.length; i++) {
       console.log(`Processing chunk ${i+1} of ${chunks.length}`);
@@ -220,8 +222,19 @@ export class OpenAIService implements AIService {
           const parsedSubjects = JSON.parse(cleanedContent);
           
           if (Array.isArray(parsedSubjects)) {
+            // Check for unrelated content response
+            if (parsedSubjects.length === 1 && parsedSubjects[0].status === 'unrelated_content') {
+              console.log(`Chunk ${i+1} contains unrelated content:`, parsedSubjects[0].message);
+              continue; // Skip to next chunk
+            }
+            
             chunkSubjects = parsedSubjects.filter(subject => subject && typeof subject === 'object' && subject.name);
             console.log(`Found ${chunkSubjects.length} subjects in chunk ${i+1}`);
+            
+            // Log the subjects found in this chunk for better visibility
+            const subjectNames = chunkSubjects.map(s => s.name);
+            console.log(`Subjects in chunk ${i+1}:`, subjectNames);
+            subjectsByChunk[i] = subjectNames;
             
             // Add these subjects to our master list
             allSubjects = [...allSubjects, ...chunkSubjects];
@@ -257,6 +270,12 @@ export class OpenAIService implements AIService {
         console.error(`Error processing chunk ${i+1}:`, chunkError);
         // Continue with next chunk for other types of errors
       }
+    }
+    
+    // Log a summary of subjects found in each chunk
+    console.log(`===== SUBJECT EXTRACTION SUMMARY =====`);
+    for (const [chunkIdx, subjectNames] of Object.entries(subjectsByChunk)) {
+      console.log(`Chunk ${parseInt(chunkIdx) + 1}: Found ${subjectNames.length} subjects - ${subjectNames.join(', ')}`);
     }
     
     // Combine all subjects

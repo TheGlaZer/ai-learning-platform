@@ -10,15 +10,23 @@ import {
   FormControlLabel,
   Button,
   CircularProgress,
-  Alert
+  Alert,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField
 } from '@mui/material';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { styled } from '@mui/material/styles';
-import { Flashcard as FlashcardType } from '@/app/models/flashcard';
+import { Flashcard as FlashcardType, CreateFlashcardParams } from '@/app/models/flashcard';
 import FlashcardItem from './FlashcardItem';
 import { useFlashcards } from '@/app/lib-client/hooks/useFlashcards';
-import { accent, primary, secondary } from '../../../colors';
+import { accent, primary, secondary, flashcardStatus } from '../../../colors';
 import { useTranslations } from 'next-intl';
+import AddIcon from '@mui/icons-material/Add';
+import { useRTL } from '@/contexts/RTLContext';
 
 // Styled components
 const ColumnHeader = styled(Box)(({ theme }) => ({
@@ -73,16 +81,13 @@ const CardItemWrapper = styled(Box)(({ theme }) => ({
 }));
 
 const ColumnContainer = styled(Paper)(({ theme }) => ({
-  borderRadius: theme.shape.borderRadius,
-  border: '1px solid',
-  borderColor: 'rgba(0, 0, 0, 0.08)',
-  height: '100%',
   display: 'flex',
   flexDirection: 'column',
+  height: '100%',
+  minHeight: 500,
   padding: theme.spacing(2),
-  overflow: 'hidden',
   position: 'relative',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+  border: '2px solid transparent',
 }));
 
 // Custom styles for drag handling
@@ -116,25 +121,100 @@ interface FlashcardBoardProps {
   workspaceId: string;
 }
 
+interface AddFlashcardDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (question: string, answer: string) => Promise<void>;
+}
+
+const AddFlashcardDialog: React.FC<AddFlashcardDialogProps> = ({ open, onClose, onAdd }) => {
+  const [question, setQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { isRTL } = useRTL();
+  const t = useTranslations('Flashcards');
+
+  const handleAdd = async () => {
+    if (!question.trim() || !answer.trim()) return;
+    
+    setLoading(true);
+    try {
+      await onAdd(question, answer);
+      setQuestion('');
+      setAnswer('');
+      onClose();
+    } catch (err) {
+      console.error('Error adding flashcard:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>{t('addFlashcard')}</DialogTitle>
+      <DialogContent>
+        <TextField
+          label={t('question')}
+          fullWidth
+          multiline
+          minRows={2}
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          margin="normal"
+          variant="outlined"
+          InputProps={{
+            dir: isRTL ? 'rtl' : 'ltr'
+          }}
+        />
+        <TextField
+          label={t('answer')}
+          fullWidth
+          multiline
+          minRows={3}
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          margin="normal"
+          variant="outlined"
+          InputProps={{
+            dir: isRTL ? 'rtl' : 'ltr'
+          }}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>{t('cancel')}</Button>
+        <Button 
+          onClick={handleAdd} 
+          variant="contained" 
+          color="primary"
+          disabled={loading || !question.trim() || !answer.trim()}
+        >
+          {loading ? t('adding') : t('add')}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
   const t = useTranslations('Flashcards');
   
   const columnDefinitions = {
     dont_know: {
       title: t('dontKnow'),
-      color: secondary.main,
+      color: flashcardStatus.dontKnow,
       icon: '😕',
       bgColor: 'rgba(255, 122, 90, 0.05)',
     },
     partially_know: {
       title: t('partiallyKnow'),
-      color: '#FF9800',
+      color: flashcardStatus.partiallyKnow,
       icon: '🤔',
       bgColor: 'rgba(255, 209, 102, 0.05)',
     },
     know_for_sure: {
       title: t('know'),
-      color: accent.green.main,
+      color: flashcardStatus.know,
       icon: '✓',
       bgColor: 'rgba(54, 214, 183, 0.05)',
     }
@@ -145,7 +225,9 @@ const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
     loading,
     error,
     updateFlashcard,
-    deleteFlashcard
+    deleteFlashcard,
+    createFlashcard,
+    fetchFlashcards
   } = useFlashcards(workspaceId);
   
   const [hideAnswers, setHideAnswers] = useState(true);
@@ -154,6 +236,7 @@ const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
     partially_know: [],
     know_for_sure: []
   });
+  const [openAddDialog, setOpenAddDialog] = useState(false);
   
   // Initialize columns with flashcards when they load
   useEffect(() => {
@@ -310,6 +393,29 @@ const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
     });
   };
 
+  // Handle adding a new flashcard
+  const handleAddFlashcard = async (question: string, answer: string) => {
+    const userId = localStorage.getItem('userId') || '';
+    
+    const newFlashcard: CreateFlashcardParams = {
+      question,
+      answer,
+      workspaceId,
+      userId,
+      status: 'dont_know'
+    };
+    
+    try {
+      const flashcard = await createFlashcard(newFlashcard);
+      // Refresh flashcards list after adding
+      fetchFlashcards(workspaceId);
+      return flashcard;
+    } catch (err) {
+      console.error('Error creating flashcard:', err);
+      throw err;
+    }
+  };
+
   // Handle errors
   if (error) {
     return (
@@ -334,7 +440,9 @@ const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
                   elevation={0}
                   sx={{
                     bgcolor: 'white',
-                    borderColor: key === 'dont_know' ? '#ffcdd2' : key === 'partially_know' ? '#fff9c4' : '#c8e6c9',
+                    borderColor: key === 'dont_know' ? flashcardStatus.dontKnow : 
+                                key === 'partially_know' ? flashcardStatus.partiallyKnow : 
+                                flashcardStatus.know,
                     borderWidth: '2px',
                     borderRadius: '12px',
                   }}
@@ -344,6 +452,22 @@ const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
                       {column.icon} {column.title}
                       <ColumnCount>{columns[key].length}</ColumnCount>
                     </ColumnTitle>
+                    
+                    {key === 'dont_know' && (
+                      <IconButton 
+                        size="small" 
+                        onClick={() => setOpenAddDialog(true)}
+                        sx={{ 
+                          color: flashcardStatus.dontKnow,
+                          bgcolor: `${flashcardStatus.dontKnow}15`,
+                          '&:hover': {
+                            bgcolor: `${flashcardStatus.dontKnow}30`,
+                          } 
+                        }}
+                      >
+                        <AddIcon fontSize="small" />
+                      </IconButton>
+                    )}
                   </ColumnHeader>
                   
                   <Droppable droppableId={getDroppableId(key)} direction="vertical">
@@ -385,6 +509,12 @@ const FlashcardBoard: React.FC<FlashcardBoardProps> = ({ workspaceId }) => {
           </Grid>
         </DragDropContext>
       )}
+      
+      <AddFlashcardDialog
+        open={openAddDialog}
+        onClose={() => setOpenAddDialog(false)}
+        onAdd={handleAddFlashcard}
+      />
     </Box>
   );
 };

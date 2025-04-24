@@ -76,7 +76,15 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
   };
   
   const handleClick = () => {
-    onClick(quiz);
+    // Don't call onClick(quiz) anymore, directly start the quiz
+    console.log('Quiz card clicked, opening quiz directly: ', quiz.title);
+    if (hasPreviousSubmission) {
+      // If there's a previous submission, continue the quiz
+      handleContinueQuiz();
+    } else {
+      // Otherwise start a new quiz
+      handleStartQuiz();
+    }
   };
   
   const handleStartQuiz = (e?: React.MouseEvent) => {
@@ -162,8 +170,8 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick, onDelete }) => {
       <BaseCard>
         <CardActionArea onClick={handleClick}>
           <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
-            <CardHeader sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-              <CardTitleContainer sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+            <CardHeader>
+              <CardTitleContainer>
                 <CardIconAvatar sx={{ 
                   bgcolor: 'white', 
                   border: '1px solid #d0d0d0',

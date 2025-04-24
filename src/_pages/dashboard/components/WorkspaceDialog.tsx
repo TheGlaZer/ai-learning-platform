@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { primary, accent, text, gradients, background, surface } from '../../../../colors';
 import { useTranslations } from 'next-intl';
+import { useRTL } from '@/contexts/RTLContext';
 
 interface WorkspaceDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ const WorkspaceDialog: React.FC<WorkspaceDialogProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const t = useTranslations('Workspace.createDialog');
   const commonT = useTranslations('Common');
+  const { isRTL } = useRTL();
 
   const handleSubmit = async () => {
     if (!newWorkspaceName.trim()) {
@@ -82,7 +84,8 @@ const WorkspaceDialog: React.FC<WorkspaceDialogProps> = ({
             backgroundColor: background.paper,
             backgroundImage: `linear-gradient(135deg, ${primary.light}05, ${accent.purple.light}10)`,
             boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.15)`,
-            border: `1px solid ${surface.border}`
+            border: `1px solid ${surface.border}`,
+            direction: isRTL ? 'rtl' : 'ltr'
           }
         }}
       >
@@ -178,7 +181,8 @@ const WorkspaceDialog: React.FC<WorkspaceDialogProps> = ({
             width: '100%',
             backgroundColor: '#4caf50',
             color: '#fff',
-            fontWeight: 'medium'
+            fontWeight: 'medium',
+            direction: isRTL ? 'rtl' : 'ltr'
           }}
         >
           {successMessage}

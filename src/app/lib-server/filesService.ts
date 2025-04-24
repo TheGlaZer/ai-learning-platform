@@ -156,7 +156,10 @@ export const uploadFile = async (
             arrayBuffer,
             mimeType,
             file.name,
-            { language: 'auto' }
+            { 
+              language: 'auto',
+              addPageMarkers: false // Don't need page markers for language detection
+            }
           );
           
           // Use first 5000 chars for language detection

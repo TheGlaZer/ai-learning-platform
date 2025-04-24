@@ -47,6 +47,7 @@ import { useUserLocale } from '@/hooks/useLocale';
 import { useSubjects } from '@/app/lib-client/hooks/useSubjects';
 import { usePastExams } from '@/hooks/usePastExams';
 import { useTranslations } from 'next-intl';
+import { useRTL } from '@/contexts/RTLContext';
 import * as colors from '../../../../colors';
 import { useFileUpload, formatFileSize } from '@/hooks/useFileUpload';
 import { validateUserInstructions } from '@/utils/securityValidation';
@@ -81,7 +82,12 @@ interface SubjectChipProps {
   $priority: 'normal' | 'high';
 }
 
-const SubjectChip = styled(Chip)<SubjectChipProps>`
+const StyledCloseButton = styled(IconButton)<{ isRTL?: boolean }>`
+  margin-left: ${props => props.isRTL ? '0' : 'auto'};
+  margin-right: ${props => props.isRTL ? 'auto' : '0'};
+`;
+
+const SubjectChip = styled(Chip)<SubjectChipProps & { isRTL?: boolean }>`
   border-radius: 16px;
   padding: 0 4px;
   height: 36px;
@@ -98,12 +104,14 @@ const SubjectChip = styled(Chip)<SubjectChipProps>`
   
   & .MuiChip-icon {
     color: ${props => props.$priority === 'high' ? colors.text.white : colors.primary.main};
-    margin-left: 8px;
+    margin-left: ${props => props.isRTL ? '0' : '8px'};
+    margin-right: ${props => props.isRTL ? '8px' : '0'};
   }
   
   & .MuiChip-deleteIcon {
     color: ${props => props.$priority === 'high' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.3)'};
-    margin-right: 5px;
+    margin-left: ${props => props.isRTL ? '5px' : '0'};
+    margin-right: ${props => props.isRTL ? '0' : '5px'};
     
     &:hover {
       color: ${props => props.$priority === 'high' ? colors.text.white : colors.text.secondary};
@@ -190,6 +198,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
   // Get user locale from URL and translation function
   const userLocale = useUserLocale();
   const t = useTranslations('QuizGeneration');
+  const { isRTL } = useRTL();
   
   // Use the subjects hook to get subjects from context
   const { subjects: workspaceSubjects, isLoading: subjectsLoading } = useSubjects(workspaceId);
@@ -199,6 +208,9 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
   
   // Get file validation from hook
   const { validateFileSize } = useFileUpload();
+  
+  // Reference for progress bar to enable auto-scrolling
+  const progressBarRef = useRef<HTMLDivElement>(null);
   
   // Form state
   const [selectedFileId, setSelectedFileId] = useState<string>('');
@@ -411,6 +423,13 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
     
     console.log('Quiz generation params:', params);
     
+    // Auto-scroll to progress bar when generation starts
+    setTimeout(() => {
+      if (progressBarRef.current) {
+        progressBarRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+    
     const quiz = await generateQuiz(params);
     
     if (quiz) {
@@ -437,18 +456,19 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
       PaperProps={{
         sx: {
           borderRadius: 2,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.16)'
+          boxShadow: '0 8px 32px rgba(0,0,0,0.16)',
+          direction: isRTL ? 'rtl' : 'ltr'
         }
       }}
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <QuizIcon sx={{ mr: 1.5, color: colors.primary.main, fontSize: 28 }} />
+          <QuizIcon sx={{ mr: isRTL ? 0 : 1.5, ml: isRTL ? 1.5 : 0, color: colors.primary.main, fontSize: 28 }} />
           <Typography variant="h5" fontWeight="600">{t('dialogTitle')}</Typography>
         </Box>
-        <IconButton onClick={handleClose} disabled={isGenerating}>
+        <StyledCloseButton onClick={handleClose} disabled={isGenerating} isRTL={isRTL}>
           <CloseIcon />
-        </IconButton>
+        </StyledCloseButton>
       </DialogTitle>
       
       <Divider />
@@ -473,7 +493,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={4}>
+          <Grid container spacing={4} sx={{ width: '100%', margin: 0 }}>
             <Grid item xs={12} md={6}>
               <SectionTitle>
                 <SectionNumber>1</SectionNumber>
@@ -523,7 +543,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
                 <SectionNumber>3</SectionNumber>
                 {t('configureOptions')}
               </SectionTitle>
-              <Grid container spacing={2} sx={{ mb: 4 }}>
+              <Grid container spacing={2} sx={{ mb: 4, width: '100%', margin: 0, marginBottom: 4 }}>
                 <Grid item xs={6}>
                   <TextField
                     label={t('questionCount')}
@@ -690,6 +710,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
                           onDelete={() => handleRemoveSubject(subjectId)}
                           icon={<TagIcon />}
                           disabled={isGenerating}
+                          isRTL={isRTL}
                         />
                       ) : null;
                     })
@@ -712,7 +733,7 @@ const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
         )}
         
         {isGenerating && (
-          <Box sx={{ mt: 4 }}>
+          <Box sx={{ mt: 4 }} ref={progressBarRef}>
             <LinearProgress variant="determinate" value={generationProgress} />
             <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
               {t('generatingProgress', { progress: Math.round(generationProgress) })}

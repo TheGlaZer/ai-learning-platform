@@ -71,28 +71,6 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
         sx={{ direction: isRTL ? 'rtl' : 'ltr' }}
       >
         <StyledMenuItem 
-          onClick={() => handleMenuItemClick(onGenerateSubjects)}
-          color={accent.purple.main}
-        >
-          <ListItemIcon>
-            <CategoryOutlinedIcon />
-          </ListItemIcon>
-          <ListItemText primary={t('generateSubjects')} />
-        </StyledMenuItem>
-
-        <StyledMenuItem 
-          onClick={() => handleMenuItemClick(onGenerateQuiz)}
-          color={primary.main}
-        >
-          <ListItemIcon>
-            <QuizOutlinedIcon />
-          </ListItemIcon>
-          <ListItemText primary={t('generateQuiz')} />
-        </StyledMenuItem>
-
-        <MenuDivider />
-
-        <StyledMenuItem 
           onClick={() => handleMenuItemClick(onUploadFile)}
           color={accent.green.main}
         >
@@ -110,6 +88,28 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
             <HistoryEduOutlinedIcon />
           </ListItemIcon>
           <ListItemText primary={t('uploadPastExam')} />
+        </StyledMenuItem>
+
+        <MenuDivider />
+
+        <StyledMenuItem 
+          onClick={() => handleMenuItemClick(onGenerateQuiz)}
+          color={primary.main}
+        >
+          <ListItemIcon>
+            <QuizOutlinedIcon />
+          </ListItemIcon>
+          <ListItemText primary={t('generateQuiz')} />
+        </StyledMenuItem>
+
+        <StyledMenuItem 
+          onClick={() => handleMenuItemClick(onGenerateSubjects)}
+          color={accent.purple.main}
+        >
+          <ListItemIcon>
+            <CategoryOutlinedIcon />
+          </ListItemIcon>
+          <ListItemText primary={t('generateSubjects')} />
         </StyledMenuItem>
       </StyledMenu>
     </Box>

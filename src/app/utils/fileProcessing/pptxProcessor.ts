@@ -47,8 +47,10 @@ export async function processPptxFile(
         // Extract text elements from slide
         const slideText = extractTextFromSlide(result);
         
-        // Add slide content to full text
-        allText += `Slide ${slideNumber}:\n${slideText}\n\n`;
+        // Add slide content with page marker to full text
+        // Use 1-based page numbers matching the slide number
+        const pageNumber = parseInt(slideNumber, 10);
+        allText += `------ PAGE: ${pageNumber} ----------\n${slideText.trim()}\n\n`;
       } catch (xmlError) {
         console.warn(`Error parsing slide ${slideNumber}:`, xmlError);
       }

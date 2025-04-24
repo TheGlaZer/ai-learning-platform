@@ -71,9 +71,9 @@ export function detectLanguage(text: string): string {
   const hebrewCharCount = (text.match(hebrewRegex) || []).length;
   const totalCharCount = text.replace(/\s/g, '').length;
   
-  // If there are Hebrew characters and they make up more than 5% of the content,
-  // classify as Hebrew. This is more sensitive than before to catch mixed content.
-  if (hebrewCharCount > 0 && (hebrewCharCount / totalCharCount) > 0.05) {
+  // If there are Hebrew characters and they make up more than 2% of the content,
+  // classify as Hebrew. This is more sensitive to detect mixed content files with Hebrew.
+  if (hebrewCharCount > 0 && (hebrewCharCount / totalCharCount) > 0.02) {
     console.log(`Detected Hebrew language: ${hebrewCharCount} Hebrew chars out of ${totalCharCount} total (${((hebrewCharCount/totalCharCount)*100).toFixed(2)}%)`);
     return 'he';
   }

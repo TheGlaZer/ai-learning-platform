@@ -38,6 +38,13 @@ export const accent = {
   }
 };
 
+// Flashcard status colors
+export const flashcardStatus = {
+  dontKnow: '#ffcdd2',
+  partiallyKnow: '#fff9c4',
+  know: '#c8e6c9'
+};
+
 // Background gradients
 export const gradients = {
   primaryGradient: `linear-gradient(135deg, ${primary.main}, ${accent.purple.main})`,
@@ -82,4 +89,4 @@ export const border = {
   light: '#DDDDDD',
   medium: '#CCCCCC',
   dark: '#AAAAAA'
-}; 
+};

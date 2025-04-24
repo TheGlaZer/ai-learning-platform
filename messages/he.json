@@ -158,6 +158,15 @@
     "fileNameRequired": "שם הקובץ נדרש",
     "fileNameHelp": "הזן שם לקובץ שלך"
   },
+  "FileUpload": {
+    "title": "העלאת קובץ",
+    "dragDropText": "גרור ושחרר את הקובץ כאן, או לחץ לעיון",
+    "browseText": "או לחץ כאן לבחירת קובץ",
+    "allowedTypes": "פורמטים נתמכים",
+    "uploading": "מעלה",
+    "uploadButton": "העלה",
+    "invalidFileType": "סוג קובץ לא נתמך. פורמטים נתמכים:"
+  },
   "Workspace": {
     "deleteDialog": {
       "title": "מחיקת מרחב עבודה",
@@ -217,7 +226,7 @@
     "selectSubjects": "בחר נושאים",
     "subjectsTooltip": "לחץ על נושא כדי להחליף עדיפות גבוהה. נושאים בעדיפות גבוהה (כחולים) יהיו במוקד בחידון. הסר נושא עם כפתור ה-X.",
     "refreshSubjects": "רענן רשימת נושאים",
-    "noSubjects": "אין עדיין נושאים זמינים במרחב העבודה זה.",
+    "noSubjects": "אין נושאים במרחב העבודה הזה עדיין.",
     "subjectsClickInstructions": "לחץ על נושא כדי לסמן אותו כעדיפות גבוהה (כחול). נושאים בעדיפות גבוהה יהיו במוקד בחידון.",
     "generatingProgress": "החידון שלך נוצר... {progress}%",
     "cancel": "בטל",
@@ -247,7 +256,8 @@
     "confirmDelete": "האם אתה בטוח שברצונך למחוק פריט זה?",
     "logIn": "התחברות",
     "signUp": "הרשמה",
-    "unnamed": "קובץ ללא שם"
+    "unnamed": "קובץ ללא שם",
+    "back": "חזרה"
   },
   "Flashcards": {
     "pageTitle": "כרטיסי לימוד",
@@ -274,7 +284,16 @@
     "successCreated": "נוצרו בהצלחה {count} כרטיסי לימוד!",
     "noFlashcardsCreated": "לא נוצרו כרטיסי לימוד. ייתכן שאין לך תשובות לא נכונות.",
     "confirmDelete": "האם אתה בטוח שברצונך למחוק כרטיס לימוד זה? פעולה זו אינה ניתנת לביטול.",
-    "deleteFlashcard": "מחק כרטיס לימוד"
+    "deleteFlashcard": "מחק כרטיס לימוד",
+    "addFlashcard": "הוסף כרטיס לימוד",
+    "question": "שאלה",
+    "answer": "תשובה",
+    "add": "הוסף",
+    "adding": "מוסיף...",
+    "source": "מקור",
+    "pages": "עמודים",
+    "lines": "שורות",
+    "deleteConfirmation": "האם אתה בטוח שברצונך למחוק כרטיס לימוד זה? פעולה זו אינה ניתנת לביטול."
   },
   "Files": {
     "uploadButton": "העלה קובץ",
@@ -292,19 +311,17 @@
     "subjects": "נושאים",
     "pastExams": "מבחנים קודמים",
     "flashcards": "כרטיסי לימוד",
-    "noSubjects": "אין עדיין נושאים במרחב עבודה זה.",
-    "generateSubjectsFromFiles": "צור נושאים מקבצים",
-    "addSubjectManually": "הוסף נושא ידנית",
-    "noPastExams": "אין עדיין מבחנים קודמים במרחב עבודה זה. העלה קבצי מבחנים קודמים כדי ליצור ספריית התייחסות.",
+    "noSubjects": "אין נושאים במרחב העבודה הזה עדיין.",
+    "generateSubjectsFromFiles": "גילוי נושאים מבוסס בינה מלאכותית",
+    "addSubjectManually": "הוסף נושא באופן ידני",
+    "noPastExams": "אין מבחנים קודמים במרחב העבודה הזה עדיין. העלה קבצי מבחנים קודמים ליצירת ספריית התייחסות.",
     "uploadPastExam": "העלה מבחן קודם",
     "noQuizzes": "אין עדיין חידונים במרחב עבודה זה.",
     "generateQuiz": "צור חידון",
     "selectWorkspacePrompt": "בחר מרחב עבודה להצגת קבצים",
     "generateSubjects": "יצירת נושאים",
     "uploadFile": "העלאת קובץ",
-    "uploadPastExam": "העלאת מבחן קודם",
-    "generateSubjectsFromFiles": "יצירת נושאים מקבצים",
-    "addSubjectManually": "הוספת נושא ידנית",
+    "mainActions": "פעולות ראשיות",
     "studyMaterials": "חומרי לימוד",
     "tabs": {
       "files": "קבצים ({count})",
@@ -314,10 +331,10 @@
       "flashcards": "כרטיסי לימוד"
     },
     "emptyStates": {
-      "files": "אין עדיין קבצים במרחב עבודה זה. לחץ על \"העלאת קובץ\" כדי להוסיף קבצים.",
-      "subjects": "אין עדיין נושאים במרחב עבודה זה.",
-      "pastExams": "אין עדיין מבחנים קודמים במרחב עבודה זה. העלה קבצי מבחנים קודמים כדי ליצור ספריית מקורות.",
-      "quizzes": "אין עדיין חידונים במרחב עבודה זה."
+      "files": "אין עדיין קבצים במרחב עבודה זה עדיין. לחץ על \"העלאת קובץ\" כדי להוסיף קבצים.",
+      "subjects": "אין עדיין נושאים במרחב העבודה הזה עדיין.",
+      "pastExams": "אין עדיין מבחנים קודמים במרחב העבודה הזה עדיין. העלה קבצי מבחנים קודמים ליצירת ספריית התייחסות.",
+      "quizzes": "אין עדיין חידונים במרחב עבודה זה עדיין."
     }
   },
   "Export": {
@@ -386,7 +403,10 @@
     "correctAnswers": "תשובות נכונות: {count}",
     "submit": "שלח",
     "next": "שאלה הבאה",
+    "previous": "הקודם",
     "finish": "סיים חידון",
+    "answeredOf": "{answered} מתוך {total} שאלות נענו ({percentage}%)",
+    "noTimeLimit": "ללא הגבלת זמן",
     "quizComplete": "החידון הושלם!",
     "yourScore": "הציון שלך: {score}%",
     "correctCount": "{correct} מתוך {total} נכונות",
@@ -401,7 +421,59 @@
     "sessionRefreshFailed": "לא ניתן היה לרענן את הפעלת המשתמש. אנא התחבר מחדש.",
     "resultsSaved": "תוצאות החידון נשמרו בהצלחה!",
     "resultsSaveFailed": "הערה: שמירת תוצאות החידון נכשלה.",
-    "submissionError": "שמירת תוצאות החידון נכשלה. התשובות שלך לא יישמרו."
+    "submissionError": "שמירת תוצאות החידון נכשלה. התשובות שלך לא יישמרו.",
+    "feedbackExcellent": "מצוין! שלטת בנושא הזה!",
+    "feedbackGreat": "עבודה טובה! יש לך הבנה מוצקה.",
+    "feedbackGood": "מאמץ טוב! המשך לתרגל כדי להשתפר.",
+    "feedbackOnTrack": "אתה בכיוון הנכון. עוד קצת תרגול יעזור.",
+    "feedbackKeepStudying": "המשך ללמוד! אל תוותר, תשתפר עם תרגול.",
+    "questionSummary": "סיכום שאלות",
+    "questionNumber": "שאלה {number}",
+    "page": "עמוד: {number}",
+    "exportToWord": "ייצא ל-Word",
+    "createFlashcards": "צור כרטיסיות לימוד"
+  },
+  "SubjectGeneration": {
+    "generatedSubjectsTitle": "נושאים שנוצרו",
+    "generatedSubjectsDescription": "סקור את הנושאים שנוצרו להלן. אלה הם נושאים שעדיין לא קיימים במרחב העבודה שלך. תוכל לשמור את כולם או לבחור נושאים בודדים לשמירה.",
+    "analyzingContent": "מנתח תוכן ומייצר נושאים...",
+    "noSubjectsGenerated": "טרם נוצרו נושאים. בחר קובץ ולחץ על \"יצירת נושאים\" כדי להתחיל.",
+    "saveAllSubjects": "שמור את כל הנושאים",
+    "subjectsGeneratedSuccess": "הנושאים נוצרו בהצלחה!",
+    "saveError": "אירעה שגיאה בשמירת הנושאים. אנא נסה שוב.",
+    "dialogTitle": "גילוי נושאים בינה מלאכותית",
+    "selectFileTitle": "יצירת נושאים חכמים מהתוכן שלך",
+    "selectFileDescription": "תן לבינה המלאכותית שלנו לנתח את הקבצים שלך ולחלץ באופן אוטומטי נושאים ומושגים מרכזיים. האלגוריתמים המתקדמים שלנו יזהו את תחומי הנושא הרלוונטיים ביותר כדי לעזור לך לארגן את חומרי הלימוד שלך טוב יותר.",
+    "selectFile": "בחר קובץ",
+    "generateSubjects": "✨ גלה נושאים עם בינה מלאכותית",
+    "editSubjectTitle": "עריכת נושא",
+    "subjectNameLabel": "שם הנושא",
+    "countRangeLabel": "מספר נושאים",
+    "countRangeDescription": "בחר כמה נושאים ברצונך ליצור",
+    "countRangeSmall": "מעט (5-10 נושאים)",
+    "countRangeMedium": "בינוני (10-15 נושאים)",
+    "countRangeLarge": "הרבה (15-20 נושאים)",
+    "specificityLabel": "רמת פירוט",
+    "specificityDescription": "בחר כמה מפורטים הנושאים שיווצרו",
+    "specificityGeneral": "נושאים כלליים",
+    "specificitySpecific": "נושאים מפורטים וספציפיים",
+    "thisWillTakeTime": "זה ייקח זמן",
+    "generatingProgress": "מנתח תוכן ומזהה נושאים מרכזיים... {progress}%"
+  },
+  "SubjectReview": {
+    "dialogTitle": "סקירת נושאים",
+    "instructions": "בחר את הנושאים שברצונך לשמור במרחב העבודה שלך.",
+    "newSubjectsTab": "נושאים חדשים",
+    "existingSubjectsTab": "נושאים קיימים",
+    "noNewSubjects": "אין נושאים חדשים זמינים כרגע.",
+    "noNewSubjectsExtended": "לא נמצאו נושאים חדשים שאינם קושרים לנושאים הקיימים",
+    "noExistingSubjects": "אין נושאים קיימים במרחב העבודה שלך.",
+    "unrelatedContent": "התוכן שסופק אינו קשור לנושאים אקדמיים. אנא ספק תוכן לימודי עם נושאים ברורים.",
+    "saveSuccess": "הנושאים נשמרו בהצלחה!",
+    "saveError": "אירעה שגיאה בשמירת הנושאים. אנא נסה שוב.",
+    "saving": "שומר...",
+    "saveSelected": "שמור נבחרים",
+    "closeToReturnInfo": "אתה יכול לסגור את תיבת הדו-שיח לסקירה כדי לחזור למסך יצירת הנושאים. נושאים יישמרו רק אם תלחץ על \"שמור נבחרים\"."
   }
 }
   

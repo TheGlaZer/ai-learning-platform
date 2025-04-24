@@ -7,6 +7,9 @@ export interface Flashcard {
   status?: 'dont_know' | 'partially_know' | 'know_for_sure';
   createdAt?: string;
   updatedAt?: string;
+  pages?: string[];
+  fileName?: string;
+  lines?: number[];
 }
 
 export interface CreateFlashcardParams {
@@ -15,6 +18,9 @@ export interface CreateFlashcardParams {
   workspaceId: string;
   userId: string;
   status?: 'dont_know' | 'partially_know' | 'know_for_sure';
+  pages?: string[];
+  fileName?: string;
+  lines?: number[];
 }
 
 export interface UpdateFlashcardParams {
@@ -22,4 +28,7 @@ export interface UpdateFlashcardParams {
   question?: string;
   answer?: string;
   status?: 'dont_know' | 'partially_know' | 'know_for_sure';
+  pages?: string[];
+  fileName?: string;
+  lines?: number[];
 } 

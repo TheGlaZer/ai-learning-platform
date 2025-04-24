@@ -27,6 +27,13 @@ export async function extractTextFromFile(
     console.log(`=== Starting text extraction for ${fileName} (${mimeType}) ===`);
     console.log(`File buffer size: ${fileBuffer.byteLength} bytes`);
     
+    // Handle page markers option - default to true if not specified
+    if (options.addPageMarkers === undefined) {
+      options.addPageMarkers = true; // Enable by default
+    }
+    
+    console.log(`Page markers: ${options.addPageMarkers ? 'enabled' : 'disabled'}`);
+    
     if (!fileBuffer || fileBuffer.byteLength === 0) {
       throw new Error(`Empty file buffer provided for ${fileName}`);
     }

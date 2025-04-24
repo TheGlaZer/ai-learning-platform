@@ -13,10 +13,14 @@ import { useAuth } from '@/contexts/AuthContext';
 interface UseSubjectManagementReturn {
   workspaceSubjects: Record<string, Subject[]>;
   generatedSubjects: Subject[] | null;
+  generatedNewSubjects: Subject[] | null;
+  generatedExistingSubjects: Subject[] | null;
   selectedSubject: Subject | null;
   loading: boolean;
   generating: boolean;
   error: string | null;
+  unrelatedContentMessage: string | null;
+  lastAIResponse: any | null;
   fetchWorkspaceSubjects: (workspaceId: string) => Promise<Subject[]>;
   createSubject: (subject: Partial<Subject>) => Promise<Subject | null>;
   updateSubject: (id: string, updates: Partial<Subject>) => Promise<Subject | null>;
@@ -26,15 +30,20 @@ interface UseSubjectManagementReturn {
   clearGeneratedSubjects: () => void;
   saveGeneratedSubjects: () => Promise<Subject[]>;
   resetState: () => void;
+  updateSelectedNewSubjects: (selectedSubjects: Subject[]) => void;
 }
 
 export const useSubjectManagement = (userId: string | null): UseSubjectManagementReturn => {
   const [workspaceSubjects, setWorkspaceSubjects] = useState<Record<string, Subject[]>>({});
   const [generatedSubjects, setGeneratedSubjects] = useState<Subject[] | null>(null);
+  const [generatedNewSubjects, setGeneratedNewSubjects] = useState<Subject[] | null>(null);
+  const [generatedExistingSubjects, setGeneratedExistingSubjects] = useState<Subject[] | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [generating, setGenerating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [unrelatedContentMessage, setUnrelatedContentMessage] = useState<string | null>(null);
+  const [lastAIResponse, setLastAIResponse] = useState<any | null>(null);
   const { accessToken } = useAuth();
 
   const fetchWorkspaceSubjects = async (workspaceId: string): Promise<Subject[]> => {
@@ -198,24 +207,53 @@ export const useSubjectManagement = (userId: string | null): UseSubjectManagemen
     
     try {
       setGenerating(true);
+      setUnrelatedContentMessage(null);
+      setLastAIResponse(null);
       
       // If we don't have any subjects for this workspace yet, fetch them first
       if (!workspaceSubjects[params.workspaceId]) {
         await fetchWorkspaceSubjects(params.workspaceId);
       }
       
-      const subjects = await generateSubjectsClient({
+      const response = await generateSubjectsClient({
         ...params,
         userId: userId
       }, accessToken);
       
-      // Save the generated subjects in state
-      setGeneratedSubjects(subjects);
+      // Check for unrelated content status
+      if (response.status === 'unrelated_content') {
+        setUnrelatedContentMessage(response.message || 'The provided content appears unrelated to academic subjects.');
+        setGeneratedSubjects([]);
+        setGeneratedNewSubjects([]);
+        setGeneratedExistingSubjects(response.existingSubjects || []);
+        setError(null);
+        setLastAIResponse(response.debugInfo?.aiDebug || null);
+        return [];
+      }
       
-      // Don't automatically add to workspace subjects - user will confirm first
+      // Save the response for debugging
+      if (response.debugInfo?.aiDebug) {
+        setLastAIResponse(response.debugInfo.aiDebug);
+      }
+      
+      // Get the existing and new subjects from the response
+      const existingSubjects = response.existingSubjects || [];
+      const newSubjects = response.newSubjects || [];
+      
+      // Combine them for backward compatibility with components expecting a single array
+      const allSubjects = [...existingSubjects, ...newSubjects];
+      
+      // Save all the generated subjects in state (for backward compatibility)
+      setGeneratedSubjects(allSubjects);
+      
+      // Save the new and existing subjects separately - these are just in state, not in the database
+      setGeneratedNewSubjects(newSubjects);
+      setGeneratedExistingSubjects(existingSubjects);
+      
+      // Note: The subjects are NOT saved to the database until saveGeneratedSubjects is called
       
       setError(null);
-      return subjects;
+      return allSubjects;
     } catch (err) {
       console.error('Error generating subjects:', err);
       setError('Failed to generate subjects. Please try again later.');
@@ -231,6 +269,26 @@ export const useSubjectManagement = (userId: string | null): UseSubjectManagemen
 
   const clearGeneratedSubjects = () => {
     setGeneratedSubjects(null);
+    setGeneratedNewSubjects(null);
+    setGeneratedExistingSubjects(null);
+  };
+
+  /**
+   * Update the generatedNewSubjects array with only the selected subjects
+   */
+  const updateSelectedNewSubjects = (selectedSubjects: Subject[]): void => {
+    if (!generatedNewSubjects) return;
+    
+    // Filter generatedNewSubjects to only include the ones in selectedSubjects
+    const newSelected = selectedSubjects.filter(selected => 
+      generatedNewSubjects.some(generated => 
+        (!generated.id && !selected.id && generated.name === selected.name) ||
+        (generated.id && selected.id && generated.id === selected.id)
+      )
+    );
+    
+    // Update the generatedNewSubjects state with only the selected ones
+    setGeneratedNewSubjects(newSelected);
   };
 
   /**
@@ -238,7 +296,7 @@ export const useSubjectManagement = (userId: string | null): UseSubjectManagemen
    * @returns An array of saved subjects
    */
   const saveGeneratedSubjects = async (): Promise<Subject[]> => {
-    if (!generatedSubjects || generatedSubjects.length === 0) {
+    if (!generatedNewSubjects || generatedNewSubjects.length === 0) {
       return [];
     }
     
@@ -247,35 +305,45 @@ export const useSubjectManagement = (userId: string | null): UseSubjectManagemen
       const savedSubjects: Subject[] = [];
       
       // Get max order of existing subjects to ensure new ones are added at the end
-      const workspaceId = generatedSubjects[0].workspaceId;
+      const workspaceId = generatedNewSubjects[0].workspaceId;
       const existingSubjects = workspaceSubjects[workspaceId] || [];
       const maxOrder = existingSubjects.length > 0
         ? Math.max(...existingSubjects.map(s => s.order || 0))
         : -1;
       
       // Save each subject one by one
-      for (let i = 0; i < generatedSubjects.length; i++) {
-        const subject = generatedSubjects[i];
+      for (let i = 0; i < generatedNewSubjects.length; i++) {
+        const subject = generatedNewSubjects[i];
         
-        const savedSubject = await createSubjectClient({
-          ...subject,
-          order: maxOrder + i + 1, // Ensure new subjects are at the end in order
-        }, accessToken);
-        
-        savedSubjects.push(savedSubject);
+        // Only save subjects that don't already have an ID (new subjects)
+        if (!subject.id) {
+          const savedSubject = await createSubjectClient({
+            ...subject,
+            order: maxOrder + i + 1, // Ensure new subjects are at the end in order
+          }, accessToken);
+          
+          savedSubjects.push(savedSubject);
+        } else {
+          // If it already has an ID, it's already in the database
+          savedSubjects.push(subject);
+        }
       }
       
       // Update our local state
       setWorkspaceSubjects(prev => {
         const currentSubjects = prev[workspaceId] || [];
+        // Only add subjects that don't already exist in the list
+        const newlySavedSubjects = savedSubjects.filter(
+          saved => !currentSubjects.some(existing => existing.id === saved.id)
+        );
         return {
           ...prev,
-          [workspaceId]: [...currentSubjects, ...savedSubjects]
+          [workspaceId]: [...currentSubjects, ...newlySavedSubjects]
         };
       });
       
       // Clear generated subjects since they're now saved
-      setGeneratedSubjects(null);
+      clearGeneratedSubjects();
       
       return savedSubjects;
     } catch (error) {
@@ -293,16 +361,24 @@ export const useSubjectManagement = (userId: string | null): UseSubjectManagemen
   const resetState = () => {
     setSelectedSubject(null);
     setGeneratedSubjects(null);
+    setGeneratedNewSubjects(null);
+    setGeneratedExistingSubjects(null);
     setError(null);
+    setUnrelatedContentMessage(null);
+    setLastAIResponse(null);
   };
 
   return {
     workspaceSubjects,
     generatedSubjects,
+    generatedNewSubjects,
+    generatedExistingSubjects,
     selectedSubject,
     loading,
     generating,
     error,
+    unrelatedContentMessage,
+    lastAIResponse,
     fetchWorkspaceSubjects,
     createSubject,
     updateSubject,
@@ -311,6 +387,7 @@ export const useSubjectManagement = (userId: string | null): UseSubjectManagemen
     selectSubject,
     clearGeneratedSubjects,
     saveGeneratedSubjects,
-    resetState
+    resetState,
+    updateSelectedNewSubjects
   };
 }; 

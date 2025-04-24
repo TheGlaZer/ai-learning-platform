@@ -1,11 +1,10 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { 
   Dialog, 
   DialogTitle, 
   DialogContent, 
-  DialogActions, 
   Button, 
   Typography, 
   Box, 
@@ -16,27 +15,17 @@ import {
   LinearProgress,
   Alert,
   IconButton,
-  Divider,
-  Grid,
-  Paper,
-  Chip,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  SelectChangeEvent,
-  Checkbox
+  SelectChangeEvent
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import DescriptionIcon from '@mui/icons-material/Description';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { FileMetadata } from '@/app/models/file';
 import { Subject, SubjectGenerationParams } from '@/app/models/subject';
 import { useSubjectManagement } from '@/hooks/useSubjectManagement';
 import { useUserLocale } from '@/hooks/useLocale';
+import { useTranslations } from 'next-intl';
+import SubjectReviewDialog from './SubjectReviewDialog';
 
 const StyledDialogTitle = styled(DialogTitle)`
   display: flex;
@@ -53,39 +42,35 @@ const StyledAlert = styled(Alert)`
   margin-bottom: 16px;
 `;
 
-const StyledPaper = styled(Paper)`
-  padding: 16px;
-  margin-top: 16px;
-  background-color: #f5f8ff;
-`;
-
-const StyledChip = styled(Chip)`
-  margin-right: 8px;
-  margin-bottom: 8px;
-`;
-
 const StyledLinearProgress = styled(LinearProgress)`
   margin: 16px 0;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #e0e0e0;
+  
+  .MuiLinearProgress-bar {
+    background-color: #1976d2;
+  }
+`;
+
+// Progress indicator wrapper
+const ProgressContainer = styled(Box)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  text-align: center;
+`;
+
+const ProgressStatusText = styled(Typography)`
+  margin-top: 16px;
+  color: #666;
+  font-style: italic;
 `;
 
 const StyledFileIcon = styled(DescriptionIcon)`
   margin-right: 8px;
   color: #1976d2;
-`;
-
-const StyledListItem = styled(ListItem)`
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  background-color: white;
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-`;
-
-const StyledSubjectName = styled(Typography)`
-  font-weight: 500;
 `;
 
 interface SubjectGenerationDialogProps {
@@ -107,28 +92,73 @@ const SubjectGenerationDialog: React.FC<SubjectGenerationDialogProps> = ({
 }) => {
   // Get user locale from URL
   const userLocale = useUserLocale();
+  const t = useTranslations('SubjectGeneration');
+  const commonT = useTranslations('Common');
   
   const [selectedFileId, setSelectedFileId] = useState<string>('');
-  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
-  const [editName, setEditName] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [countRange, setCountRange] = useState<'small' | 'medium' | 'large'>('medium');
+  const [specificity, setSpecificity] = useState<'general' | 'specific'>('general');
   
   const { 
     generateSubjects, 
-    generatedSubjects, 
+    generatedNewSubjects, 
+    generatedExistingSubjects, 
     generating, 
     error,
-    createSubject,
-    updateSubject,
-    deleteSubject,
     clearGeneratedSubjects,
+    resetState,
+    fetchWorkspaceSubjects,
+    workspaceSubjects,
+    unrelatedContentMessage,
     saveGeneratedSubjects,
-    resetState
+    loading,
+    updateSelectedNewSubjects
   } = useSubjectManagement(userId);
+
+  // Add state for progress percentage
+  const [progressPercentage, setProgressPercentage] = useState(0);
+
+  // Update progress percentage when generating
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    
+    if (generating) {
+      setProgressPercentage(0);
+      // Changed interval from 1000ms to 300ms and using smaller increments to make the progress bar
+      // take about 3 seconds to reach 90%
+      intervalId = setInterval(() => {
+        setProgressPercentage(prev => {
+          // Slowly increase to 90% max during generation
+          if (prev < 90) {
+            // Smaller increments to make it smoother and take longer
+            return prev + 1;
+          }
+          return prev;
+        });
+      }, 300);
+    } else if (progressPercentage > 0 && progressPercentage < 100) {
+      // Complete to 100% when generation is done
+      setProgressPercentage(100);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [generating, progressPercentage]);
 
   const handleFileChange = (event: SelectChangeEvent) => {
     setSelectedFileId(event.target.value);
     setErrorMsg(null);
+  };
+
+  const handleCountRangeChange = (event: SelectChangeEvent<string>) => {
+    setCountRange(event.target.value as 'small' | 'medium' | 'large');
+  };
+  
+  const handleSpecificityChange = (event: SelectChangeEvent<string>) => {
+    setSpecificity(event.target.value as 'general' | 'specific');
   };
 
   const handleGenerateSubjects = async () => {
@@ -138,17 +168,31 @@ const SubjectGenerationDialog: React.FC<SubjectGenerationDialogProps> = ({
     }
 
     try {
+      setErrorMsg(null);
+      
       const params: SubjectGenerationParams = {
         workspaceId,
         fileId: selectedFileId,
         userId,
-        locale: userLocale
+        locale: userLocale,
+        countRange,
+        specificity
       };
+      
+      // If we don't have any subjects for this workspace yet, fetch them first
+      if (!workspaceSubjects[workspaceId]) {
+        await fetchWorkspaceSubjects(workspaceId);
+      }
       
       const subjects = await generateSubjects(params);
       
-      if (subjects.length === 0) {
+      if (unrelatedContentMessage) {
+        setErrorMsg(t('unrelatedContent', { message: unrelatedContentMessage }));
+      } else if (subjects.length === 0) {
         setErrorMsg('No new subjects could be generated from this file. Try another file or create subjects manually.');
+      } else {
+        // Open the review dialog to let the user select which subjects to save
+        setShowReviewDialog(true);
       }
       
       if (onSubjectsGenerated) {
@@ -160,101 +204,33 @@ const SubjectGenerationDialog: React.FC<SubjectGenerationDialogProps> = ({
     }
   };
 
-  const handleSaveSubject = async (subject: Subject) => {
-    try {
-      await createSubject(
-        workspaceId,
-        subject.name
-      );
-    } catch (err) {
-      console.error('Failed to save subject:', err);
-      setErrorMsg('An error occurred while saving the subject. Please try again.');
-    }
-  };
-
-  const handleSaveAll = async () => {
-    if (!generatedSubjects || generatedSubjects.length === 0) {
+  const handleSaveSelected = async (subjects: Subject[]) => {
+    if (!subjects || subjects.length === 0) {
+      // If no subjects to save, just close the dialog
+      setShowReviewDialog(false);
       return;
     }
     
     try {
-      const savedSubjects = await saveGeneratedSubjects();
-      if (savedSubjects) {
-        onSubjectsGenerated(savedSubjects);
-        // Close the dialog after a short delay to show the success state
-        setTimeout(() => {
-          handleClose();
-        }, 1500);
-      }
-    } catch (err) {
-      console.error('Failed to save all subjects:', err);
-      setErrorMsg('An error occurred while saving subjects. Please try again.');
-    }
-  };
-
-  const handleEditClick = (subject: Subject) => {
-    setEditingSubject(subject);
-    setEditName(subject.name);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingSubject) return;
-    
-    try {
-      // If the subject already has an ID, it means it's already saved in the database
-      if (editingSubject.id) {
-        await updateSubject(editingSubject.id, {
-          name: editName
-        });
-      } else {
-        // This is a generated subject that hasn't been saved yet
-        // Update it in the generatedSubjects array
-        const updatedGeneratedSubjects = generatedSubjects?.map(subject => 
-          subject === editingSubject 
-            ? { ...subject, name: editName }
-            : subject
-        ) || [];
-        
-        // Update the state
-        // We're using a workaround here since we can't directly modify generatedSubjects
-        clearGeneratedSubjects();
-        setTimeout(() => {
-          if (onSubjectsGenerated) {
-            onSubjectsGenerated(updatedGeneratedSubjects as Subject[]);
-          }
-        }, 0);
+      // First update the generatedNewSubjects with the selected ones
+      if (updateSelectedNewSubjects) {
+        updateSelectedNewSubjects(subjects);
       }
       
-      // Reset editing state
-      setEditingSubject(null);
-      setEditName('');
-    } catch (err) {
-      console.error('Failed to save edit:', err);
-      setErrorMsg('An error occurred while saving changes. Please try again.');
-    }
-  };
-
-  const handleDeleteSubject = async (subject: Subject) => {
-    try {
-      if (subject.id) {
-        // If the subject has an ID, it's already in the database
-        await deleteSubject(subject.id);
-      } else {
-        // This is a generated subject that hasn't been saved yet
-        // Remove it from the generatedSubjects array
-        const updatedGeneratedSubjects = generatedSubjects?.filter(s => s !== subject) || [];
-        
-        // Update the state
-        clearGeneratedSubjects();
-        setTimeout(() => {
-          if (onSubjectsGenerated) {
-            onSubjectsGenerated(updatedGeneratedSubjects as Subject[]);
-          }
-        }, 0);
+      // Now save them to the database
+      const savedSubjects = await saveGeneratedSubjects();
+      
+      // Notify parent component of the saved subjects
+      if (onSubjectsGenerated && savedSubjects.length > 0) {
+        onSubjectsGenerated(savedSubjects);
       }
+      
+      // Close the dialogs
+      setShowReviewDialog(false);
+      handleClose();
     } catch (err) {
-      console.error('Failed to delete subject:', err);
-      setErrorMsg('An error occurred while deleting the subject. Please try again.');
+      console.error('Failed to save selected subjects:', err);
+      setErrorMsg(t('saveError'));
     }
   };
 
@@ -262,212 +238,194 @@ const SubjectGenerationDialog: React.FC<SubjectGenerationDialogProps> = ({
     if (!generating) {
       resetState();
       setSelectedFileId('');
-      setEditingSubject(null);
-      setEditName('');
       setErrorMsg(null);
       clearGeneratedSubjects();
       onClose();
     }
   };
 
-  const renderFileSelection = () => (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Generate Subjects from File
-      </Typography>
-      
-      <Typography variant="body2" color="textSecondary" paragraph>
-        Select a file from your workspace to analyze and automatically generate subject areas.
-        The AI will identify main topics and concepts from your content. 
-        Any new subjects will be added to your existing subjects.
-      </Typography>
-      
-      <FormControl fullWidth sx={{ mt: 2 }}>
-        <InputLabel id="file-select-label">Select File</InputLabel>
-        <Select
-          labelId="file-select-label"
-          value={selectedFileId}
-          onChange={handleFileChange}
-          label="Select File"
-          fullWidth
-        >
-          {files.map((file) => (
-            <MenuItem key={file.id} value={file.id}>
-              <StyledFileIcon fontSize="small" />
-              {file.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      
-      {errorMsg && (
-        <StyledAlert severity="error" onClose={() => setErrorMsg(null)}>
-          {errorMsg}
-        </StyledAlert>
-      )}
-
-      {error && (
-        <StyledAlert severity="error">
-          {error}
-        </StyledAlert>
-      )}
-      
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button 
-          onClick={handleClose} 
-          color="inherit" 
-          sx={{ mr: 1 }}
-        >
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleGenerateSubjects} 
-          variant="contained" 
-          color="primary"
-          disabled={!selectedFileId || generating}
-          startIcon={<AutoAwesomeIcon />}
-        >
-          Generate Subjects
-        </Button>
-      </Box>
-    </Box>
-  );
-
-  const renderSubjectsList = () => (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Generated Subjects
-      </Typography>
-      
-      <Typography variant="body2" color="textSecondary" paragraph>
-        Review the newly generated subjects below. These are subjects that don't exist in your workspace yet. 
-        You can save all of them or select individual subjects to save.
-      </Typography>
-      
-      {generating && (
-        <>
-          <StyledLinearProgress />
-          <Typography variant="body2" align="center" color="textSecondary">
-            Analyzing content and generating subjects...
-          </Typography>
-        </>
-      )}
-      
-      {errorMsg && (
-        <StyledAlert severity="error" onClose={() => setErrorMsg(null)}>
-          {errorMsg}
-        </StyledAlert>
-      )}
-
-      {error && (
-        <StyledAlert severity="error">
-          {error}
-        </StyledAlert>
-      )}
-      
-      {!generating && generatedSubjects && generatedSubjects.length > 0 && (
-        <List sx={{ mt: 2 }}>
-          {generatedSubjects.map((subject, index) => (
-            <StyledListItem key={index}>
-              <ListItemText
-                primary={<StyledSubjectName>{subject.name}</StyledSubjectName>}
-              />
-              <ListItemSecondaryAction>
-                <IconButton edge="end" onClick={() => handleEditClick(subject)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton edge="end" onClick={() => handleDeleteSubject(subject)}>
-                  <DeleteIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
-            </StyledListItem>
-          ))}
-        </List>
-      )}
-      
-      {!generating && (!generatedSubjects || generatedSubjects.length === 0) && !error && (
-        <StyledPaper elevation={0}>
-          <Typography variant="body2" color="textSecondary" align="center">
-            No subjects have been generated yet. Select a file and click "Generate Subjects" to start.
-          </Typography>
-        </StyledPaper>
-      )}
-      
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button 
-          onClick={handleClose} 
-          color="inherit" 
-          sx={{ mr: 1 }}
-        >
-          Cancel
-        </Button>
-        {generatedSubjects && generatedSubjects.length > 0 && (
-          <Button 
-            onClick={handleSaveAll} 
-            variant="contained" 
-            color="primary"
-            disabled={generating}
-          >
-            Save All Subjects
-          </Button>
-        )}
-      </Box>
-    </Box>
-  );
-
-  const renderEditForm = () => (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Edit Subject
-      </Typography>
-      
-      <TextField
-        label="Subject Name"
-        value={editName}
-        onChange={(e) => setEditName(e.target.value)}
-        fullWidth
-        margin="normal"
-        variant="outlined"
-      />
-      
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button 
-          onClick={() => setEditingSubject(null)} 
-          color="inherit" 
-          sx={{ mr: 1 }}
-        >
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleSaveEdit} 
-          variant="contained" 
-          color="primary"
-          disabled={!editName.trim()}
-        >
-          Save
-        </Button>
-      </Box>
-    </Box>
-  );
+  const handleCloseReviewDialog = () => {
+    setShowReviewDialog(false);
+    
+    // Clear the selected new subjects to prevent automatic saving
+    if (updateSelectedNewSubjects) {
+      // Clear the selection by passing an empty array
+      updateSelectedNewSubjects([]);
+    }
+    
+    // Make it explicit that the user can return to the generation dialog
+    // instead of closing completely without saving
+    console.log('Returning to subject generation dialog without saving');
+    
+    // We don't call handleClose() here to keep the main dialog open
+  };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <StyledDialogTitle>
-        Subject Generation
-        <StyledCloseButton onClick={handleClose}>
-          <CloseIcon />
-        </StyledCloseButton>
-      </StyledDialogTitle>
-      
-      <DialogContent>
-        {editingSubject 
-          ? renderEditForm() 
-          : (generatedSubjects && generatedSubjects.length > 0) || generating
-            ? renderSubjectsList()
-            : renderFileSelection()
-        }
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open && !showReviewDialog} onClose={handleClose} maxWidth="md" fullWidth>
+        <StyledDialogTitle>
+          {t('dialogTitle')}
+          <StyledCloseButton onClick={handleClose}>
+            <CloseIcon />
+          </StyledCloseButton>
+        </StyledDialogTitle>
+        
+        <DialogContent>
+          {generating ? (
+            <ProgressContainer>
+              <Typography variant="h6" gutterBottom>
+                {t('analyzingContent')}
+              </Typography>
+              <Box sx={{ width: '100%', my: 3, position: 'relative' }}>
+                <StyledLinearProgress variant="determinate" value={progressPercentage} />
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    position: 'absolute', 
+                    top: '-6px', 
+                    right: '0', 
+                    fontWeight: 'bold',
+                    color: '#1976d2',
+                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                    padding: '0 4px',
+                    borderRadius: '4px'
+                  }}
+                >
+                  {progressPercentage}%
+                </Typography>
+              </Box>
+              <ProgressStatusText variant="body2">
+                {t('generatingProgress', { progress: progressPercentage })}
+              </ProgressStatusText>
+              <Typography variant="caption" sx={{ mt: 2 }}>
+                {t('thisWillTakeTime')}
+              </Typography>
+            </ProgressContainer>
+          ) : (
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                {t('selectFileTitle')}
+              </Typography>
+              
+              <Typography variant="body2" color="textSecondary" paragraph>
+                {t('selectFileDescription')}
+              </Typography>
+              
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel id="file-select-label">{t('selectFile')}</InputLabel>
+                <Select
+                  labelId="file-select-label"
+                  value={selectedFileId}
+                  onChange={handleFileChange}
+                  label={t('selectFile')}
+                  fullWidth
+                >
+                  {files.map((file) => (
+                    <MenuItem key={file.id} value={file.id}>
+                      <StyledFileIcon fontSize="small" />
+                      {file.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              {/* Subject Count Range Selection */}
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel id="count-range-label">{t('countRangeLabel')}</InputLabel>
+                <Select
+                  labelId="count-range-label"
+                  value={countRange}
+                  onChange={handleCountRangeChange}
+                  label={t('countRangeLabel')}
+                  fullWidth
+                >
+                  <MenuItem value="small">{t('countRangeSmall')}</MenuItem>
+                  <MenuItem value="medium">{t('countRangeMedium')}</MenuItem>
+                  <MenuItem value="large">{t('countRangeLarge')}</MenuItem>
+                </Select>
+                <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5 }}>
+                  {t('countRangeDescription')}
+                </Typography>
+              </FormControl>
+              
+              {/* Subject Specificity Selection */}
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel id="specificity-label">{t('specificityLabel')}</InputLabel>
+                <Select
+                  labelId="specificity-label"
+                  value={specificity}
+                  onChange={handleSpecificityChange}
+                  label={t('specificityLabel')}
+                  fullWidth
+                >
+                  <MenuItem value="general">{t('specificityGeneral')}</MenuItem>
+                  <MenuItem value="specific">{t('specificitySpecific')}</MenuItem>
+                </Select>
+                <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5 }}>
+                  {t('specificityDescription')}
+                </Typography>
+              </FormControl>
+              
+              {errorMsg && (
+                <StyledAlert severity="error" onClose={() => setErrorMsg(null)}>
+                  {errorMsg}
+                </StyledAlert>
+              )}
+
+              {error && (
+                <StyledAlert severity="error">
+                  {error}
+                </StyledAlert>
+              )}
+              
+              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button 
+                  onClick={handleClose} 
+                  color="inherit" 
+                  sx={{ mr: 1 }}
+                >
+                  {commonT('cancel')}
+                </Button>
+                <Button 
+                  onClick={handleGenerateSubjects} 
+                  variant="contained" 
+                  color="primary"
+                  disabled={!selectedFileId || generating}
+                  startIcon={<AutoAwesomeIcon />}
+                  sx={{ 
+                    fontWeight: 'bold', 
+                    py: 1, 
+                    px: 3,
+                    boxShadow: 3,
+                    '&:hover': { 
+                      boxShadow: 5,
+                      transform: 'translateY(-2px)',
+                      transition: 'transform 0.3s, box-shadow 0.3s'
+                    }
+                  }}
+                >
+                  {t('generateSubjects')}
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Subject Review Dialog - Now the only way to review subjects */}
+      {showReviewDialog && (generatedNewSubjects || generatedExistingSubjects) && (
+        <SubjectReviewDialog
+          open={showReviewDialog}
+          onClose={handleCloseReviewDialog}
+          workspaceId={workspaceId}
+          userId={userId}
+          newSubjects={generatedNewSubjects || []}
+          existingSubjects={generatedExistingSubjects || []}
+          onSaveSubjects={handleSaveSelected}
+          updateSelectedSubjects={updateSelectedNewSubjects}
+        />
+      )}
+    </>
   );
 };
 

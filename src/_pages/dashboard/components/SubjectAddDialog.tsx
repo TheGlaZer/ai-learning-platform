@@ -15,6 +15,8 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { Subject } from '@/app/models/subject';
 import { useTranslations } from 'next-intl';
+import { useRTL } from '@/contexts/RTLContext';
+import styled from '@emotion/styled';
 
 interface SubjectAddDialogProps {
   open: boolean;
@@ -23,6 +25,11 @@ interface SubjectAddDialogProps {
   userId: string;
   onAdd: (subject: Partial<Subject>) => Promise<Subject | null>;
 }
+
+const StyledCloseButton = styled(IconButton)<{ isRTL?: boolean }>`
+  margin-left: ${props => props.isRTL ? '0' : 'auto'};
+  margin-right: ${props => props.isRTL ? 'auto' : '0'};
+`;
 
 const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
   open,
@@ -36,6 +43,7 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const t = useTranslations('SubjectDialog');
   const commonT = useTranslations('Common');
+  const { isRTL } = useRTL();
 
   const handleAdd = async () => {
     if (!name.trim()) {
@@ -69,7 +77,15 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: { direction: isRTL ? 'rtl' : 'ltr' }
+      }}
+    >
       <DialogTitle sx={{ 
         display: 'flex', 
         alignItems: 'center', 
@@ -79,9 +95,9 @@ const SubjectAddDialog: React.FC<SubjectAddDialogProps> = ({
         borderColor: 'divider'
       }}>
         <Typography variant="h6">{t('addTitle')}</Typography>
-        <IconButton edge="end" onClick={handleClose} aria-label="close">
+        <StyledCloseButton isRTL={isRTL} edge={isRTL ? "start" : "end"} onClick={handleClose} aria-label="close">
           <CloseIcon />
-        </IconButton>
+        </StyledCloseButton>
       </DialogTitle>
 
       <DialogContent sx={{ pt: 3, pb: 2 }}>

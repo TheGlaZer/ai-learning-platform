@@ -58,11 +58,15 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               height: 'calc(100vh - 64px)', // Subtracting header height
               position: 'fixed',
               top: 64, // Header height
-              left: 0,
+              [isRTL ? 'right' : 'left']: 0, // Position based on RTL
               zIndex: 1000,
               display: { xs: 'none', md: 'block' }, // Hide on mobile
               overflow: 'visible', // Ensure the toggle button is not clipped
               transition: `width ${TRANSITION_DURATION} ease`, // Add transition for width changes
+              borderLeft: isRTL ? `1px solid ${theme.palette.divider}` : 'none',
+              borderRight: isRTL ? 'none' : `1px solid ${theme.palette.divider}`,
+              // Ensure enough space for the toggle button in RTL mode
+              paddingLeft: isRTL ? '16px' : 0,
             }}
           >
             <WorkspaceSidebar 

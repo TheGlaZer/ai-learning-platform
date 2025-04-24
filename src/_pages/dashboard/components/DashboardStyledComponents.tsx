@@ -394,6 +394,7 @@ export const ResponsiveGrid = styled(Grid)`
 // Section styling
 export const SectionContainer = styled(Box)`
   margin-bottom: 2rem;
+  flex: 1;
 `;
 
 export const SectionTitle = styled(Typography)`

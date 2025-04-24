@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
     // Parse the form data
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    const addPageMarkers = formData.get("addPageMarkers") !== "false"; // Default to true
     
     if (!file) {
       return NextResponse.json(
@@ -43,7 +44,10 @@ export async function POST(req: NextRequest) {
       arrayBuffer,
       file.type,
       file.name,
-      { language: 'auto' }
+      { 
+        language: 'auto',
+        addPageMarkers: addPageMarkers
+      }
     );
     
     return NextResponse.json({ 
@@ -51,7 +55,8 @@ export async function POST(req: NextRequest) {
       text: extractedText,
       fileName: file.name,
       fileType: file.type,
-      fileSize: file.size
+      fileSize: file.size,
+      hasPageMarkers: addPageMarkers
     });
     
   } catch (error: any) {
