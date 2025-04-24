@@ -51,6 +51,11 @@ export const ContentScrollArea = styled(Box)`
   padding: 0 1.5rem;
   scrollbar-width: thin;
   
+  @media (max-width: 600px) {
+    margin: 0 -0.75rem;
+    padding: 0 0.75rem;
+  }
+  
   // &::-webkit-scrollbar {
   //   width: 6px;
   // }
@@ -199,15 +204,28 @@ export const StyledSpeedDial = styled(SpeedDial)`
 
 // Tabs styling
 export const StyledTabs = styled(Tabs)<{ isRTL: boolean }>`
-  // margin-bottom: 1.5rem;
-  width: 75%;
-  margin-left: ${({ isRTL }) => isRTL ? 'auto' : '0'};
-  margin-right: ${({ isRTL }) => isRTL ? '0' : 'auto'};
+  width: 100%;
+  padding: 0 4px;
   
   .MuiTabs-indicator {
     background: ${gradients.primaryGradient};
     height: 3px;
     border-radius: 3px;
+  }
+  
+  .MuiTabs-flexContainer {
+    @media (max-width: 600px) {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+  
+  @media (min-width: 600px) {
+    width: 75%;
+    padding: 0;
+    margin-left: ${({ isRTL }) => isRTL ? 'auto' : '0'};
+    margin-right: ${({ isRTL }) => isRTL ? '0' : 'auto'};
   }
 `;
 
@@ -215,6 +233,21 @@ export const StyledTab = styled(Tab)`
   text-transform: none;
   font-weight: 500;
   color: ${text.secondary};
+  min-width: 80px;
+  padding: 6px 12px;
+  
+  @media (max-width: 600px) {
+    flex: 1;
+    font-size: 0.75rem;
+    min-width: auto;
+    padding: 6px 2px;
+    max-width: none;
+    
+    .MuiTab-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+  }
   
   &.Mui-selected {
     color: ${primary.main};
@@ -402,4 +435,4 @@ export const SectionTitle = styled(Typography)`
   font-weight: 600;
   color: ${text.primary};
   padding-left: 0.5rem;
-`; 
+`;

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress, Grid } from '@mui/material';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { Workspace } from '@/app/models/workspace';
@@ -12,9 +12,9 @@ import { useQuizGeneration } from '@/hooks/useQuizGeneration';
 import { useSubjectManagement } from '@/hooks/useSubjectManagement';
 import { usePastExams } from '@/hooks/usePastExams';
 import { deleteFileClient, updateFileMetadata } from "@/app/lib-client/fileClient";
+import { useResponsive } from '@/hooks/useResponsive';
 
 import { DashboardContainer, ContentPaper } from './components/DashboardStyledComponents';
-import WorkspaceList from './components/WorkspaceList';
 import FilesContainer from './components/FilesContainer';
 import WorkspaceDialog from './components/WorkspaceDialog';
 import FileUploadDialog from './components/FileUploadDialog';
@@ -23,6 +23,21 @@ import SubjectGenerationDialog from './components/SubjectGenerationDialog';
 import SubjectEditDialog from './components/SubjectEditDialog';
 import FileMetadataDialog from './components/FileMetadataDialog';
 import PastExamDialog from './components/PastExamDialog';
+import MobileWorkspaceDrawer from './components/MobileWorkspaceDrawer';
+import styled from '@emotion/styled';
+
+// Styled components for responsive layout
+const ResponsiveLayout = styled(Box)`
+  display: flex;
+  height: 100%;
+  width: 100%;
+`;
+
+const MainContentContainer = styled(Box)`
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+`;
 
 const DashboardPage = () => {
   const { userId, accessToken } = useAuth();
@@ -69,6 +84,9 @@ const DashboardPage = () => {
   const [openSubjectGenerationDialog, setOpenSubjectGenerationDialog] = useState(false);
   const [openSubjectEditDialog, setOpenSubjectEditDialog] = useState(false);
   
+  // State for mobile workspace drawer
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  
   // State for subject editing
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
 
@@ -82,6 +100,9 @@ const DashboardPage = () => {
 
   // Create a single loading state that captures all initial loading conditions
   const isInitialLoading = workspacesLoading || !userId;
+  
+  // Get responsive state
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     if (selectedWorkspace) {
@@ -148,6 +169,14 @@ const DashboardPage = () => {
   const handleCloseSubjectEditDialog = () => {
     setEditingSubject(null);
     setOpenSubjectEditDialog(false);
+  };
+  
+  const handleToggleMobileDrawer = () => {
+    setMobileDrawerOpen(!mobileDrawerOpen);
+  };
+  
+  const handleCloseMobileDrawer = () => {
+    setMobileDrawerOpen(false);
   };
 
   const handleCreateWorkspace = async (name: string): Promise<boolean> => {
@@ -351,29 +380,45 @@ const DashboardPage = () => {
 
   return (
     <DashboardContainer>
-      <ContentPaper>
-        <FilesContainer
+      <ResponsiveLayout>
+        {/* Mobile drawer for workspaces */}
+        <MobileWorkspaceDrawer 
+          open={mobileDrawerOpen}
+          onClose={handleCloseMobileDrawer}
+          workspaces={workspaces}
           selectedWorkspace={selectedWorkspace}
-          files={selectedWorkspace ? workspaceFiles[selectedWorkspace.id] || [] : []}
-          quizzes={selectedWorkspace ? workspaceQuizzes[selectedWorkspace.id] || [] : []}
-          subjects={selectedWorkspace ? workspaceSubjects[selectedWorkspace.id] || [] : []}
-          pastExams={selectedWorkspace ? workspacePastExams[selectedWorkspace.id] || [] : []}
-          userId={userId || ''}
-          onDeleteFile={handleDeleteFile}
-          onEditFile={handleEditFile}
-          onUploadFile={handleOpenFileUploadDialog}
-          onGenerateQuiz={handleOpenQuizGenerationDialog}
-          onGenerateSubjects={handleOpenSubjectGenerationDialog}
-          onEditSubject={handleEditSubject}
-          onDeleteSubject={handleDeleteSubject}
-          onOpenQuiz={handleOpenQuiz}
-          onDeleteQuiz={handleDeleteQuiz}
-          onAddSubject={handleAddSubject}
-          onUploadPastExam={handleOpenPastExamDialog}
-          onEditPastExam={handleEditPastExam}
-          onDeletePastExam={handleDeletePastExam}
+          onWorkspaceSelect={selectWorkspace}
+          onCreateWorkspace={handleOpenWorkspaceDialog}
         />
-      </ContentPaper>
+        
+        {/* Main content area - now takes full width */}
+        <MainContentContainer>
+          <ContentPaper>
+            <FilesContainer
+              selectedWorkspace={selectedWorkspace}
+              files={selectedWorkspace ? workspaceFiles[selectedWorkspace.id] || [] : []}
+              quizzes={selectedWorkspace ? workspaceQuizzes[selectedWorkspace.id] || [] : []}
+              subjects={selectedWorkspace ? workspaceSubjects[selectedWorkspace.id] || [] : []}
+              pastExams={selectedWorkspace ? workspacePastExams[selectedWorkspace.id] || [] : []}
+              userId={userId || ''}
+              onDeleteFile={handleDeleteFile}
+              onEditFile={handleEditFile}
+              onUploadFile={handleOpenFileUploadDialog}
+              onGenerateQuiz={handleOpenQuizGenerationDialog}
+              onGenerateSubjects={handleOpenSubjectGenerationDialog}
+              onEditSubject={handleEditSubject}
+              onDeleteSubject={handleDeleteSubject}
+              onOpenQuiz={handleOpenQuiz}
+              onDeleteQuiz={handleDeleteQuiz}
+              onAddSubject={handleAddSubject}
+              onUploadPastExam={handleOpenPastExamDialog}
+              onEditPastExam={handleEditPastExam}
+              onDeletePastExam={handleDeletePastExam}
+              onMenuToggle={handleToggleMobileDrawer}
+            />
+          </ContentPaper>
+        </MainContentContainer>
+      </ResponsiveLayout>
       
       {/* Create Workspace Dialog */}
       <WorkspaceDialog
