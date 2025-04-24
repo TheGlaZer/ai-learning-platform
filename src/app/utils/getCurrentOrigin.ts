@@ -5,5 +5,5 @@ export function getCurrentOrigin() {
   }
   
   // Server-side: use environment variable or default to localhost:3000
-  return process.env.NEXT_PUBLIC_API_ORIGIN || 'http://localhost:3000';
+  return process.env.AMPLIFY_URL || process.env.NEXT_PUBLIC_API_ORIGIN || 'http://localhost:3000';
 } 

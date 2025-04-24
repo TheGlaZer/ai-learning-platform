@@ -18,9 +18,27 @@ export class AnthropicService implements AIService {
    * @param apiKey Optional API key (falls back to environment variable)
    */
   constructor(apiKey?: string) {
-    this.anthropic = new Anthropic({
-      apiKey: apiKey || process.env.ANTHROPIC_API_KEY,
-    });
+    // Add error handling and debugging for API key
+    const configuredApiKey = apiKey || process.env.ANTHROPIC_API_KEY;
+    
+    if (!configuredApiKey) {
+      console.error("ERROR: Anthropic API key is missing! Check your environment variables.");
+      // Log environment information for debugging (don't log the actual keys)
+      console.log("Environment:", {
+        nodeEnv: process.env.NODE_ENV,
+        hasKey: !!process.env.ANTHROPIC_API_KEY,
+        keyLength: process.env.ANTHROPIC_API_KEY?.length || 0
+      });
+    }
+
+    try {
+      this.anthropic = new Anthropic({
+        apiKey: configuredApiKey,
+      });
+    } catch (error) {
+      console.error("Failed to initialize Anthropic client:", error);
+      throw error;
+    }
     
     // Configure max retries from environment variable if set
     if (process.env.CLAUDE_MAX_RETRIES) {
