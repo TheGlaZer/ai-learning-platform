@@ -72,6 +72,12 @@ const nextConfig = {
     poweredByHeader: false,
     // Skip problematic pages during build
     pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+    api: {
+      bodyParser: {
+        sizeLimit: '50mb'
+      },
+      responseLimit: false
+    },
     async redirects() {
       return [
         {
