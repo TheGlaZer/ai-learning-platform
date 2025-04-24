@@ -6,11 +6,12 @@ frontend:
         - npm ci
     build:
       commands:
-        - env | grep -e SUPABASE_ANON_KEY >> .env.production
-        - env | grep -e OPENAI_API_KEY >> .env.production
-        - env | grep -e ANTHROPIC_API_KEY >> .env.production
-        - env | grep -e NEXT_PUBLIC_ >> .env.production
-        - env | grep -e NODE_ENV >> .env.production
+        - touch .env.production
+        - env | grep -e SUPABASE_ANON_KEY >> .env.production || true
+        - env | grep -e OPENAI_API_KEY >> .env.production || true
+        - env | grep -e ANTHROPIC_API_KEY >> .env.production || true
+        - env | grep -e NEXT_PUBLIC_ >> .env.production || true
+        - env | grep -e NODE_ENV >> .env.production || true
         - npm run build
   artifacts:
     baseDirectory: .next
