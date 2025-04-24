@@ -19,7 +19,6 @@ import AddIcon from "@mui/icons-material/Add";
 import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
 import { useTranslations } from "next-intl";
 import {
-  HeaderContainer,
   WorkspaceTitle,
   WorkspaceDescription,
   ButtonGroup,
@@ -39,6 +38,8 @@ import FlashcardsTab from "@/components/flashcards/FlashcardsTab";
 import { useRTL } from "@/contexts/RTLContext";
 import ActionMenu from "./ActionMenu";
 import styled from "@emotion/styled";
+import DashboardHeader from './DashboardHeader';
+import { useResponsive } from '@/hooks/useResponsive';
 
 // Styled components
 const FilesSectionsLayout = styled(Box)`
@@ -47,6 +48,12 @@ const FilesSectionsLayout = styled(Box)`
   justify-content: center;
   gap: 16px;
   height: 100%;
+  
+  @media (max-width: 600px) {
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+  }
 `;
 
 const SectionDivider = styled(Divider)`
@@ -66,6 +73,15 @@ const SectionColumn = styled(Box)`
   min-width: 45%;
 `;
 
+const MobileSectionContainer = styled(SectionContainer)`
+  width: 100%;
+  max-width: 100%;
+  
+  @media (max-width: 600px) {
+    padding: 0 8px;
+  }
+`;
+
 const CenteredSectionTitle = styled(SectionTitle)`
   text-align: center;
 `;
@@ -73,23 +89,38 @@ const CenteredSectionTitle = styled(SectionTitle)`
 const FileCardWrapper = styled(Box)`
   display: flex;
   justify-content: center;
+  align-items: center;
   height: 100%;
+  width: 100%;
+  
+  @media (max-width: 600px) {
+    padding: 0 4px;
+  }
 `;
 
 const UploadCardContainer = styled(Box)`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   width: 90%;
   height: 100%;
   position: relative;
   cursor: pointer;
   padding: 12px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  border-radius: 8px;
+  transition: background-color 0.2s, border-color 0.2s;
+  border: 1px dashed ${accent.green.light};
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.04);
+    border-color: ${accent.green.main};
+  }
+  
+  @media (max-width: 600px) {
+    padding: 8px;
+    width: 100%;
+    min-height: 100px;
   }
 `;
 
@@ -112,7 +143,7 @@ const UploadText = styled(Typography)`
 `;
 
 interface FilesContainerProps {
-  selectedWorkspace?: Workspace;
+  selectedWorkspace: Workspace | null;
   files: FileMetadata[];
   quizzes?: Quiz[];
   subjects?: Subject[];
@@ -127,10 +158,11 @@ interface FilesContainerProps {
   onDeleteSubject: (subject: Subject) => void;
   onAddSubject: (subject: Partial<Subject>) => Promise<Subject | null>;
   onOpenQuiz?: (quiz: Quiz) => void;
-  onDeleteQuiz?: (quiz: Quiz) => void;
+  onDeleteQuiz: (quiz: Quiz) => void;
   onUploadPastExam?: () => void;
   onEditPastExam?: (pastExam: PastExam) => void;
   onDeletePastExam?: (pastExam: PastExam) => void;
+  onMenuToggle: () => void;
 }
 
 const FilesContainer: React.FC<FilesContainerProps> = ({
@@ -153,11 +185,14 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
   onUploadPastExam = () => {},
   onEditPastExam,
   onDeletePastExam,
+  onMenuToggle,
 }) => {
   const [tabValue, setTabValue] = useState<number>(0);
   const [subjectDialogOpen, setSubjectDialogOpen] = useState<boolean>(false);
   const t = useTranslations("Dashboard");
   const { isRTL } = useRTL();
+  const { isMobile } = useResponsive();
+  
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
@@ -181,38 +216,43 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
 
   return (
     <>
-      <HeaderContainer isRTL={isRTL}>
-        <div>
-          <WorkspaceTitle variant="h5">{selectedWorkspace.name}</WorkspaceTitle>
-          {selectedWorkspace.description && (
-            <WorkspaceDescription variant="body1">
-              {selectedWorkspace.description}
-            </WorkspaceDescription>
-          )}
-        </div>
-        <ActionMenu
-          onGenerateSubjects={onGenerateSubjects}
-          onGenerateQuiz={onGenerateQuiz}
-          onUploadFile={onUploadFile}
-          onUploadPastExam={onUploadPastExam}
-        />
-      </HeaderContainer>
+      <DashboardHeader
+        selectedWorkspace={selectedWorkspace}
+        onMenuToggle={onMenuToggle}
+        onGenerateSubjects={onGenerateSubjects}
+        onGenerateQuiz={onGenerateQuiz}
+        onUploadFile={onUploadFile}
+        onUploadPastExam={onUploadPastExam}
+      />
 
-      <StyledTabs
-        value={tabValue}
-        onChange={handleTabChange}
-        variant="fullWidth"
-        isRTL={isRTL}
-      >
-        <StyledTab
-          label={t("tabs.files", {
-            count: files.length + (pastExams?.length || 0),
-          })}
-        />
-        <StyledTab label={t("tabs.subjects", { count: subjects.length })} />
-        <StyledTab label={t("tabs.quizzes", { count: quizzes.length })} />
-        <StyledTab label={t("tabs.flashcards")} />
-      </StyledTabs>
+      <Box sx={{ 
+        width: '100%', 
+        display: 'flex', 
+        justifyContent: isMobile ? 'center' : 'flex-start',
+        mb: 1
+      }}>
+        <StyledTabs
+          value={tabValue}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          isRTL={isRTL}
+        >
+          <StyledTab
+            label={isMobile ? t("files") : t("tabs.files", {
+              count: files.length + (pastExams?.length || 0),
+            })}
+          />
+          <StyledTab 
+            label={isMobile ? t("subjects") : t("tabs.subjects", { count: subjects.length })} 
+          />
+          <StyledTab 
+            label={isMobile ? t("quizzes") : t("tabs.quizzes", { count: quizzes.length })} 
+          />
+          <StyledTab 
+            label={isMobile ? t("flashcards") : t("tabs.flashcards")} 
+          />
+        </StyledTabs>
+      </Box>
 
       <Divider sx={{ mb: 3 }} />
 
@@ -223,11 +263,11 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
             {files?.length > 0 || pastExams?.length > 0 ? (
               <FilesSectionsLayout>
                 {/* Study Materials Section */}
-                <SectionContainer>
+                <MobileSectionContainer>
                   <CenteredSectionTitle variant="h4">
                     {t("studyMaterials")}
                   </CenteredSectionTitle>
-                  <Grid container>
+                  <Grid container spacing={isMobile ? 1 : 2}>
                     {files.map((file) => (
                       <Grid item xs={12} sm={6} md={4} lg={3} key={file.id}>
                         <FileCard
@@ -243,24 +283,27 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
                       <FileCardWrapper>
                         <UploadCardContainer onClick={onUploadFile}>
                           <IconContainer color={accent.green.light}>
-                            <CloudUploadIcon sx={{ fontSize: 60 }} />
+                            <CloudUploadIcon sx={{ fontSize: isMobile ? 40 : 60 }} />
                           </IconContainer>
                           <UploadText>{t("uploadFile")}</UploadText>
                         </UploadCardContainer>
                       </FileCardWrapper>
                     </Grid>
                   </Grid>
-                </SectionContainer>
+                </MobileSectionContainer>
 
-                {/* Vertical Divider between sections */}
-                <VerticalDivider orientation="vertical" flexItem />
+                {/* Vertical Divider between sections - Show only on desktop */}
+                {!isMobile && <VerticalDivider orientation="vertical" flexItem />}
+                
+                {/* Show horizontal divider on mobile */}
+                {isMobile && <SectionDivider />}
 
                 {/* Past Exams Section */}
-                <SectionContainer>
+                <MobileSectionContainer>
                   <CenteredSectionTitle variant="h4">
                     {t("pastExams")}
                   </CenteredSectionTitle>
-                  <Grid container>
+                  <Grid container spacing={isMobile ? 1 : 2}>
                     {pastExams.map((pastExam) => (
                       <Grid item xs={12} sm={6} md={4} lg={3} key={pastExam.id}>
                         <FileCard
@@ -285,16 +328,16 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
                     {/* Add Study Material Card */}
                     <Grid item xs={12} sm={6} md={4} lg={2}>
                       <FileCardWrapper>
-                        <UploadCardContainer onClick={onUploadFile}>
+                        <UploadCardContainer onClick={onUploadPastExam}>
                           <IconContainer color={accent.green.light}>
-                            <CloudUploadIcon sx={{ fontSize: 60 }} />
+                            <CloudUploadIcon sx={{ fontSize: isMobile ? 40 : 60 }} />
                           </IconContainer>
                           <UploadText>{t("uploadPastExam")}</UploadText>
                         </UploadCardContainer>
                       </FileCardWrapper>
                     </Grid>
                   </Grid>
-                </SectionContainer>
+                </MobileSectionContainer>
               </FilesSectionsLayout>
             ) : (
               <EmptyStateContainer>
@@ -322,8 +365,12 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
         {tabValue === 1 && (
           <>
             {subjects?.length > 0 ? (
-              <Box sx={{ position: "relative" }}>
-                <Grid container spacing={2} sx={{ width: '100%', margin: 0 }}>
+              <Box sx={{ 
+                position: "relative",
+                width: "100%",
+                padding: isMobile ? "0 8px" : 0
+              }}>
+                <Grid container spacing={isMobile ? 1 : 2} sx={{ width: '100%', margin: 0 }}>
                   {subjects.map((subject) => (
                     <Grid item xs={12} sm={6} md={4} lg={3} key={subject.id}>
                       <SubjectCard
@@ -340,7 +387,7 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
                       <AddButtonBox onClick={handleOpenSubjectDialog}>
                         <AddIcon
                           sx={{
-                            fontSize: 40,
+                            fontSize: isMobile ? 30 : 40,
                             mb: 1,
                             color: accent.green.light,
                           }}
@@ -377,31 +424,37 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
         {tabValue === 2 && (
           <>
             {quizzes?.length > 0 ? (
-              <Grid container spacing={2} sx={{ width: '100%', margin: 0 }}>
-                {quizzes.map((quiz) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={quiz.id}>
-                    <QuizCard
-                      quiz={quiz}
-                      onClick={onOpenQuiz}
-                      onDelete={onDeleteQuiz}
-                    />
-                  </Grid>
-                ))}
-                {/* Add Quiz Card */}
-                <Grid item xs={12} sm={6} md={4} lg={3}>
-                  <BaseCard>
-                    <AddButtonBox onClick={onGenerateQuiz}>
-                      <AddIcon
-                        sx={{
-                          fontSize: 40,
-                          mb: 1,
-                          color: accent.green.light,
-                        }}
+              <Box sx={{ 
+                position: "relative",
+                width: "100%",
+                padding: isMobile ? "0 8px" : 0
+              }}>
+                <Grid container spacing={isMobile ? 1 : 2} sx={{ width: '100%', margin: 0 }}>
+                  {quizzes.map((quiz) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={quiz.id}>
+                      <QuizCard
+                        quiz={quiz}
+                        onClick={onOpenQuiz}
+                        onDelete={onDeleteQuiz}
                       />
-                    </AddButtonBox>
-                  </BaseCard>
+                    </Grid>
+                  ))}
+                  {/* Add Quiz Card */}
+                  <Grid item xs={12} sm={6} md={4} lg={3}>
+                    <BaseCard>
+                      <AddButtonBox onClick={onGenerateQuiz}>
+                        <AddIcon
+                          sx={{
+                            fontSize: isMobile ? 30 : 40,
+                            mb: 1,
+                            color: accent.green.light,
+                          }}
+                        />
+                      </AddButtonBox>
+                    </BaseCard>
+                  </Grid>
                 </Grid>
-              </Grid>
+              </Box>
             ) : (
               <EmptyStateContainer>
                 <EmptyStateText>{t("emptyStates.quizzes")}</EmptyStateText>
@@ -420,7 +473,10 @@ const FilesContainer: React.FC<FilesContainerProps> = ({
         {tabValue === 3 && (
           <>
             {selectedWorkspace && (
-              <Box>
+              <Box sx={{ 
+                width: '100%',
+                padding: isMobile ? '0 8px' : 0
+              }}>
                 <FlashcardsTab workspace={selectedWorkspace} />
               </Box>
             )}

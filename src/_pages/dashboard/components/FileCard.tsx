@@ -23,6 +23,8 @@ import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
 import { FileMetadata } from '@/app/models/file';
 import useFileDownload from '@/hooks/useFileDownload';
 import { useRTL } from '@/contexts/RTLContext';
+import styled from '@emotion/styled';
+import { accent } from '../../../../colors';
 
 // Type to map file extensions to display types
 interface FileTypeMap {
@@ -291,5 +293,44 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, onDelete, onEdit }) 
     </>
   );
 };
+
+const FileCardWrapper = styled(Box)`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  
+  @media (max-width: 600px) {
+    padding: 0 4px;
+  }
+`;
+
+const UploadCardContainer = styled(Box)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 90%;
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px dashed ${accent.green.light};
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    border-color: ${accent.green.main};
+  }
+  
+  @media (max-width: 600px) {
+    padding: 8px;
+    width: 100%;
+    min-height: 100px;
+  }
+`;
 
 export default FileCard;
