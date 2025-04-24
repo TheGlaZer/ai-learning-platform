@@ -13,6 +13,9 @@ import api from '../lib/axios';
 import { getFileSizeFromId } from './filesService';
 import { FILE_SIZE_LIMITS, formatFileSize } from '@/hooks/useFileUpload';
 import { validateUserInstructions } from '@/app/lib-server/securityService';
+import { AIService } from './ai/AIService';
+import { AIProviderType } from './ai/AIServiceFactory';
+import { safeParseJSON } from '@/app/utils/jsonUtils';
 
 /**
  * Creates a quiz in the database and returns the result
@@ -233,7 +236,8 @@ export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> 
       fileId: params.fileId,
       topic: params.topic,
       numberOfQuestions: params.numberOfQuestions,
-      difficultyLevel: params.difficultyLevel
+      difficultyLevel: params.difficultyLevel,
+      aiProvider: params.aiProvider // Log the AI provider being used
     });
 
     // Perform security validation for user comments/instructions
@@ -492,10 +496,25 @@ export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> 
       }
     }
     
-    // Use AIConfig to get the appropriate service for quiz generation
-    console.log('Using AIConfig to determine the best AI service for quiz generation');
+    // Get AI configuration
     const aiConfig = AIConfig.getInstance();
-    const aiService = aiConfig.getServiceForFeature('quiz_generation');
+    
+    // Override the default provider if specified in params
+    let aiService: AIService;
+    if (params.aiProvider) {
+      console.log(`Using specified AI provider: ${params.aiProvider}`);
+      aiService = AIServiceFactory.createService(params.aiProvider as AIProviderType);
+      
+      // Configure the model based on provider
+      if (params.aiProvider === 'anthropic') {
+        (aiService as any).setDefaultModel('claude-3-haiku-20240307');
+      } else if (params.aiProvider === 'openai') {
+        (aiService as any).setDefaultModel('gpt-4o-mini');
+      }
+    } else {
+      // Use the default service from config
+      aiService = aiConfig.getServiceForFeature('quiz_generation');
+    }
     
     // Get configuration details for logging
     const featureConfig = aiConfig.getFeatureConfig('quiz_generation');
@@ -508,13 +527,13 @@ export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> 
       temperature: 0.7,
       maxTokens: 2000,
       language: languageForGeneration,
-      model: 'gpt-4o-mini', // Changed from gpt-4o to gpt-4o-mini for higher token limits
+      model: params.aiProvider === 'anthropic' ? 'claude-3-haiku-20240307' : 'gpt-4o-mini', // Use different model based on provider
       includeFileReferences: params.includeFileReferences !== false, // Default to true if not specified
       includePastExam: params.includePastExam,
       pastExamContent: params.pastExamContent
     };
     
-    console.log(`Using model gpt-4o-mini for quiz generation on content length: ${content.length} chars in language: ${languageForGeneration}`);
+    console.log(`Using provider ${params.aiProvider} with model ${aiOptions.model} for quiz generation on content length: ${content.length} chars in language: ${languageForGeneration}`);
     console.log(`File references in explanations: ${params.includeFileReferences !== false ? 'enabled' : 'disabled'}`);
     console.log(`Including past exam as reference: ${params.includePastExam ? 'yes' : 'no'}`);
     if (params.includePastExam && params.pastExamContent) {
@@ -641,27 +660,10 @@ export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> 
     // Add the response processing and duplicate checking
     let parsedContent;
     try {
-      // Clean the response content by removing any markdown formatting
-      let cleanedContent = response.content;
-      
-      // Remove markdown code blocks if present
-      cleanedContent = cleanedContent.replace(/```json\s*/g, '');
-      cleanedContent = cleanedContent.replace(/```\s*/g, '');
-      
-      // Remove any additional text before or after the JSON
-      const jsonStartIdx = cleanedContent.indexOf('{');
-      const jsonEndIdx = cleanedContent.lastIndexOf('}');
-      
-      if (jsonStartIdx >= 0 && jsonEndIdx >= 0 && jsonEndIdx > jsonStartIdx) {
-        cleanedContent = cleanedContent.substring(jsonStartIdx, jsonEndIdx + 1);
-      }
-      
-      // Trim whitespace
-      cleanedContent = cleanedContent.trim();
-      
-      console.log('Cleaned content for parsing:', cleanedContent.substring(0, 100) + '...');
-      
-      parsedContent = JSON.parse(cleanedContent);
+      // Use the robust JSON parsing utility instead of manual cleanup and parsing
+      console.log('Parsing AI response with safeParseJSON utility');
+      parsedContent = safeParseJSON(response.content);
+      console.log('Successfully parsed AI response');
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
       console.error('AI response content:', response.content.substring(0, 500) + '...');

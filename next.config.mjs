@@ -80,7 +80,11 @@ const nextConfig = {
           permanent: false
         }
       ];
-    }
+    },
+    // Increase serverless function timeout
+    serverRuntimeConfig: {
+      FUNCTION_TIMEOUT: 90,
+    },
 };
  
 export default withNextIntl(nextConfig);

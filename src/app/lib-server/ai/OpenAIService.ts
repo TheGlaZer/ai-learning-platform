@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import promptService from './PromptService';
 import aiUtils from './AIUtilsService';
 import cacheService from './CacheService';
+import { safeParseJSON } from '@/app/utils/jsonUtils';
 
 /**
  * OpenAI service implementation of the AIService interface
@@ -212,14 +213,8 @@ export class OpenAIService implements AIService {
         // Parse the subjects from this chunk
         let chunkSubjects: any[] = [];
         try {
-          // Clean the response content
-          let cleanedContent = chunkResponse.content;
-          cleanedContent = cleanedContent.replace(/```json\s*/g, '');
-          cleanedContent = cleanedContent.replace(/```\s*/g, '');
-          cleanedContent = cleanedContent.trim();
-          
-          // Parse the JSON
-          const parsedSubjects = JSON.parse(cleanedContent);
+          // Use the robust JSON parsing utility
+          const parsedSubjects = safeParseJSON(chunkResponse.content);
           
           if (Array.isArray(parsedSubjects)) {
             // Check for unrelated content response
