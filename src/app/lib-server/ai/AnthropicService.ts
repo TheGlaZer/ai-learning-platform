@@ -56,7 +56,16 @@ export class AnthropicService implements AIService {
     }
     
     const temperature = options?.temperature || 0.7;
-    const maxTokens = options?.maxTokens || 1000;
+    let maxTokens = options?.maxTokens || 1000;
+    
+    // Get the model's max output token limit
+    const modelMaxOutputTokens = this.getModelMaxOutputTokens(model);
+    
+    // Cap maxTokens to model's output limit
+    if (maxTokens > modelMaxOutputTokens) {
+      console.warn(`Requested max_tokens (${maxTokens}) exceeds model limit (${modelMaxOutputTokens}). Capping to ${modelMaxOutputTokens}.`);
+      maxTokens = modelMaxOutputTokens - 100; // Leave 100 token buffer
+    }
     
     // Estimate token count and adjust parameters if needed
     const estimatedTokenCount = aiUtils.estimateTokenCount(prompt);
@@ -74,11 +83,11 @@ export class AnthropicService implements AIService {
       // Otherwise adjust max_tokens to fit within the model's limit
       const adjustedMaxTokens = Math.max(100, modelMaxTokens - estimatedTokenCount - 100); // Leave 100 token buffer
       console.log(`Adjusting max_tokens from ${maxTokens} to ${adjustedMaxTokens} to fit within model context limit`);
-      options = { ...options, maxTokens: adjustedMaxTokens };
+      maxTokens = adjustedMaxTokens;
     }
     
     // Generate a cache key and check cache
-    const cacheKey = aiUtils.generateCacheKey(prompt, model, temperature, options?.maxTokens || maxTokens);
+    const cacheKey = aiUtils.generateCacheKey(prompt, model, temperature, maxTokens);
     const cachedResponse = cacheService.get(cacheKey);
     if (cachedResponse) {
       return cachedResponse;
@@ -93,7 +102,7 @@ export class AnthropicService implements AIService {
         model,
         messages: [{ role: 'user' as const, content: prompt }],
         temperature,
-        max_tokens: options?.maxTokens || maxTokens
+        max_tokens: maxTokens
       };
       
       // Log the request parameters for debugging
@@ -106,6 +115,10 @@ export class AnthropicService implements AIService {
       
       // Call the API with the clean parameters
       const message = await this.anthropic.messages.create(requestParams);
+
+      console.log('--------------------------------');
+      console.log('Anthropic response:', message);
+      console.log('--------------------------------');
 
       // Extract the text content from the first content block
       let content = '';
@@ -142,7 +155,8 @@ export class AnthropicService implements AIService {
     selectedSubjectNames?: string[],
     previousQuestions?: string[]
   ): Promise<AIModelResponse> {
-    const prompt = promptService.createQuizPrompt(
+    // Create a prompt that specifically asks for valid JSON formatting
+    let enhancedPrompt = promptService.createQuizPrompt(
       fileContent, 
       topic, 
       numberOfQuestions, 
@@ -153,22 +167,54 @@ export class AnthropicService implements AIService {
       previousQuestions
     );
     
-    console.log("QUIZ GENERATION PROMPT LENGTH:", prompt.length);
+    // Add special instructions for JSON formatting to handle RTL text
+    enhancedPrompt += `\n\nVERY IMPORTANT: Your response MUST be VALID JSON ONLY, with NO additional text or markdown formatting.
+
+SPECIAL INSTRUCTIONS FOR HEBREW/RTL TEXT IN JSON:
+1. All quotes must be properly escaped within strings, especially within Hebrew text
+2. All brackets {}, braces [], and commas must be properly balanced and located
+3. Do not include any Unicode control characters or directional indicators (like U+202B, U+202E, etc.)
+4. Ensure all Hebrew text is properly UTF-8 encoded without control character insertions
+5. Every property name must be enclosed in double quotes
+6. Every string value must be enclosed in double quotes
+7. Follow strict JSON syntax - no trailing commas, no single quotes for keys/values
+
+Example of properly formatted Hebrew text in JSON:
+{
+  "question": "שאלה בעברית עם \"מרכאות כפולות\" שהן מוברחות כראוי",
+  "options": [
+    {"id": "א", "text": "תשובה אפשרית ראשונה"}
+  ]
+}
+
+Return ONLY the complete JSON object with no explanations before or after.`;
+    
+    console.log("QUIZ GENERATION PROMPT LENGTH:", enhancedPrompt.length);
     console.log("Using Claude model (in generateQuiz before options applied):", this.defaultModel);
     
     // For quiz generation, we need a much larger max_tokens to ensure the JSON response is not truncated
     // Each question can take ~250-500 tokens when formatted as JSON with explanations
     const estimatedRequiredTokens = 1000 + (numberOfQuestions * 500);
-    console.log(`Setting max_tokens to ${estimatedRequiredTokens} for quiz generation to prevent truncation`);
+    
+    // Get the model to use (either from options or default)
+    const modelToUse = options?.model || this.defaultModel;
+    
+    // Get the model-specific max output token limit
+    const maxTokenLimit = this.getModelMaxOutputTokens(modelToUse);
+    console.log(`Using ${modelToUse} with max output token limit of ${maxTokenLimit}`);
+    
+    // Cap the tokens to the model's limit
+    const requestedTokens = Math.min(estimatedRequiredTokens, maxTokenLimit - 100); // Leave 100 token buffer
+    console.log(`Setting max_tokens to ${requestedTokens} for quiz generation (capped to model limit)`);
     
     // Make sure we're explicitly setting the model to the current default with adequate tokens
     const quizOptions = {
       ...options,
       model: this.defaultModel,
-      maxTokens: Math.max(options?.maxTokens || 0, estimatedRequiredTokens)
+      maxTokens: Math.max(options?.maxTokens || 0, requestedTokens)
     };
     
-    return this.generateText(prompt, quizOptions);
+    return this.generateText(enhancedPrompt, quizOptions);
   }
 
   /**
@@ -196,9 +242,9 @@ export class AnthropicService implements AIService {
   }
 
   /**
-   * Gets the maximum token limit for Claude models
+   * Gets the maximum token limit for Claude models context window
    * @param model Model name
-   * @returns Maximum token limit for the model
+   * @returns Maximum token limit for the model's context window
    */
   private getModelMaxTokens(model: string): number {
     const modelLimits: Record<string, number> = {
@@ -218,6 +264,31 @@ export class AnthropicService implements AIService {
     
     // Use model-specific limit or default to 100000 if unknown
     return modelLimits[model] || 100000;
+  }
+
+  /**
+   * Gets the maximum output token limit for Claude models
+   * @param model Model name
+   * @returns Maximum output token limit for the model
+   */
+  private getModelMaxOutputTokens(model: string): number {
+    const outputTokenLimits: Record<string, number> = {
+      // Claude 3.5 models have 8,192 output token limit
+      'claude-3-5-sonnet-20240620': 8192,
+      
+      // Claude 3 models have 4,096 output token limit
+      'claude-3-opus-20240229': 4096,
+      'claude-3-sonnet-20240229': 4096,
+      'claude-3-haiku-20240307': 4096,
+      
+      // Legacy Claude models have various limits
+      'claude-2.1': 4096,
+      'claude-2.0': 4096,
+      'claude-instant-1.2': 4096,
+    };
+    
+    // Use model-specific limit or default to 4096 if unknown
+    return outputTokenLimits[model] || 4096;
   }
 
   /**

@@ -507,7 +507,8 @@ export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> 
       
       // Configure the model based on provider
       if (params.aiProvider === 'anthropic') {
-        (aiService as any).setDefaultModel('claude-3-haiku-20240307');
+        const configModel = aiConfig.getFeatureConfig('quiz_generation')?.model || 'claude-3-5-sonnet-20240620';
+        (aiService as any).setDefaultModel(configModel);
       } else if (params.aiProvider === 'openai') {
         (aiService as any).setDefaultModel('gpt-4o-mini');
       }
@@ -527,8 +528,10 @@ export const generateQuiz = async (params: QuizGenerationParams): Promise<Quiz> 
       temperature: 0.7,
       maxTokens: 2000,
       language: languageForGeneration,
-      model: params.aiProvider === 'anthropic' ? 'claude-3-haiku-20240307' : 'gpt-4o-mini', // Use different model based on provider
-      includeFileReferences: params.includeFileReferences !== false, // Default to true if not specified
+      model: params.aiProvider === 'anthropic' 
+        ? (featureConfig?.model || 'claude-3-5-sonnet-20240620')
+        : 'gpt-4o-mini',
+      includeFileReferences: params.includeFileReferences !== false,
       includePastExam: params.includePastExam,
       pastExamContent: params.pastExamContent
     };

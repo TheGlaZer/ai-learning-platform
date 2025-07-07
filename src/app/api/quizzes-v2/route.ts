@@ -6,6 +6,7 @@ import { extractToken } from '@/app/lib-server/authService';
 import { getFileSizeFromId } from '@/app/lib-server/filesService';
 import { FILE_SIZE_LIMITS, formatFileSize } from '@/hooks/useFileUpload';
 import { validateUserInstructions } from '@/app/lib-server/securityService';
+import { AIConfig } from '@/app/lib-server/ai/AIConfig';
 
 export const dynamic = 'force-dynamic'; // This ensures the route is not statically optimized
 export const maxDuration = 60; // 5 minutes
@@ -153,7 +154,7 @@ export async function POST(req: Request) {
     
     return NextResponse.json({
       ...quiz,
-      model: selectedProvider === 'anthropic' ? 'claude-3-haiku-20240307' : 'gpt-4o-mini' // Indicate which model was used
+      model: selectedProvider === 'anthropic' ? AIConfig.getInstance().getFeatureConfig('quiz_generation')?.model || 'claude-3-5-sonnet-20240620' : 'gpt-4o-mini' // Use configured model
     });
   } catch (error: any) {
     console.error('Error generating quiz:', error);
@@ -165,7 +166,7 @@ export async function POST(req: Request) {
     
     // Determine which model caused the error
     if (errorMessage.includes('anthropic')) {
-      model = "claude-3-haiku-20240307";
+      model = AIConfig.getInstance().getFeatureConfig('quiz_generation')?.model || 'claude-3-5-sonnet-20240620';
     } else if (errorMessage.includes('openai') || errorMessage.includes('gpt')) {
       model = "gpt-4o-mini";
     }
@@ -174,7 +175,7 @@ export async function POST(req: Request) {
     if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
       status = 429;
       
-      if (model === "claude-3-haiku-20240307") {
+      if (model.includes('claude-3')) {
         errorMessage = 'Anthropic API rate limit exceeded. We recommend:' +
           '\n1. Try again in a few minutes' +
           '\n2. Use a smaller file';

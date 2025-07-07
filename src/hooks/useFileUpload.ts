@@ -19,18 +19,18 @@ export const ALLOWED_FILE_EXTENSIONS = ['.pdf', '.doc', '.docx', '.ppt', '.pptx'
 // Define file size limits per file type (in bytes)
 export const FILE_SIZE_LIMITS = {
   // Word documents (approximately 150 pages max)
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 15 * 1024 * 1024, // 15MB for DOCX
-  'application/msword': 15 * 1024 * 1024, // 15MB for DOC
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 50 * 1024 * 1024, // 50MB for DOCX
+  'application/msword': 50 * 1024 * 1024, // 50MB for DOC
   
   // PowerPoint presentations
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 30 * 1024 * 1024, // 30MB for PPTX
-  'application/vnd.ms-powerpoint': 30 * 1024 * 1024, // 30MB for PPT
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 50 * 1024 * 1024, // 50MB for PPTX
+  'application/vnd.ms-powerpoint': 50 * 1024 * 1024, // 50MB for PPT
   
   // PDF documents
-  'application/pdf': 20 * 1024 * 1024, // 20MB for PDF
+  'application/pdf': 50 * 1024 * 1024, // 50MB for PDF
   
   // Default limit for any other accepted file type
-  'default': 20 * 1024 * 1024 // 20MB default
+  'default': 50 * 1024 * 1024 // 50MB default
 };
 
 // Format file size for display
@@ -115,10 +115,11 @@ export const useFileUpload = (): UseFileUploadReturn => {
       // Simulate progress updates (since the actual API doesn't provide progress)
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
-          const newProgress = prev + Math.random() * 10;
+          // Calculate a smaller increment to make it last longer
+          const newProgress = prev + 1.8; // This will reach 90% in 5 seconds (90/1.8 = 50 steps, 50 * 100ms = 5 seconds)
           return newProgress < 90 ? newProgress : 90;
         });
-      }, 300);
+      }, 100); // Update every 100ms for smoother progress
 
       const result = await uploadFileClient(userId, workspaceId, file, accessToken);
       
